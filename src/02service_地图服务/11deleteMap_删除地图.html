@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title data-i18n="vjmap"></title>
+    <!--这是vjmap提供的样式和js库，实际项目中只需引入下面这两个文件即可-->
+    <link rel="stylesheet" type="text/css" href="../../js/vjmap/vjmap.min.css">
+    <script type="text/javascript" src="../../js/vjmap/vjmap.min.js"></script>
+
+    <!--下面的第三方的样式和js库，只是为了示例演示的需要引入的库，实际项目中无需引入下面的这些文件-->
+    <link rel="stylesheet" type="text/css" href="../../css/demo.css">
+    <link rel="stylesheet" type="text/css" href="../../js/vjgui/vjgui.css">
+    <script type="text/javascript" src="../../js/vjgui/vjgui.min.js"></script>
+    <script type="text/javascript" src="../../js/react.production.min.js"></script>
+    <script type="text/javascript" src="../../js/react-dom.production.min.js"></script>
+    <script type="text/javascript" src="../../js/babel.min.js"></script>
+    <script type="text/javascript" src="../../js/moment.min.js"></script>
+    <script type="text/javascript" src="../../js/antd.min.js"></script>
+    <script type="text/javascript" src="../../js/env.js"></script>
+</head>
+<body style=" margin: 0;overflow: hidden;background-color:white;font-size: 16px">
+<div id="map" style="left:0;right:0;top:0;bottom:0;position: absolute;z-index: 0; background:#022B4F"></div>
+<div id="ui" style="z-index: 2;"></div>
+</body>
+<script type="text/babel">
+    const { message } = antd;
+    window.onload = async () => {
+        const env = {
+            serviceUrl: "https://vjmap.com/server/api/v1",
+            accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiVXNlcm5hbWUiOiJhZG1pbjEiLCJOaWNrTmFtZSI6ImFkbWluMSIsIkF1dGhvcml0eUlkIjoiYWRtaW4iLCJCdWZmZXJUaW1lIjo4NjQwMCwiZXhwIjo0ODEzMjY3NjM3LCJpc3MiOiJ2am1hcCIsIm5iZiI6MTY1OTY2NjYzN30.cDXCH2ElTzU2sQU36SNHWoTYTAc4wEkVIXmBAIzWh6M",
+            exampleMapId: "sys_zp",
+            assetsPath: "../../assets/",
+            ...__env__ // 如果您已私有化部署，需要连接已部署的服务器地址和token，请打开js/env.js,修改里面面的参数
+        };
+        try {
+            // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/service/11deleteMap
+            // --删除地图--删除指定的图形
+            // js代码
+            let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
+            
+            function showUI() {
+                vjgui.init();
+                let element = vjgui.createElement("div", "sidebar .sidebar", "", "")
+                vjgui.add(element)
+                vjgui.add(element)
+                let sidebar = new vjgui.Inspector();
+                sidebar.addButton("所有图形","选择删除的图",{callback: async function(name) {
+                        let allmaps = await svc.listMaps("", "*");
+                        let res = await showSelectMaps(allmaps);
+                        if (!res.version && res.id) {
+                            res.mapid = res.id;
+                            res.version = "*"; // 如果只选择了图，没有选择版本，则删除所有的
+                        }
+                        if (res && res.mapid && res.version) {
+                            let data = await svc.cmdDeleteMap(res.mapid, res.version);
+                            message.info(data)
+                        }
+                    }});
+            
+                sidebar.appendTo("#sidebar");
+            }
+            
+            showUI();
+            
+            async function showSelectMaps(param) {
+                return new Promise((resolve, reject) => {
+                    let dialog = new vjgui.Dialog( { title:"选择图形", close: true, minimize: true, width: 300, height: 400, scroll: true, resizable:true, draggable: true} );
+                    dialog.show();
+                    dialog.setPosition( 240,20 );
+            
+                    //tree
+                    let mytree = { id: "所有图形",
+                        children: [
+                        ]};
+            
+                    for(let m in param) {
+                        let node = {};
+                        node.id = m;
+                        node.children = []
+                        for(let v of param[m]) {
+                            node.children.push({
+                                id: v.version,
+                                geom: v.geom,
+                                status: v.finish,
+                                mapid: m,
+                                version: v.version
+                            })
+                        }
+                        mytree.children.push(node);
+                    }
+                    mytree.children.push({});
+                    let sel = {};
+                    let litetree = new vjgui.Tree( mytree, { allow_rename: false });
+                    vjgui.bind( litetree.root, "item_selected", function(e) {
+                        sel = e.detail.data;
+                    });
+                    dialog.add(litetree);
+            
+                    // Add some buttons
+                    let isOk = false;
+                    dialog.addButton('确定', { close: true, callback: () => {
+                        isOk = true;
+                    }});
+                    dialog.addButton('取消',{ close: 'fade' });
+            
+                    vjgui.bind(dialog, "closed", e => {
+                        if (isOk) {
+                            resolve(sel)
+                        } else {
+                            resolve();
+                        }
+                    })
+                });
+            }
+            
+        }
+        catch (e) {
+            console.error(e);
+            message.error({
+                content: "catch error: " + (e.message || e.response || JSON.stringify(e).substr(0, 80)),
+                duration: 60,
+                key: "err"
+            });
+        }
+    };
+</script>
+</html>
