@@ -78,8 +78,7 @@
                 onAdd (map) {
                     this.map = map
                     // 初始化绘制
-                    const opts = vjmap.Draw.defaultOptions();
-                    opts.de
+                    const  opts = vjmap.cloneDeep(vjmap.Draw.defaultOptions()); // 得到的对象复制一份，不要修改原来的
                     for(let c in opts.controls) {
                         opts.controls[c] = false;// 初始控件全部隐藏
                     }
