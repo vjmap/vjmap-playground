@@ -1,4 +1,4 @@
-const { message } = antd; // 第三库用于消息提示
+const { message } = antd; // 第三方库用于消息提示
 window.onload = async () => {
     const env = {
         serviceUrl: "https://vjmap.com/server/api/v1",
