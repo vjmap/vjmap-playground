@@ -1,0 +1,62 @@
+const { message } = antd; // 第三库用于消息提示
+window.onload = async () => {
+    const env = {
+        serviceUrl: "https://vjmap.com/server/api/v1",
+        accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiVXNlcm5hbWUiOiJhZG1pbjEiLCJOaWNrTmFtZSI6ImFkbWluMSIsIkF1dGhvcml0eUlkIjoiYWRtaW4iLCJCdWZmZXJUaW1lIjo4NjQwMCwiZXhwIjo0ODEzMjY3NjM3LCJpc3MiOiJ2am1hcCIsIm5iZiI6MTY1OTY2NjYzN30.cDXCH2ElTzU2sQU36SNHWoTYTAc4wEkVIXmBAIzWh6M",
+        exampleMapId: "sys_zp",
+        assetsPath: "../../assets/",
+        ...__env__ // 如果您已私有化部署，需要连接已部署的服务器地址和token，请打开js/env.js,修改里面面的参数
+    };
+    try {
+        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/web/03webGaode1
+        // --高德地图(地图数据前端获取)--
+        let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
+        // 根据地图范围建立经纬度投影坐标系
+        let prj = new vjmap.LnglatProjection();
+        // wgs84坐标
+        const coWgs84 = prj.toLngLat([116.3912, 39.9073])
+        // 把wgs84转成高德坐标坐标
+        const coGCJ02 = vjmap.transform.convert(coWgs84, vjmap.transform.CRSTypes.WGS84, vjmap.transform.CRSTypes.GCJ02)
+        // 地图对象
+        let map = new vjmap.Map({
+            container: 'map', // DIV容器ID
+            style: {
+                version: svc.styleVersion(),
+                glyphs: svc.glyphsUrl(),
+                sources: {
+                    tdt1: {
+                        type: 'raster',
+                        tiles: ["https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"],
+                    }
+                },
+                layers: [{
+                    id: 'tdt1',
+                    type: 'raster',
+                    source: 'tdt1',
+                }]
+            },
+            center: prj.toLngLat(coGCJ02),
+            zoom: 15,
+            pitch: 0,
+            renderWorldCopies: false // 不显示多屏地图
+        });
+        
+        // 关联服务对象和投影对象
+        map.attach(svc, prj);
+        // 根据地图本身范围缩放地图至全图显示
+        //map.fitMapBounds();
+        await map.onLoad();
+        
+        const marker = new vjmap.Marker({color: "red"})
+        marker.setLngLat(coGCJ02).addTo(map)
+        
+    }
+    catch (e) {
+        console.error(e);
+        message.error({
+            content: "catch error: " + (e.message || e.response || JSON.stringify(e).substr(0, 80)),
+            duration: 60,
+            key: "err"
+        });
+    }
+};
