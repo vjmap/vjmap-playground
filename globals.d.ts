@@ -10254,6 +10254,22 @@ export  namespace vec4 {
 
 export  type vec4type = [number, number, number, number] | Float32Array;
 
+/**
+ * 生成矢量等值面
+ * @param {json} featureCollection：必填，已有点数据，geojson格式
+ * @param {string} weight：必填，插值所依赖的属性中字段名称
+ * @param {array} breaks：必填，等值面分级区间
+ * @param params
+ params:{
+         model:'exponential','gaussian','spherical'，三选一，默认exponential
+         sigma2: 0,
+         alpha: 100, // 此参数可能控制孔扩散范围,越小范围越大
+         canvas: HTMLCanvasElement, // 如果要渲染到画布上填这个
+         xlim: number, // canvas有效
+         ylim: number, // canvas有效
+         colors:string[] // canvas有效 等值面分级区间
+  }
+ */
 export  function vectorContour(featureCollection: FeatureCollection, weight: string, breaks: number[], params?: {
     model?: 'exponential' | 'gaussian' | 'spherical';
     sigma2?: number;
