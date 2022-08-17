@@ -10254,6 +10254,28 @@ export  namespace vec4 {
 
 export  type vec4type = [number, number, number, number] | Float32Array;
 
+export  function vectorContour(featureCollection: FeatureCollection, weight: string, breaks: number[], params?: {
+    model?: 'exponential' | 'gaussian' | 'spherical';
+    sigma2?: number;
+    alpha?: number;
+    canvas?: HTMLCanvasElement;
+    xlim?: number;
+    ylim?: number;
+    colors?: string[];
+}): {
+    grid: {
+        grid: number[];
+        n: number;
+        m: number;
+        xlim: number;
+        ylim: number;
+        zlim: number;
+        x_resolution: number;
+        y_resolution: number;
+    };
+    contour: FeatureCollection;
+};
+
 export  type VectorSourceSpecification = {
     type: "vector";
     url?: string;
