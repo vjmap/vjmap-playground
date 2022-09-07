@@ -81,7 +81,7 @@ window.onload = async () => {
         
         // 由多段线转成多边形
         const polylineToPolygon = (path, offset) => {
-            return vjmap.offsetPoints([...path, ...path.reverse()], {offset: len});
+            return vjmap.polylineMarginToPolygon(path, {offset: len});
         }
         vjmap.createAnimation({
             from: 0,
@@ -112,6 +112,7 @@ window.onload = async () => {
                 });
             }
         })
+        
     }
     catch (e) {
         console.error(e);

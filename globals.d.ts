@@ -962,6 +962,20 @@ export  interface createMarkerOptions extends MarkerOptions {
     removeWhenNoInMapViewPadding?: boolean;
 }
 
+export  function createObjectOffset(): {
+    offsetLines(dist: number): any;
+    offset(dist: number): any;
+    margin(dist: number): any;
+    padding(dist: number): any;
+    data(vertices: any): any;
+};
+
+export  function createObjectPolygonUtil(): {
+    diff(polygonA: Array<Array<Number>>, polygonB: Array<Array<Number>>): Array<Array<Number>> | null;
+    union(polygonA: Array<Array<Number>>, polygonB: Array<Array<Number>>): Array<Array<Number>> | null;
+    intersection(polygonA: Array<Array<Number>>, polygonB: Array<Array<Number>>): Array<Array<Number>> | null;
+};
+
 /**
  * 创建geoson格式的点
  * @param input
@@ -1257,6 +1271,12 @@ export  class DbDimension extends DbEntity {
 export  class DbDocument {
     /** 来源于哪个图，会在此图的上面进行修改或新增删除，格式如 形式为 mapid/version,如 exam/v1 . */
     from?: string;
+    /** 来源于哪个图时有效，表示从此图中选择指定的图层，不在指定的图层将不会显示 */
+    pickLayers?: string[];
+    /** 来源于哪个图时有效，表示从此图中选择指定的实体ID，不在指定的实体ID将不会显示 */
+    pickEntitys?: string[];
+    /** 文档环境，用于设置是否显示线宽等设置, 设置线宽为 LWDISPLAY ,true显示或 false不显示线宽*/
+    environment?: Record<string, any>;
     /** 实体集. */
     entitys?: IDbEntity[];
     /** 图层集. */
@@ -1867,27 +1887,27 @@ export  namespace Dom {
 
 export  const Draw: {
     /** 工具类. */
-    Tool: (options?: object | undefined) => any;
+    Tool: (options?: IDrawOptions | undefined) => IDrawTool | any;
     /** 缺省配置项. */
     defaultOptions: () => any;
     /** 模式. */
-    modes: object;
+    modes: Record<string, any>;
     /** 绘制动作. */
-    actionDraw: (map: any, modename: string, options?: object | undefined) => any;
+    actionDraw: (map: any, modename: string, options?: Record<string, any> | undefined) => any;
     /** 绘制圆动作. */
-    actionDrawCircle: (map: any, options?: object | undefined) => any;
+    actionDrawCircle: (map: any, options?: Record<string, any> | undefined) => any;
     /** 绘制线动作. */
-    actionDrawLineSting: (map: any, options?: object | undefined) => any;
+    actionDrawLineSting: (map: any, options?: Record<string, any> | undefined) => any;
     /** 绘制点动作. */
-    actionDrawPoint: (map: any, options?: object | undefined) => any;
+    actionDrawPoint: (map: any, options?: Record<string, any> | undefined) => any;
     /** 绘制多边形动作. */
-    actionDrawPolygon: (map: any, options?: object | undefined) => any;
+    actionDrawPolygon: (map: any, options?: Record<string, any> | undefined) => any;
     /** 绘制矩形动作. */
-    actionDrawRectangle: (map: any, options?: object | undefined) => any;
+    actionDrawRectangle: (map: any, options?: Record<string, any> | undefined) => any;
     /** 绘制斜矩形动作. */
-    actionDrawSlantRectangle: (map: any, options?: object | undefined) => any;
+    actionDrawSlantRectangle: (map: any, options?: Record<string, any> | undefined) => any;
     /** 选择实体. 如果只能选择一个实体，options选项请输入selectSingle为true*/
-    actionSelect: (map: any, draw: any, options?: object | undefined) => any;
+    actionSelect: (map: any, draw: any, options?: Record<string, any> | undefined) => any;
 };
 
 export  type Driver = (update: Update) => DriverControls;
@@ -3033,6 +3053,13 @@ export  function getEllipsePolygonCoordinates(center: GeoPointLike, majorAxisRad
 } | null;
 
 /**
+ * 获取一个geojson的
+ * @param data 输入值
+ * @return {GeoBounds} 获取的范围值
+ */
+export  function getGeoBounds<T extends GeoJsonGeomertry | GeoPoint | GeoPointLike | GeoPointLike[]>(data: T | string): GeoBounds;
+
+/**
  * Get first defined value.
  *
  * Specialized "replacement" for `a || b || c` used frequently to get value from various sources
@@ -3439,6 +3466,20 @@ export  interface ICreateArrowAnimateLineLayerOptions extends IAnimateLineLayerO
     arrowStrokeWidth?: number;
     /** 箭头宽(默认为画布的一半). */
     arrowWidth?: number;
+}
+
+/**
+ * 获取创建实体的几何数据
+ */
+export  interface ICreateEntitiesGeomData {
+    /** 文件文档. */
+    filedoc: string;
+    /** 图形范围.如果不填的话，则使用全图范围 */
+    mapBounds?: [number, number, number, number];
+    /** 渲染精度，默认1，有时候图形特别大导致圆或圆弧精度不够时,不够光滑，可以先清空之前的缓存数据，再重新上传时，改变渲染精度来使圆或圆弧光滑些。注：提高精度会导致空间数据文件增大，渲染性能下降 */
+    renderAccuracy?: number;
+    /** 返回的数据中排除属性数据( 默认true) */
+    excludeAttribute?: boolean;
 }
 
 export  interface ICreateFillAnimateLayerResult extends ICreateAnimateLayerResult {
@@ -4084,27 +4125,99 @@ export  interface IDeleteStyle {
 
 export  interface IDraw {
     /** 工具类. */
-    Tool: (options?: object) => any;
+    Tool: (options?: IDrawOptions) => IDrawTool | any;
     /** 缺省配置项. */
     defaultOptions: () => any;
     /** 模式. */
-    modes: object;
+    modes: Record<string, any>;
     /** 绘制动作. */
-    actionDraw: (map: any, modename: string, options?: object) => any;
+    actionDraw: (map: any, modename: string, options?: Record<string, any>) => any;
     /** 绘制圆动作. */
-    actionDrawCircle: (map: any, options?: object) => any;
+    actionDrawCircle: (map: any, options?: Record<string, any>) => any;
     /** 绘制线动作. */
-    actionDrawLineSting: (map: any, options?: object) => any;
+    actionDrawLineSting: (map: any, options?: Record<string, any>) => any;
     /** 绘制点动作. */
-    actionDrawPoint: (map: any, options?: object) => any;
+    actionDrawPoint: (map: any, options?: Record<string, any>) => any;
     /** 绘制多边形动作. */
-    actionDrawPolygon: (map: any, options?: object) => any;
+    actionDrawPolygon: (map: any, options?: Record<string, any>) => any;
     /** 绘制矩形动作. */
-    actionDrawRectangle: (map: any, options?: object) => any;
+    actionDrawRectangle: (map: any, options?: Record<string, any>) => any;
     /** 绘制斜矩形动作. */
-    actionDrawSlantRectangle: (map: any, options?: object) => any;
+    actionDrawSlantRectangle: (map: any, options?: Record<string, any>) => any;
     /** 选择实体. 如果只能选择一个实体，options选项请输入selectSingle为true*/
-    actionSelect: (map: any, draw: any, options?: object) => any;
+    actionSelect: (map: any, draw: any, options?: Record<string, any>) => any;
+}
+
+export  interface IDrawOptions {
+    addControls?: any[];
+    controls?: Record<string, boolean>;
+    guides?: boolean;
+    modes?: Record<string, any>;
+    snap?: true;
+    api: {
+        getSnapFeatures: any;
+        [key: string]: any;
+    };
+    snapOptions: {
+        snapGridPx?: number;
+        snapPx?: number;
+        snapToMidPoints?: boolean;
+        snapVertexPriorityDistance?: number;
+    };
+    styles?: any[];
+    userProperties?: boolean;
+    [key: string]: any;
+}
+
+export  interface IDrawTool {
+    /** 此方法采用 GeoJSON Feature、FeatureCollection 或 Geometry 并将其添加到 Draw。它返回一个 id 数组，用于与添加的功能进行交互。如果某个功能没有自己的 id，则会自动生成一个 **/
+    add: (geojson: any) => Array<string>;
+    /**将绘图更改为另一种模式。返回用于链接的绘制实例 */
+    changeMode: (mode: string, modeOptions: any) => IDrawTool;
+    /** 调用当前模式的combineFeatures操作。返回用于链接的绘制实例 */
+    combineFeatures: () => IDrawTool;
+    /** 删除具有指定 ID 的功能。返回用于链接的绘制实例*/
+    delete: (featureIds: string[] | string) => IDrawTool;
+    /** 删除所有功能。返回用于链接的绘制实例 */
+    deleteAll: () => IDrawTool;
+    /** 在当前模式下执行动作 */
+    doAction: (actionName: string) => any;
+    /** 强制刷新 */
+    forceRefresh: () => any;
+    /** 返回 Draw 中具有指定 id 的 GeoJSON 功能，或者undefined如果 id 不匹配任何功能 */
+    get: (id: string) => any;
+    /** 返回所有功能的 FeatureCollection */
+    getAll: () => FeatureCollection;
+    /** 返回当前在指定点呈现的功能的功能 ID 数组。*/
+    getFeatureIdsAt: (point: {
+        x: number;
+        y: number;
+    }) => Array<string>;
+    /** 返回 Draw 的当前模式 */
+    getMode: () => string;
+    /** 返回当前选择的所有功能的 FeatureCollection */
+    getSelected: () => FeatureCollection;
+    /** 返回当前所选功能的功能 ID 数组 */
+    getSelectedIds: () => Array<string>;
+    /** 返回代表当前选择的所有顶点的 FeatureCollection 点 */
+    getSelectedPoints: () => FeatureCollection;
+    /** 内部变量模式值 */
+    modes: Record<string, any>;
+    /** 增加时回调接口 */
+    onAdd: (map: any) => any;
+    /** 移除时回调接口 */
+    onRemove: () => any;
+    /** 内部变量选项值 */
+    options: Record<string, any>;
+    redo: () => any;
+    /** 将 Draw 的功能设置为指定的 FeatureCollection */
+    set: (featureCollection: FeatureCollection) => Array<string>;
+    /** 设置具有指定 id 的要素的属性值。返回用于链接的绘制实例 */
+    setFeatureProperty: (featureId: string, property: string, value: any) => IDrawTool;
+    /** 调用当前模式的删除trash操作。返回用于链接的绘制实例 */
+    trash: () => IDrawTool;
+    uncombineFeatures: () => IDrawTool;
+    undo: () => any;
 }
 
 /**
@@ -4371,6 +4484,8 @@ export  interface IPointQueryFeatures extends IQueryBaseFeatures {
     y: number;
     /** 像素大小. */
     pixelsize?: number;
+    /** 条件. */
+    condition?: string;
     /** 返回最大的几何字节数. */
     maxGeomBytesSize?: number;
     /** 当前一个像素表示多少几何长度，如果输入了此值，则为此值为主，否则，根据输入的zoom值后台自动计算. */
@@ -4411,6 +4526,8 @@ export  interface IRectQueryFeatures extends IQueryBaseFeatures {
     x2: number;
     /** 查询的坐标Y2. */
     y2: number;
+    /** 条件. */
+    condition?: string;
     /** 返回最大的几何字节数. */
     maxGeomBytesSize?: number;
 }
@@ -6936,11 +7053,13 @@ export  class PolylineArrow {
     setWeight(val: any): void;
     setBorderColor(value: any): void;
     setBorderOpacity(val: any): void;
-    setborderWidth(weight: any): void;
+    setBorderWidth(weight: any): void;
     show(): void;
     hide(): void;
-    showDir(): void;
+    addDir(): void;
     removeDir(): void;
+    hideDir(): void;
+    showDir(): void;
 }
 
 export  interface PolylineArrowOptions {
@@ -6989,6 +7108,17 @@ export  interface PolylineArrowOptions {
     map?: Map;
     path?: GeoPointLike[] | any;
 }
+
+/**
+ * 把多段线往外扩展成多边形
+ * @param pts
+ * @param options
+ */
+export  function polylineMarginToPolygon(pts: GeoPointLike[], options: {
+    smoothFactor?: number;
+    offset: number;
+    arcSegments?: number;
+}): any;
 
 export  interface PolylineOptions extends OverlayLayerBaseOptions {
     data: PointGeoJsonInput | PointGeoJsonInput[] | GeoJsonGeomertry | GeoPointLike | any;
@@ -8147,6 +8277,12 @@ export  class Service {
      * @return {Promise<any>}
      */
     cmdMapDiff(param: IMapDiff): Promise<any>;
+    /**
+     * 获取创建实体的几何数据
+     * @param param 参数
+     * @return {Promise<any>}
+     */
+    cmdCreateEntitiesGeomData(param: ICreateEntitiesGeomData): Promise<any>;
     /**
      * 坐标转换
      * @return {Promise<any>}
@@ -10969,6 +11105,35 @@ export  const wrap: (min: number, max: number, v: number) => number;
          */
         getCameraPosition(isMKT?: boolean): LngLatLike
 
+
+        /**
+         * 得到绘制图层，不存在的话，将自动创建一个新的
+         */
+        getDrawLayer(options?: IDrawOptions): IDrawTool;
+
+        /**
+         * 创建一个新的绘制图层，每调用一次将自动创建一个
+         */
+        createDrawLayer(options?: IDrawOptions): IDrawTool;
+
+        /**
+         * 删除绘制图层,为空的话，将删除默认的由getDrawLayer创建的绘制图层
+         */
+        removeDrawLayer(layer?: IDrawTool): void;
+
+        /**
+         * 实体颜色转html颜色
+         * @param color 实体颜色
+         * @return {string}
+         */
+        entColorToHtmlColor(color: number): string
+
+        /**
+         * html颜色转实体颜色
+         * @param color html 格式如 "#rrggbb"
+         * @return {number}
+         */
+        htmlColorToEntColor(color: string): number
         
 
         /** 每当鼠标悬停在这些图层上时，将地图的光标设置为“指针”。

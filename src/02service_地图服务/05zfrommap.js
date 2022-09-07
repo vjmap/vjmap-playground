@@ -9,7 +9,7 @@ window.onload = async () => {
     };
     try {
         // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/service/05zfrommap
-        // --在现有图形上修改或新增删除--基于现在的图形，在上面进行修改或新增删除
+        // --在现有图形上修改或新增删除[改变原图]--基于现在的图形，在上面进行修改或新增删除，会对原DWG图进行修改
         	// js代码
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         let doc = new vjmap.DbDocument();

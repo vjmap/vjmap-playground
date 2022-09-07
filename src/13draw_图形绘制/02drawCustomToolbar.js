@@ -445,7 +445,7 @@ window.onload = async () => {
                     // 如果是拉伸多边形，要设置高度
                     // 高度默认设置外包的矩形的四分之一吧
                     let bounds = map.getFeatureBounds(e.features[i], true)
-                    draw.setFeatureProperty(id, "height", prj.toMeter(bounds.width() / 4));
+                    draw.setFeatureProperty(id, "extrusionHeight", prj.toMeter(bounds.width() / 4));
                 }
             }
         });
@@ -488,8 +488,7 @@ window.onload = async () => {
             if (res && res.result && res.result.length > 0) {
                 for (let ent of res.result) {
                     if (ent.geom && ent.geom.geometries) {
-                        let clr = (ent.color >>> 0).toString(16);//转成无符号
-                        clr = "#" + clr.substring(6, 8) + clr.substring(4, 6) + clr.substring(2, 4);//转成十六进制，去掉前面两位透明度
+                        let clr = map.entColorToHtmlColor(ent.color); // 实体颜色转html颜色
                         for (let g = 0; g < ent.geom.geometries.length; g++) {
                             features.push({
                                 id: globalIndex++,
@@ -514,18 +513,6 @@ window.onload = async () => {
                 type: "FeatureCollection",
                 features: features
             };
-        }
-        
-        // 获取一个geojson的外包矩形
-        const getGeoJsonBounds = (data) => {
-            let pts = []
-            vjmap.transform.convert(data, (pt) => {
-                pts.push(vjmap.geoPoint(pt));
-                return pt; // 只求范围，不做转化，返回原来的
-            });
-            let bounds = new vjmap.GeoBounds();
-            bounds.update(pts);
-            return bounds;
         }
         
         // data geojson数据；basePt基点，destPt要移动至的位置；scale 缩放倍数，angle旋转角度
@@ -564,7 +551,7 @@ window.onload = async () => {
             let destPt = map.fromLngLat(drawDestPt.features[0].geometry.coordinates);
         
             // 获取数据范围
-            let dataBounds = getGeoJsonBounds(data);
+            let dataBounds = vjmap.getGeoBounds(data);
             //  要放置的位置点
             let drawData = transformGeoJsonData(vjmap.cloneDeep(data), map.fromLngLat(dataBounds.center()), destPt, vjmap.randInt(1, 10) / 20.0)
         

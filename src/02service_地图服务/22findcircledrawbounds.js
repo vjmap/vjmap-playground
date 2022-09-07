@@ -62,8 +62,7 @@ window.onload = async () => {
                     let polygons = []
                     for(var i = 0; i < query.recordCount; i++) {
                         let bounds = map.getEnvelopBounds(query.result[i].envelop);
-                        let clr = (query.result[i].color >>> 0).toString(16);//转成无符号
-                        clr = "#" + clr.substring(6, 8) + clr.substring(4, 6) + clr.substring(2, 4);//转成十六进制，去掉前面两位透明度
+                        let clr = map.entColorToHtmlColor(query.result[i].color); // 实体颜色转html颜色(
                         polygons.push({
                             points: map.toLngLat(bounds.toPointArray()),
                             properties: {

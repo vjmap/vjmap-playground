@@ -15,9 +15,10 @@ window.onload = async () => {
         let rsp = await svc.composeNewMap([
             {
                 mapid: "sys_world", // 地图id
-                layers: ["经纬度标注","COUNTRY"], // 要显示的图层名称列表
-                clipbounds: [10201.981489534268, 9040.030491346213, 26501.267379,  4445.465999], // 要显示的范围
-                fourParameter: [0,0,2,0] // 对地图进行四参数转换计算
+                // 下面的参数可以根据实际需要来设置，可以对图层，范围，坐标转换来进行处理
+                //layers: ["经纬度标注","COUNTRY"], // 要显示的图层名称列表
+                //clipbounds: [10201.981489534268, 9040.030491346213, 26501.267379,  4445.465999], // 要显示的范围
+                //fourParameter: [0,0,2,0] // 对地图进行四参数转换计算
             },
             {
                 mapid: "sys_hello"
@@ -29,15 +30,17 @@ window.onload = async () => {
         // 返回结果为
         /*
         {
-            "fileid": "pd1ddd8e2296",
-            "mapdependencies": "sys_world||sys_hello",
-            "mapfrom": "sys_world&&v1&&[20201.981489534268,9040.030491346213,31308.49673394777,19968.8414918491]&&0&&[-196.98,19477.19,0.290252,-1.397]&&&&&&&&00A0||sys_hello&&v5&&&&0&&&&&&&&&&",
-            "status": true
+            fileid: "pefbe7459b06",
+            mapdependencies: "sys_world||sys_hello",
+            mapfrom: "sys_world&&v1&&&&0&&&&&&&&&&&&10||sys_hello&&v1&&&&0&&&&&&&&&&&&2",
+            status: true
         }
          */
         let res = await svc.openMap({
-            mapid: "compose_helloword", // 取个新的地图名称
-            ...rsp, // 把返回值做为参数传递打开
+            mapid: "composeHelloWord", // 取个新的地图名称
+            fileid: rsp.fileid,
+            //mapdependencies: rsp.mapdependencies, // 把返回值做为参数传递打开, 如果需要创建协同图形，请把此项打开
+            //mapfrom: rsp.mapfrom, // 把返回值做为参数传递打开, 如果需要创建协同图形，请把此项打开
             mapopenway: vjmap.MapOpenWay.GeomRender, // 以几何数据渲染方式打开
             style:  vjmap.openMapDarkStyle() // div为深色背景颜色时，这里也传深色背景样式
         })

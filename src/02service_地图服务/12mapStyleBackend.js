@@ -37,6 +37,7 @@ window.onload = async () => {
         map.addControl(new vjmap.MousePositionControl({showZoom: true}));
         
         map.enableLayerClickHighlight(svc, e => {
+            if (!e) return;
             let msg = {
                 content: `type: ${e.name}, id: ${e.objectid}, layer: ${e.layerindex}`,
                 key: "layerclick",
@@ -111,9 +112,9 @@ window.onload = async () => {
         // 增加实体对象id判断条件,只要满足任何一种类型即可,如 ['283','285']
         const conditionObjectIds = objectIds => {
             if (!Array.isArray(objectIds)) objectIds = [objectIds];// 先转成数组，再统一用数组去算吧
-            return objectIds.map(objectId => `gInObjectId=='${objectId}'`).join(" or ");
+            let strObjectIds = objectIds.join("||");
+            return `gInObjectId  in  '${strObjectIds}'`
         }
-        
         // 增加实体对象颜色判断条件,只要满足任何一种类型即可,如 [{r:255,g:122,b:100},{r:100}]
         const conditionColors = colors => {
             if (!Array.isArray(colors)) colors = [colors];// 先转成数组，再统一用数组去算吧

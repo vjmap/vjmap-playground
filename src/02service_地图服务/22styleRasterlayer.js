@@ -37,6 +37,7 @@ window.onload = async () => {
         map.addControl(new vjmap.MousePositionControl({showZoom: true}));
         
         map.enableLayerClickHighlight(svc, e => {
+            if (!e) return;
             let msg = {
                 content: `type: ${e.name}, id: ${e.objectid}, layer: ${e.layerindex}`,
                 key: "layerclick",

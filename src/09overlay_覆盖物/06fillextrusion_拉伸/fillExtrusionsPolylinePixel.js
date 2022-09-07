@@ -50,7 +50,7 @@ window.onload = async () => {
         let pixelWidth = 1;//像素宽度
         // 由多段线转成多边形
         const polylineToPolygon = (path, len) => {
-            return vjmap.offsetPoints([...path, ...path.reverse()], {offset: len})
+            return vjmap.polylineMarginToPolygon(path, {offset: len});
         }
         
         for(let i = 0; i < 5; i++) {

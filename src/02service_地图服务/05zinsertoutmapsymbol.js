@@ -189,8 +189,7 @@ window.onload = async () => {
         	if (res && res.result && res.result.length > 0) {
         		for (let ent of res.result) {
         			if (ent.geom && ent.geom.geometries) {
-        				let clr = (ent.color >>> 0).toString(16);//转成无符号
-        				clr = "#" + clr.substring(6, 8) + clr.substring(4, 6) + clr.substring(2, 4);//转成十六进制，去掉前面两位透明度
+        				let clr = map.entColorToHtmlColor(ent.color); // 实体颜色转html颜色
         				for (let g = 0; g < ent.geom.geometries.length; g++) {
         					features.push({
         						id: globalIndex++,

@@ -51,7 +51,9 @@ window.onload = async () => {
             removeMarker();
             // 默认marker
             marker = new vjmap.Marker();
+            // 格式为: new vjmap.Marker().setLngLat( map.toLngLat([cad的x坐标，cad的y坐标)).addTo(map);
             marker.setLngLat(latLng).addTo(map);
+        
         
             // 红色marker,旋转45度
             marker2 = new vjmap.Marker({ color: 'red', rotation: 45 });

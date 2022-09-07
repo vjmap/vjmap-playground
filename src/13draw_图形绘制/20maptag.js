@@ -150,16 +150,28 @@ window.onload = async () => {
             canvas.freeDrawingBrush.width = drawWidth;
         
             //绑定画板事件
-            canvas.on("mouse:down", function (options) {
+            const down = (options) => {
                 if (fabricCanvas.selection) return;
-                mouseFrom.x = options.e.offsetX;
-                mouseFrom.y = options.e.offsetY;
+                if (options.e.touches) {
+                    // 移动端
+                    mouseFrom.x = options.e.touches[0].clientX;
+                    mouseFrom.y = options.e.touches[0].clientY;
+                } else {
+                    mouseFrom.x = options.e.offsetX;
+                    mouseFrom.y = options.e.offsetY;
+                }
+        
                 doDrawing = true;
-            });
-            canvas.on("mouse:up", function (options) {
+            }
+            canvas.on("mouse:down", down);
+            canvas.on("touchstart", down);
+        
+            const up = (options) => {
                 if (fabricCanvas.selection) return;
-                mouseTo.x = options.e.offsetX;
-                mouseTo.y = options.e.offsetY;
+                if (!options.e.touches) {
+                    mouseTo.x = options.e.offsetX;
+                    mouseTo.y = options.e.offsetY;
+                }
                 // drawing();
                 if (drawingObject) {
                     fabricCanvas.setActiveObject(drawingObject);
@@ -172,18 +184,30 @@ window.onload = async () => {
                 fabricCanvas.isDrawingMode = false;
                 fabricCanvas.selection = true;
         
-            });
-            canvas.on("mouse:move", function (options) {
+            }
+            canvas.on("mouse:up", up);
+            canvas.on("touchend", up);
+        
+            const move = (options) => {
                 if (fabricCanvas.selection) return;
                 if (moveCount % 2 && !doDrawing) {
                     //减少绘制频率
                     return;
                 }
                 moveCount++;
-                mouseTo.x = options.e.offsetX;
-                mouseTo.y = options.e.offsetY;
+                if (options.e.touches) {
+                    // 移动端
+                    mouseTo.x = options.e.touches[0].clientX;
+                    mouseTo.y = options.e.touches[0].clientY;
+                } else {
+                    mouseTo.x = options.e.offsetX;
+                    mouseTo.y = options.e.offsetY;
+                }
+        
                 drawing();
-            });
+            }
+            canvas.on("mouse:move", move);
+            canvas.on("touchmove", move);
         
         
             //绘画方法

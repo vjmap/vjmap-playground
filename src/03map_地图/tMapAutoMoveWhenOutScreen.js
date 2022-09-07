@@ -128,7 +128,7 @@ window.onload = async () => {
         });
         marker.setLngLat(map.getCenter())
             .addTo(map);
-        await beginWalk(marker, 10000, [mapBounds.toPointArray().map(p => vjmap.geoPoint(p))])
+        await beginWalk(marker, mapBounds.width() / 20, [mapBounds.toPointArray().map(p => vjmap.geoPoint(p))])
         
         
     }
