@@ -4704,6 +4704,10 @@ export  interface IWmsTileUrl {
     mvt?: boolean;
     /** 是否考虑旋转，在不同坐标系中转换是需要考虑。默认自动考虑是否需要旋转. */
     useImageRotate?: boolean;
+    /** 旋转时图像处理算法. 1或2,默认自动选择（旋转时有用）*/
+    imageProcessAlg?: number;
+    /** 当前互联网底图地图类型 WGS84(84坐标，如天地图，osm), GCJ02(火星坐标，如高德，腾讯地图)， BD09LL(百度经纬度坐标，如百度地图)， BD09MC(百度墨卡托米制坐标，如百度地图)*/
+    webMapType?: "WGS84" | "GCJ02" | "BD09LL" | "BD09MC";
 }
 
 export  const kebabCase: (s: any) => any;
@@ -8050,29 +8054,39 @@ export  class Service {
     waitMapOpenFinish(mapid: string, version: string, tryTime?: number, maxTryTimes?: number): Promise<any>;
     /**
      * 处理查询结果
+     * @param param 参数
+     * @param cb 结果中每个点的处理回调。如果返回空的话，则用默认处理方法
+     */
+    processQueryResult(param: any, cb?: (point: [number, number]) => [number, number] | null | undefined): any;
+    /**
+     * 处理查询结果
      * @private
      */
     private _processQueryResult;
     /**
      * 点查询实体
      * @param param 参数
+     * @param cb 结果中每个点的处理回调。如果返回空的话，则用默认处理方法
      */
-    pointQueryFeature(param: IPointQueryFeatures): Promise<any>;
+    pointQueryFeature(param: IPointQueryFeatures, cb?: (point: [number, number]) => [number, number] | null | undefined): Promise<any>;
     /**
      * 矩形查询实体
      * @param param 参数
+     * @param cb 结果中每个点的处理回调。如果返回空的话，则用默认处理方法
      */
-    rectQueryFeature(param: IRectQueryFeatures): Promise<any>;
+    rectQueryFeature(param: IRectQueryFeatures, cb?: (point: [number, number]) => [number, number] | null | undefined): Promise<any>;
     /**
      * 表达式查询实体
      * @param param 参数
+     * @param cb 结果中每个点的处理回调。如果返回空的话，则用默认处理方法
      */
-    exprQueryFeature(param: IExprQueryFeatures): Promise<any>;
+    exprQueryFeature(param: IExprQueryFeatures, cb?: (point: [number, number]) => [number, number] | null | undefined): Promise<any>;
     /**
      * 条件查询实体
      * @param param 参数
+     * @param cb 结果中每个点的处理回调。如果返回空的话，则用默认处理方法
      */
-    conditionQueryFeature(param: IConditionQueryFeatures): Promise<any>;
+    conditionQueryFeature(param: IConditionQueryFeatures, cb?: (point: [number, number]) => [number, number] | null | undefined): Promise<any>;
     /**
      * 得到地图图层集合，调用前请确保地图已打开，否则会抛异常
      */
@@ -8280,9 +8294,10 @@ export  class Service {
     /**
      * 获取创建实体的几何数据
      * @param param 参数
+     * @param cb 结果中每个点的处理回调。如果返回空的话，则用默认处理方法
      * @return {Promise<any>}
      */
-    cmdCreateEntitiesGeomData(param: ICreateEntitiesGeomData): Promise<any>;
+    cmdCreateEntitiesGeomData(param: ICreateEntitiesGeomData, cb?: (point: [number, number]) => [number, number] | null | undefined): Promise<any>;
     /**
      * 坐标转换
      * @return {Promise<any>}
@@ -10398,8 +10413,8 @@ export  type vec4type = [number, number, number, number] | Float32Array;
  * @param params
  params:{
          model:'exponential','gaussian','spherical'，三选一，默认exponential
-         sigma2: 0,
-         alpha: 100, // 此参数可能控制孔扩散范围,越小范围越大
+         sigma2: 0, // sigma2是σ²，对应高斯过程的方差参数，也就是这组数据z的距离，方差参数σ²的似然性反映了高斯过程中的误差，并应手动设置。一般设置为 0 ，其他数值设了可能会出空白图
+         alpha: 100, // Alpha α对应方差函数的先验值，此参数可能控制钻孔扩散范围,越小范围越大,少量点效果明显，但点多了且分布均匀以后改变该数字即基本无效果了，默认设置为100
          canvas: HTMLCanvasElement, // 如果要渲染到画布上填这个
          xlim: number, // canvas有效
          ylim: number, // canvas有效
@@ -10856,15 +10871,16 @@ export  const wrap: (min: number, max: number, v: number) => number;
          * @param HighlightColor?: string,
          * @param prefix 高亮图层名称前缀，缺省(highlight)
          * @param filterCb 结果过滤回调
+         * @param enterQueryCb 进入查询前回调，可用来修改查询的参数，如坐标等
          */
         enableLayerClickHighlight(
             svc: Service,
             cb?: (res: any, event: any) => void,
             HighlightColor?: string,
             prefix?: string,
-            filterCb?: (curResult: any, zoom?: number, x?: number, y?: number) => any
+            filterCb?: (curResult: any, zoom?: number, x?: number, y?: number) => any,
+            enterQueryCb?: (lngLat: LngLatLike) => IPointQueryFeatures
         ): void;
-
 
         /**
          * 不使图层点击高亮

@@ -68,14 +68,14 @@ window.onload = async () => {
             })
         );
         
-        
+        let cadEpsg = "EPSG:4544" ;// cad图的espg代号
         // 增加cad的wms图层
         let wmsUrl = svc.wmsTileUrl({
             mapid: mapId, // 地图id
             layers: layer, // 图层名称
             bbox: '', // bbox这里不需要传，cesium会自动加上
             srs: "EPSG:4326", // cesium地图是wgs84
-            crs: "EPSG:4544"
+            crs: cadEpsg
         })
         layers.addImageryProvider(
             new Cesium.WebMapServiceImageryProvider({
@@ -86,11 +86,11 @@ window.onload = async () => {
         
         // cad图坐标转web wgs84坐标
         const cadToWebCoordinate = async point => {
-            return await svc.cmdTransform("EPSG:4544", "EPSG:4326", point);
+            return await svc.cmdTransform(cadEpsg, "EPSG:4326", point);
         }
         // 转web wgs84坐标转cad图坐标
         const webTocadCoordinate = async point => {
-            return await svc.cmdTransform("EPSG:4326", "EPSG:4544", point);
+            return await svc.cmdTransform("EPSG:4326", cadEpsg, point);
         }
         // 根据cad图的中心点，计算wgs84的中心点坐标
         let mapBounds = vjmap.GeoBounds.fromString(res.bounds);

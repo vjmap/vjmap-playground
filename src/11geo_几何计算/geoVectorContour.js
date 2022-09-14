@@ -69,7 +69,7 @@ window.onload = async () => {
             dataset.features.push(feature);
         }
         
-        let contoursSize = 20; // 等值面分级区间数，这里设置为20，可以自行设置
+        let contoursSize = 20; // 【值越大，等值线越密】等值面分级区间数，这里设置为20，可以自行设置
         const createContour = async (dataset, contoursSize, propField, colors, dataMinValue, dataMaxValue, maxHeight, model) => {
             let contours = [];
             for(let i = 0; i < contoursSize; i++) {
@@ -85,9 +85,9 @@ window.onload = async () => {
             // 启动webworker计算函数
             let createContourWorker = vjmap.WorkerProxy(vjmap.vectorContour);
             let { grid, contour } = await createContourWorker(dataset, propField, contours, {
-                model: model || 'exponential',
-                sigma2:0,
-                alpha:100
+                model: model || 'exponential', // 'exponential','gaussian','spherical'，三选一，默认exponential
+                sigma2:0, // sigma2是σ²，对应高斯过程的方差参数，也就是这组数据z的距离，方差参数σ²的似然性反映了高斯过程中的误差，并应手动设置。一般设置为 0 ，其他数值设了可能会出空白图
+                alpha:100 // [如果点数少，建议把此值改小] Alpha α对应方差函数的先验值，此参数可能控制钻孔扩散范围,越小范围越大,少量点效果明显，但点多了且分布均匀以后改变该数字即基本无效果了，默认设置为100
             });
         
             // 根据比例插值颜色

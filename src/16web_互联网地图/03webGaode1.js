@@ -24,15 +24,15 @@ window.onload = async () => {
                 version: svc.styleVersion(),
                 glyphs: svc.glyphsUrl(),
                 sources: {
-                    tdt1: {
+                    gaode: {
                         type: 'raster',
                         tiles: ["https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"],
                     }
                 },
                 layers: [{
-                    id: 'tdt1',
+                    id: 'gaode',
                     type: 'raster',
-                    source: 'tdt1',
+                    source: 'gaode',
                 }]
             },
             center: prj.toLngLat(coGCJ02),

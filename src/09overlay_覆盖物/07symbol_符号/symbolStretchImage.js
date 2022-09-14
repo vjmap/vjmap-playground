@@ -43,7 +43,7 @@ window.onload = async () => {
         await map.onLoad();
         
         const mapBounds = map.getGeoBounds(0.6);
-        const geoDatas = []
+        const geoDatas = [];
         for(let i = 0; i < 1000; i++) {
             const pt = mapBounds.randomPoint();
             const data = {
@@ -71,6 +71,10 @@ window.onload = async () => {
         });
         const symbols = new vjmap.Symbol({
             data: geoDatas,
+            iconAnchor: "bottom",
+            iconOffset: [-2, -10],
+            textTranslate: [-2, -10],
+            textAnchor: "bottom",
             iconImage: "stretchTextBackImg",
             textField: ['get', 'name'],
             textFont: ['Arial Unicode MS Regular'],
