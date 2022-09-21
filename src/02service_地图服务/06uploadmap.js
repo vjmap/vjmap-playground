@@ -95,7 +95,7 @@ window.onload = async () => {
         async function showSettingsDialog(param) {
             return new Promise((resolve, reject) => {
                 // Create a new dialog
-                let dialog = new vjgui.Dialog({id: 'openSettings', title:'设置', close: true, minimize: false, width: 300, height: 470, scroll: false, resizable: false, draggable: true });
+                let dialog = new vjgui.Dialog({id: 'openSettings', title:'设置', close: true, minimize: false, width: 300, height: 500, scroll: false, resizable: false, draggable: true });
         
                 // Create a collection of widgets
                 let widgets = new vjgui.Inspector();
@@ -112,6 +112,7 @@ window.onload = async () => {
                         isVector = name === "存储后渲染矢量";
                     }
                 });
+                let password = widgets.addString("密码保护", "", {password: true});
                 widgets.addTitle("如果选择存储后渲染栅格或矢量，第一次打开时由于需要保存几何数据，需耐心等待一段时间。下次打开时会很快打开图形。")
                 let renderAccuracyWidget = widgets.addNumber("渲染精度", 1, {precision: 0,step: 1, min: 1, max: 20});
                 widgets.addTitle("渲染精度默认就行。极少数情况圆或圆弧不够光滑时，可提高精度")
@@ -130,6 +131,10 @@ window.onload = async () => {
                         param.isVector = isVector;
                         param.style = vjmap.openMapDarkStyle();
                         param.renderAccuracy = renderAccuracyWidget.getValue();
+                        if (password.getValue() != "") {
+                            // 如果有密码
+                            param.secretKey = svc.pwdToSecretKey(password.getValue()) ;// 把密码明码转成秘钥
+                        }
                         resolve(param)
                     } else {
                         reject("cancel");

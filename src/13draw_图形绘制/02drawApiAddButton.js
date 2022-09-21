@@ -9,7 +9,7 @@ window.onload = async () => {
     };
     try {
         // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/draw/02drawApiAddButton
-        // --自定义增加绘图控件按钮--
+        // --自定义增加隐藏绘图控件按钮--
         // 地图服务对象
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         // 打开地图
@@ -45,7 +45,27 @@ window.onload = async () => {
         
         const mapBounds = map.getGeoBounds(0.6);
         
-        const opts = vjmap.Draw.defaultOptions()
+        const opts = vjmap.cloneDeep(vjmap.Draw.defaultOptions());
+        // https://vjmap.com/guide/draw.html
+        // 可以隐藏默认的按钮
+        opts.controls.cutPolygon = false;//不显示裁剪多边形
+        /*
+        combine_features: true,
+        cutPolygon: false,
+        drawCircle: true,
+        drawRectangle: true,
+        line_string: true,
+        point: true,
+        polygon: true,
+        redo: true,
+        snap_mode_grid: true,
+        snap_mode_snap: true,
+        splitLine: true,
+        trash: true,
+        uncombine_features: true,
+        undo: true,
+        */
+        
         // 设置要增加的控件
         opts.addControls = [
             {

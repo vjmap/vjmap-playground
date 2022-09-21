@@ -827,9 +827,10 @@ export  function coordTransfromByInvFourParamter(pt: GeoPoint, param: {
  * @param srcArr 原始点数组
  * @param destArr 目标点数组
  * @param isSetRotateZero 是否设置旋转为零，默认false,如果为true,则只考虑平移和缩放
+ * @param isConsiderPointOrder 不考虑点的次序(这样旋转角度方向总是上面，在-180,180之间）
  * @returns {{rotate: number, dx: number, dy: number, scale: number}}
  */
-export  function coordTransfromGetFourParamter(srcArr: GeoPoint[], destArr: GeoPoint[], isSetRotateZero: boolean): {
+export  function coordTransfromGetFourParamter(srcArr: GeoPoint[], destArr: GeoPoint[], isSetRotateZero: boolean, isConsiderPointOrder?: boolean): {
     dx: number;
     dy: number;
     scale: number;
@@ -4387,6 +4388,17 @@ export  interface IOpenMapBaseParam {
     filename?: string;
     /** 上传时的文件名. */
     uploadname?: string;
+    /** 秘钥(第一次上传打开图时有效，表示此图需要密码保护). */
+    secretKey?: string;
+    /** 访问权限的key，权限小于secretKey，不能对图进行删除等操作. */
+    accessKey?: string;
+    /** 要求输入密码回调. */
+    cbInputPassword?: (param: {
+        mapid: string;
+        isPasswordError: boolean;
+        tryPasswordCount: number;
+        result: any;
+    }) => Promise<string>;
     /** 地图来源参数. */
     mapfrom?: string;
     /** 地图依赖项. */
@@ -7904,6 +7916,8 @@ export  class Service {
     private _cur_map_param;
     private readonly _svr_url_map;
     private readonly _svr_url_service;
+    private _secretKeys?;
+    private _accessKeys?;
     /**
      * 构造函数
      * @param url 服务地址
@@ -7918,6 +7932,31 @@ export  class Service {
      * @return string
      */
     serviceUrl(u: string): string;
+    /**
+     * 密码转换为秘钥
+     * @param pwd 密码
+     */
+    pwdToSecretKey(pwd: string): string;
+    /**
+     * 增加秘钥key
+     * @param key key值
+     */
+    addSecretKey(key: string): Set<string>;
+    /**
+     * 移除秘钥key, 如果key为undefined时，则移除所有的
+     * @param key key值
+     */
+    removeSecretKey(key: string): Set<string> | undefined;
+    /**
+     * 增加访问key
+     * @param key key值
+     */
+    addAccessKey(key: string): Set<string>;
+    /**
+     * 移除访问key, 如果key为undefined时，则移除所有的
+     * @param key key值
+     */
+    removeAccessKey(key: string): void;
     private _to_layer_string;
     private _addTokenHeader;
     private _get;
@@ -8164,6 +8203,28 @@ export  class Service {
      * @param retainVersionMaxCount 删除所有版本时，保留的最新的版本总数。如总共有10个版本，retainVersionMaxCount为3时，会保存最新的3个版本，其余的都会删除
      */
     cmdDeleteMap(mapid: string, version: string, retainVersionMaxCount?: number): Promise<any>;
+    /**
+     * 获取地图的AccessKey，获取之前请确保已成功打开了地图
+     * @param mapid 地图ID
+     * @param key secretKey秘钥和超级管理员superKey
+     * @return {Promise<any>}
+     */
+    cmdGetAccessKey(mapid: string, key: string): Promise<any>;
+    /**
+     * 重置地图的AccessKey，获取之前请确保已成功打开了地图
+     * @param mapid 地图ID
+     * @param key secretKey秘钥和超级管理员superKey
+     * @return {Promise<any>}
+     */
+    cmdResetAccessKey(mapid: string, key: string): Promise<any>;
+    /**
+     * 重置地图的密码，如果之前有密码，则是修改密码。如果之前没有密码，则是把此地图设置了密码保护。如果设置密码为空，则取消对此地图的密码保护。
+     * @param mapid 地图ID
+     * @param key 旧的secretKey秘钥和超级管理员superKey
+     * @param newKey 新的secretKey秘钥
+     * @return {Promise<any>}
+     */
+    cmdSetMapPassword(mapid: string, key: string, newKey: string): Promise<any>;
     /**
      * 地图ID重命名
      * @return {Promise<any>}
