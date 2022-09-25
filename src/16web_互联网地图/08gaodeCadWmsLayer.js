@@ -12,7 +12,7 @@ window.onload = async () => {
         // --高德SDK中加载CAD图(WMS图层)--
         
         if (typeof AMap !== "object") {
-            // 如果没有deck环境
+            // 如果没有amap环境
             await vjmap.addScript({
                 // 注意,请次下面的key替换为自己在高德sdk中申请的key，否则会导致报错
                 src: "https://webapi.amap.com/maps?v=1.4.15&key=5ef803514b9a411419dc3c82d6643e12"

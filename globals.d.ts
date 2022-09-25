@@ -2032,6 +2032,14 @@ export  interface EllipseFillOptions extends PolygonOptions {
     properties?: object;
 }
 
+/**
+ * 实体颜色转html颜色
+ * @param color 实体颜色
+ * @param darkMode  样式是否为暗黑框
+ * @return {string}
+ */
+export  function entColorToHtmlColor(color: number, darkMode?: boolean): string;
+
  enum EpsgCrsTypes {
     Beijing54 = "Beijing54",
     Xian80 = "Xian80",
@@ -3261,6 +3269,13 @@ export  type HillshadeLayerStyleProp = {
     hillshadeHighlightColor?: PropertyValueSpecificationEx<ColorSpecification>;
     hillshadeAccentColor?: PropertyValueSpecificationEx<ColorSpecification>;
 };
+
+/**
+ * html颜色转实体颜色
+ * @param color html
+ * @return {number}
+ */
+export  function htmlColorToEntColor(color: string): number;
 
 export  const httpHelper: {
     configure: (opts: Partial<Config>) => void;
@@ -4710,6 +4725,8 @@ export  interface IWmsTileUrl {
     height?: number;
     /** 是否透明. */
     transparent?: boolean;
+    /** 不透明时的背景颜色，默认为白色。格式必须为rgba(r,g,b,a),a不透明应该是255. */
+    backgroundColor?: string;
     /** 四参数(x偏移,y偏移,缩放，旋转弧度)，可选，对坐标最后进行修正*/
     fourParameter?: string | string[];
     /** 是否是矢量瓦片. */
