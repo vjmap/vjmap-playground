@@ -143,14 +143,14 @@ window.onload = async () => {
             })
         
             if (res && res.result && res.result.length > 0) {
-        
+                let idx = 0;
                 let features = [];
                 for (let ent of res.result) {
                     if (ent.geom && ent.geom.geometries) {
                         let clr = vjmap.entColorToHtmlColor(ent.color);
                         for (let g = 0; g < ent.geom.geometries.length; g++) {
                             features.push({
-                                id: ent.id,
+                                id: idx++,
                                 type: "Feature",
                                 properties: {
                                     objectid: ent.objectid + "_" + g,

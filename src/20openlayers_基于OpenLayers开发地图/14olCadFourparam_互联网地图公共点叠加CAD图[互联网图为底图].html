@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>唯杰地图vjmap示例</title>
+    <!--这是vjmap提供的样式和js库，实际项目中只需引入下面这两个文件即可-->
+    <link rel="stylesheet" type="text/css" href="../../js/vjmap/vjmap.min.css">
+    <script type="text/javascript" src="../../js/vjmap/vjmap.min.js"></script>
+
+    <!--下面的第三方的样式和js库，只是为了示例演示的需要引入的库，实际项目中无需引入下面的这些文件-->
+    <link rel="stylesheet" type="text/css" href="../../css/demo.css">
+    <link rel="stylesheet" type="text/css" href="../../js/vjgui/vjgui.css">
+    <script type="text/javascript" src="../../js/vjgui/vjgui.min.js"></script>
+    <script type="text/javascript" src="../../js/react.production.min.js"></script>
+    <script type="text/javascript" src="../../js/react-dom.production.min.js"></script>
+    <script type="text/javascript" src="../../js/babel.min.js"></script>
+    <script type="text/javascript" src="../../js/moment.min.js"></script>
+    <script type="text/javascript" src="../../js/antd.min.js"></script>
+    <script type="text/javascript" src="../../js/env.js"></script>
+</head>
+<body style=" margin: 0;overflow: hidden;background-color:white;font-size: 16px">
+<div id="map" style="left:0;right:0;top:0;bottom:0;position: absolute;z-index: 0; background:#022B4F"></div>
+<div id="ui" style="z-index: 2;"></div>
+</body>
+<!--为了支持类型提示，把html和js分开了-->
+<script type="text/babel" src="./14olCadFourparam.js">
+</script>
+</html>

@@ -2036,9 +2036,10 @@ export  interface EllipseFillOptions extends PolygonOptions {
  * 实体颜色转html颜色
  * @param color 实体颜色
  * @param darkMode  样式是否为暗黑框
+ * @param alpha 透明度的值
  * @return {string}
  */
-export  function entColorToHtmlColor(color: number, darkMode?: boolean): string;
+export  function entColorToHtmlColor(color: number | string, darkMode?: boolean, alpha?: number): string;
 
  enum EpsgCrsTypes {
     Beijing54 = "Beijing54",
@@ -3049,6 +3050,16 @@ export  function getEllipseFeature(center: GeoPointLike, majorAxisRadius: number
  * @return {any[]}
  */
 export  function getEllipsePolygonCoordinates(center: GeoPointLike, majorAxisRadius: number, minorAxisRadius: number, points?: number, startAngle?: number, endAngle?: number, includeCenterWhenArc?: boolean): number[][];
+
+/**
+ * 根据外包矩形创建 `GeoBounds`.
+ *
+ * Example:
+ * ```typescript
+ * const b = vjmap.getEnvelopBounds('POLYGON((3466315.697899 6704304.297588, 3466315.697899 7784496.211226, 4546475.901198 7784496.211226, 4546475.901198 6704304.297588, 3466315.697899 6704304.297588))', prj);
+ * ```
+ */
+export  function getEnvelopBounds(envelop: string, prj: Projection_2): GeoBounds;
 
 /**
  * 根据带系和坐标系来得到proj4的参数
@@ -4436,6 +4447,8 @@ export  interface IOpenMapParam extends IOpenMapBaseParam {
     version?: string;
     /** 图层名称，组合图层用英文逗号分开 */
     layer?: string;
+    /** 布局索引 (从1开始)，默认为0，表示是模型空间 */
+    layoutIndex?: number;
 }
 
 /**
@@ -4478,6 +4491,8 @@ export  interface IOpenMapResponse {
     uploadname?: string;
     /** 描述. */
     description?: string;
+    /** 所有布局. */
+    layouts?: string[];
     /** 地图来源参数. */
     mapfrom?: string;
     /** 地图依赖项. */
@@ -4725,7 +4740,7 @@ export  interface IWmsTileUrl {
     height?: number;
     /** 是否透明. */
     transparent?: boolean;
-    /** 不透明时的背景颜色，默认为白色。格式必须为rgba(r,g,b,a),a不透明应该是255. */
+    /** 不透明时的背景颜色，默认为白色。格式必须为rgb(r,g,b)或rgba(r,g,b,a),a不透明应该是255. */
     backgroundColor?: string;
     /** 四参数(x偏移,y偏移,缩放，旋转弧度)，可选，对坐标最后进行修正*/
     fourParameter?: string | string[];
@@ -10485,7 +10500,7 @@ export  type vec4type = [number, number, number, number] | Float32Array;
 
 /**
  * 生成矢量等值面
- * @param {json} featureCollection：必填，已有点数据，geojson格式
+ * @param {json} featureCollection：，已有点数据，geojson格式 (如果不填，为undefined时，表示获取的是算法本身对象）
  * @param {string} weight：必填，插值所依赖的属性中字段名称
  * @param {array} breaks：必填，等值面分级区间
  * @param params
@@ -10507,8 +10522,9 @@ export  function vectorContour(featureCollection: FeatureCollection, weight: str
     xlim?: number;
     ylim?: number;
     colors?: string[];
+    extent?: [number, number, number, number];
 }): {
-    grid: {
+    grid?: {
         grid: number[];
         n: number;
         m: number;
@@ -10518,7 +10534,9 @@ export  function vectorContour(featureCollection: FeatureCollection, weight: str
         x_resolution: number;
         y_resolution: number;
     };
-    contour: FeatureCollection;
+    contour?: FeatureCollection;
+    variogram?: any;
+    alg?: any;
 };
 
 export  type VectorSourceSpecification = {
@@ -11228,6 +11246,17 @@ export  const wrap: (min: number, max: number, v: number) => number;
          * @return {number}
          */
         htmlColorToEntColor(color: string): number
+
+        /**
+         * 加载image数据，可以是svg或base64图片
+         * @param id id
+         * @param data 数据
+         * @param width 图片宽
+         * @param height 图片高
+         * @param options 选项
+         * @return
+         */
+        addImageData(id: string, data: string, width: number, height: number, options?: Record<string, any>): Promise<any>
         
 
         /** 每当鼠标悬停在这些图层上时，将地图的光标设置为“指针”。

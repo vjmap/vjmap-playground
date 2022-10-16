@@ -9,7 +9,7 @@ window.onload = async () => {
     };
     try {
         // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/draw/08drawEllipse
-        // --交互式绘制椭圆--
+        // --交互式绘制椭圆(弧)--
         // 地图服务对象
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         // 打开地图
@@ -50,85 +50,157 @@ window.onload = async () => {
             map.fire("keyup", {keyCode:27})
         }
         
+        const drawEllipse = async (isFill, isSetAngle) => {
+            let centerPt = await vjmap.Draw.actionDrawPoint(map, {
+            });
+            if (centerPt.cancel) {
+                return ;// 取消操作
+            }
+            let center = map.fromLngLat(centerPt.features[0].geometry.coordinates);
+        
+            let ellipse;
+            if (isFill) {
+                ellipse = new vjmap.EllipseFill({
+                    center: center,
+                    majorAxisRadius: 0,
+                    minorAxisRadius: 0,
+                    fillColor: 'green',
+                    fillOpacity: 0.8,
+                    fillOutlineColor: "#f00"
+                });
+            } else {
+                ellipse = new vjmap.EllipseEdge({
+                    center: center,
+                    majorAxisRadius: 0,
+                    minorAxisRadius: 0,
+                    lineColor: 'red',
+                    lineWidth: 3
+                });
+            }
+            ellipse.addTo(map);
+        
+        
+            let ellipseMajorAxisPt = await vjmap.Draw.actionDrawPoint(map, {
+                updatecoordinate: (e) => {
+                    if (!e.lnglat) return;
+                    const co = map.fromLngLat(e.lnglat);
+                    ellipse.setMinorAxisRadius(center.distanceTo(co));
+                    ellipse.setMajorAxisRadius(center.distanceTo(co));
+                }
+            });
+            if (ellipseMajorAxisPt.cancel) {
+                ellipse.remove()
+                return ;// 取消操作
+            }
+        
+            let ellipseMinorAxisPt = await vjmap.Draw.actionDrawPoint(map, {
+                updatecoordinate: (e) => {
+                    if (!e.lnglat) return;
+                    const co = map.fromLngLat(e.lnglat);
+                    ellipse.setMinorAxisRadius(center.distanceTo(co));
+                }
+            });
+            if (ellipseMinorAxisPt.cancel) {
+                ellipse.remove()
+                return ;// 取消操作
+            }
+        
+            if (isSetAngle) {
+                let ellipseStartPt = await vjmap.Draw.actionDrawPoint(map, {
+                    updatecoordinate: (e) => {
+                        if (!e.lnglat) return;
+                        const co = map.fromLngLat(e.lnglat);
+                        ellipse.setStartAngle(vjmap.radiansToDegrees(co.angleTo(center)));
+                    }
+                });
+                if (ellipseStartPt.cancel) {
+                    ellipse.remove()
+                    return ;// 取消操作
+                }
+        
+                let ellipseEndPt = await vjmap.Draw.actionDrawPoint(map, {
+                    updatecoordinate: (e) => {
+                        if (!e.lnglat) return;
+                        const co = map.fromLngLat(e.lnglat);
+                        ellipse.setEndAngle(vjmap.radiansToDegrees(co.angleTo(center)));
+                    }
+                });
+                if (ellipseEndPt.cancel) {
+                    ellipse.remove()
+                    return ;// 取消操作
+                }
+            }
+        
+        
+        // 下面指定旋转角度
+        // 先获取所有椭圆的点，然后围绕椭圆圆心旋转一定角度
+        // 获取之前椭圆的点
+            let data = ellipse.getData();
+            let ellipseRotatePt = await vjmap.Draw.actionDrawPoint(map, {
+                updatecoordinate: (e) => {
+                    if (!e.lnglat) return;
+                    // 然后围绕椭圆圆心旋转一定角度
+                    const co = map.fromLngLat(e.lnglat);
+                    let angle = co.angleTo(center);
+                    let newData = vjmap.cloneDeep(data);
+                    let coordinates;
+                    if (isFill) {
+                        coordinates = newData.features[0].geometry.coordinates[0];
+                    } else {
+                        coordinates = newData.features[0].geometry.coordinates;
+                    }
+                    for(let i = 0; i < coordinates.length; i++) {
+                        let pt = map.fromLngLat(coordinates[i]);
+                        pt = pt.roateAround(angle, center);
+                        pt = map.toLngLat(pt);
+                        coordinates[i] = pt;//修改原来的值
+                    }
+                    ellipse.setData(newData);
+                }
+            });
+            if (ellipseRotatePt.cancel) {
+                ellipse.remove()
+                return ;// 取消操作
+            }
+        
+        
+        }
+        
+        // 绘制填充椭圆
+        const drawEllipseFill = ()=> {
+            drawEllipse(true)
+        }
+        // 绘制椭圆
+        const drawEllipseEdge = ()=> {
+            drawEllipse(false)
+        }
+        
+        // drawEllipseFillArc
+        const drawEllipseFillArc = ()=> {
+            drawEllipse(true, true)
+        }
+        // 绘制椭圆弧
+        const drawEllipseArc = ()=> {
+            drawEllipse(false, true)
+        }
+        
+        
+        
         // UI界面
         const App = () => {
             return (
                 <div className="info" style={{width:"60px", right: "5px"}}>
                     <div className="input-item">
+                        <button id="clear-map-btn" className="btn btn-full mr0" onClick={() => drawEllipseFill()}>绘制填充椭圆</button>
+                        <button id="clear-map-btn" className="btn btn-full mr0" onClick={() => drawEllipseEdge()}>绘制椭圆</button>
+                        <button id="clear-map-btn" className="btn btn-full mr0" onClick={() => drawEllipseFillArc()}>绘制填充椭圆弧</button>
+                        <button id="clear-map-btn" className="btn btn-full mr0" onClick={() => drawEllipseArc()}>绘制椭圆弧</button>
                         <button id="clear-map-btn" className="btn btn-full mr0" onClick={() => cancelDraw()}>取消绘制</button>
                     </div>
                 </div>
             );
         }
         ReactDOM.render(<App />, document.getElementById('ui'));
-        
-        let centerPt = await vjmap.Draw.actionDrawPoint(map, {
-        });
-        if (centerPt.cancel) {
-            return ;// 取消操作
-        }
-        let center = map.fromLngLat(centerPt.features[0].geometry.coordinates);
-        
-        let ellipse = new vjmap.EllipseFill({
-            center: center,
-            majorAxisRadius: 0,
-            minorAxisRadius: 0,
-            fillColor: 'green',
-            fillOpacity: 0.8,
-            fillOutlineColor: "#f00"
-        });
-        ellipse.addTo(map);
-        
-        
-        let ellipseMajorAxisPt = await vjmap.Draw.actionDrawPoint(map, {
-            updatecoordinate: (e) => {
-                if (!e.lnglat) return;
-                const co = map.fromLngLat(e.lnglat);
-                ellipse.setMinorAxisRadius(center.distanceTo(co));
-                ellipse.setMajorAxisRadius(center.distanceTo(co));
-            }
-        });
-        if (ellipseMajorAxisPt.cancel) {
-            ellipse.remove()
-            return ;// 取消操作
-        }
-        
-        
-        let ellipseMinorAxisPt = await vjmap.Draw.actionDrawPoint(map, {
-            updatecoordinate: (e) => {
-                if (!e.lnglat) return;
-                const co = map.fromLngLat(e.lnglat);
-                ellipse.setMinorAxisRadius(center.distanceTo(co));
-            }
-        });
-        if (ellipseMinorAxisPt.cancel) {
-            ellipse.remove()
-            return ;// 取消操作
-        }
-        // 下面指定旋转角度
-        // 先获取所有椭圆的点，然后围绕椭圆圆心旋转一定角度
-        // 获取之前椭圆的点
-        let data = ellipse.getData();
-        let ellipseRotatePt = await vjmap.Draw.actionDrawPoint(map, {
-            updatecoordinate: (e) => {
-                if (!e.lnglat) return;
-                // 然后围绕椭圆圆心旋转一定角度
-                const co = map.fromLngLat(e.lnglat);
-                let angle = co.angleTo(center);
-                let newData = vjmap.cloneDeep(data);
-                for(let i = 0; i < newData.features[0].geometry.coordinates[0].length; i++) {
-                    let pt = map.fromLngLat(newData.features[0].geometry.coordinates[0][i]);
-                    pt = pt.roateAround(angle, center);
-                    pt = map.toLngLat(pt);
-                    newData.features[0].geometry.coordinates[0][i] = pt;//修改原来的值
-                }
-                ellipse.setData(newData);
-            }
-        });
-        if (ellipseRotatePt.cancel) {
-            ellipse.remove()
-            return ;// 取消操作
-        }
         
     }
     catch (e) {

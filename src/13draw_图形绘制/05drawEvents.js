@@ -67,6 +67,8 @@ window.onload = async () => {
         ]
         for(let evt of eventsName) {
             map.on(evt, function (e) {
+                // 如果不是此draw对象的事件，则不用管
+                if (e.styleId != draw.options.styleId) return;
                 console.log(evt, e);
                 message.info({content:evt, key: "info", duration: 2});
             });
