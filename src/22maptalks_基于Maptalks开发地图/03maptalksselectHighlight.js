@@ -8,8 +8,8 @@ window.onload = async () => {
         ...__env__ // 如果您已私有化部署，需要连接已部署的服务器地址和token，请打开js/env.js,修改里面的参数
     };
     try {
-        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/maptalks/01maptalksraster
-        // --加载唯杰地图CAD栅格瓦片--使用maptalks来加载唯杰地图服务提供的CAD栅格瓦片
+        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/maptalks/03maptalksselectHighlight
+        // --选择高亮实体--在maptalks点击鼠标高亮实体
         
         // maptalks 官网地址 https://maptalks.org/
         // maptalks 源码地址 https://github.com/maptalks/maptalks.js
@@ -37,6 +37,10 @@ window.onload = async () => {
         }
         // 获取地图范围
         let mapBounds = vjmap.GeoBounds.fromString(res.bounds);
+        let mapPrj = new vjmap.GeoProjection(mapBounds);
+        // 获取所有图层
+        const cadLayers = svc.getMapLayers();
+        
         // 设置每级的分辨率
         let resolutions= [];
         for(let i = 0; i < 25; i++) {
@@ -70,7 +74,76 @@ window.onload = async () => {
         });
         map.addLayer(layer);
         
-        map.on('click', (e) => console.log(message.info(`您点击的坐标为： ${e.coordinate.x}, ${e.coordinate.y}`)));
+        
+        map.on('click', async (e) => {
+            console.log(e)
+            await highlight_ent([e.coordinate.x, e.coordinate.y]);
+        });
+        
+        
+        
+        let highlightLayer; // 高亮图层
+        const highlight_ent = async co => {
+            if (highlightLayer) {
+                map.removeLayer(highlightLayer);; // 先删除之前的高亮图层
+                highlightLayer = null;
+            }
+            let res = await svc.pointQueryFeature({
+                x: co[0],
+                y: co[1],
+                zoom: map.getZoom(),
+                fields: ""
+            }, pt => {
+                // 查询到的每个点进行坐标处理回调
+                return mapPrj.fromMercator(pt);// 转成cad的坐标
+            })
+            if (res && res.result && res.result.length > 0) {
+                let features = [];
+                for (let ent of res.result) {
+                    if (ent.geom && ent.geom.geometries) {
+                        let clr = vjmap.entColorToHtmlColor(ent.color);
+                        for (let g = 0; g < ent.geom.geometries.length; g++) {
+                            features.push({
+                                type: "Feature",
+                                properties: {
+                                    objectid: ent.objectid + "_" + g,
+                                    color: clr,
+                                    alpha: ent.alpha / 255,
+                                    lineWidth: 1,
+                                    name: ent.name,
+                                    isline: ent.isline,
+                                    layerindex: ent.layerindex
+                                },
+                                geometry: ent.geom.geometries[g]
+                            })
+                        }
+                        // 选择提示
+                        let content = `feature: ${ent.objectid}; layer: ${cadLayers[ent.layerindex].name}; type: ${ent.name}`
+                        message.info({ content, key: "info", duration: 3});
+                    }
+                }
+                let data = {
+                    type: "FeatureCollection",
+                    features: features
+                }
+                if (data.features.length > 0) {
+                    highlightLayer = new maptalks.VectorLayer('vector')
+                    map.addLayer(highlightLayer);
+                    highlightLayer.setStyle([{
+                        symbol: {
+                            polygonFill: '#57FFC9',
+                            polygonOpacity: 0.5,
+                            lineColor: '#57FFC9',
+                            lineWidth: 2
+                        }
+                    }])
+                    data.features.forEach(ft => {
+                        let geomerty = maptalks.GeoJSON.toGeometry(ft);
+                        geomerty.addTo(highlightLayer);
+                    })
+                }
+            }
+        };
         
     }
     catch (e) {

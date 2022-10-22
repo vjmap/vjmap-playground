@@ -53,11 +53,11 @@ window.onload = async () => {
         map.setRasterOpacity(svc.rasterLayerId(), 0.4);
         
         //生成测试数据
-        let extent;
+        let dataBounds = await svc.cmdGetDataBounds(); // 获取地图有数据的范围区域
+        let extent = map.toLngLat(dataBounds).toArray();
         // 如果要根据数据范围自动生成此范围，则无需传此参数
-        // 这里做测试，选取了图上的两个点的值，不同的图点坐标不一样，请自行修改
-        let pt1 = map.toLngLat([ 2271.3403719999988, 17638.89665600001]);
-        let pt2 = map.toLngLat([27137.83253228557, 2828.6776779999927]);
+        let pt1 = extent[0];
+        let pt2 = extent[1];
         extent = [pt1[0], pt1[1], pt2[0], pt2[1]];
         
         let dataMinValue = 10; // 数据最小值
@@ -292,6 +292,34 @@ window.onload = async () => {
             let result = alg.core.predict(pt.lng, pt.lat, variog);
             message.info('当前点击的值为：' + result);
         })
+        
+        /*
+        // 根据离散点的值进行训练，然后预测新的点的值
+        // 获取算法本身对象
+        let { alg } = vjmap.vectorContour();
+        let am = alg.core;
+        // 生成测试数据
+        function generateTestData(n){
+           let x = [], y = [], t = [];
+        
+           for (let i = 0; i < n; i++){
+               x[i] = (-180)+Math.random()*360;
+               y[i] = (-90)+Math.random()*180;
+               t[i] = (x[i] > 0) ? 100 : 0;
+           }
+           return [t,x,y];
+        }
+        // 生成100个随机数据
+        let data = generateTestData(100);
+        // 训练得到模型
+        let variogram = am.train(data[0],data[1],data[2],"exponential", 0, 10);
+        
+        if (variogram) {
+           // 预测新的点的值 80为要预测点的坐标x 60为要预测点的坐标y
+           let predictValue = am.predict(80, 60, variogram);
+           console.log(predictValue)
+        }
+        */
         
         // UI界面
         const App = () => {

@@ -8,7 +8,7 @@ window.onload = async () => {
         ...__env__ // 如果您已私有化部署，需要连接已部署的服务器地址和token，请打开js/env.js,修改里面的参数
     };
     try {
-        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/openlayers/14olCadFourparam
+        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/openlayers/15olCadFourparam
         // --互联网地图公共点叠加CAD图[互联网图为底图]--
         
         if (typeof ol !== "object") {
@@ -85,20 +85,6 @@ window.onload = async () => {
             return wmsUrl
         }
         
-        function getQueryStringArgs(url) {
-            let theRequest = {};
-            let idx = url.indexOf("?");
-            if (idx != -1) {
-                let str = url.substr(idx + 1);
-                let strs = str.split("&");
-                for (let i = 0; i < strs.length; i++) {
-                    let items = strs[i].split("=");
-                    theRequest[items[0]] = items[1];
-                }
-            }
-            return theRequest;
-        }
-        
         let mapBounds = vjmap.GeoBounds.fromString(res.bounds);
         let cadPrj = new vjmap.GeoProjection(mapBounds);
         
@@ -129,8 +115,8 @@ window.onload = async () => {
                 // 范围
                 extent: bounds.toArray(),
                 source: new ol.source.TileWMS({
-                    url: wmsUrl.substr(0, wmsUrl.indexOf("?")),
-                    params: {...getQueryStringArgs(wmsUrl),'TILED': true}
+                    url: wmsUrl,
+                    params: {'TILED': true}
                 }),
             });
             // 在openlayer中增加wms图层

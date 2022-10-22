@@ -8,28 +8,29 @@ window.onload = async () => {
         ...__env__ // 如果您已私有化部署，需要连接已部署的服务器地址和token，请打开js/env.js,修改里面的参数
     };
     try {
-        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/leaflet/13leafletCadWmsLayer
+        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/openlayers/14olCadWmsLayer
         // --互联网地图自动叠加CAD图[互联网图为底图]--
-        
-        // leaflet 官网地址 https://leafletjs.com/
-        // leaflet 源码地址 https://github.com/Leaflet/Leaflet
-        if (typeof L !== "object") {
-            // 如果没有leaflet环境
+        if (typeof ol !== "object") {
+            // 如果没有openlayer环境
             await vjmap.addScript([{
-                src: "../../js/leaflet2.0/leaflet.js"
+                src: "../../js/ol7.1.0/ol.js"
             },{
-                src: "../../js/leaflet2.0/leaflet.css"
+                src: "../../js/ol7.1.0/ol.css"
             }]);
         }
-        
-        
-        // 创建leaflet的地图对象
-        let map = L.map('map', {
-            center: [29.44102, 106.166187],
-            zoom: 15
+        const layers = [
+            new ol.layer.Tile({
+                source: new ol.source.OSM(),
+            })
+        ];
+        const map = new ol.Map({
+            layers: layers,
+            target: 'map',
+            view: new ol.View({
+                center: vjmap.Projection.lngLat2Mercator([106.166187,  29.44102]),
+                zoom: 15,
+            }),
         });
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', {foo: 'bar'}).addTo(map);
-        
         
         // 地图服务对象
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
@@ -54,8 +55,9 @@ window.onload = async () => {
             layers: layer, // 图层名称
             bbox: '', // bbox这里不需要
             srs: "EPSG:3857", //
-            crs: cadEpsg,
+            crs: cadEpsg
         })
+        
         
         let mapBounds = vjmap.GeoBounds.fromString(res.bounds);
         // cad图坐标转web wgs84坐标
@@ -63,12 +65,22 @@ window.onload = async () => {
             let co = await svc.cmdTransform(cadEpsg, "EPSG:4326", point);
             return co[0]
         }
+        // cad转wgs84经纬度
+        let boundsMin = await cadToWebCoordinate(mapBounds.min);
+        let boundsMax = await cadToWebCoordinate(mapBounds.max);
+        // wgs84经纬度转墨卡托
+        boundsMin = vjmap.Projection.lngLat2Mercator(boundsMin);
+        boundsMax = vjmap.Projection.lngLat2Mercator(boundsMax);
         
-        // 增加wms图层
-        let wmsLayer = L.tileLayer.wms(wmsUrl, {
-            attribution: "vjmap.com"
-        });
-        wmsLayer.addTo(map);
+        // 在openlayer中增加wms图层
+        map.addLayer(new ol.layer.Tile({
+            // 范围
+            extent: [boundsMin[0], boundsMin[1], boundsMax[0], boundsMax[1]],
+            source: new ol.source.TileWMS({
+                url: wmsUrl,
+                params: {'TILED': true}
+            }),
+        }))
         
     }
     catch (e) {

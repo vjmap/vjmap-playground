@@ -8,7 +8,7 @@ window.onload = async () => {
         ...__env__ // 如果您已私有化部署，需要连接已部署的服务器地址和token，请打开js/env.js,修改里面的参数
     };
     try {
-        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/leaflet/14leafletCadFourparam
+        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/leaflet/15leafletCadFourparam
         // --互联网地图公共点叠加CAD图[互联网图为底图]--
         
         // leaflet 官网地址 https://leafletjs.com/

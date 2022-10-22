@@ -32,7 +32,7 @@ window.onload = async () => {
             container: 'map', // DIV容器ID
             style: svc.rasterStyle(), // 样式，这里是栅格样式
             center: prj.toLngLat(mapExtent.center()), // 设置地图中心点
-            zoom: 10, // 设置地图缩放级别,
+            zoom: 9, // 设置地图缩放级别,
             pitch: 30, // 倾斜角度
             renderWorldCopies: false // 不显示多屏地图
         });

@@ -3059,7 +3059,7 @@ export  function getEllipsePolygonCoordinates(center: GeoPointLike, majorAxisRad
  * const b = vjmap.getEnvelopBounds('POLYGON((3466315.697899 6704304.297588, 3466315.697899 7784496.211226, 4546475.901198 7784496.211226, 4546475.901198 6704304.297588, 3466315.697899 6704304.297588))', prj);
  * ```
  */
-export  function getEnvelopBounds(envelop: string, prj: Projection_2): GeoBounds;
+export  function getEnvelopBounds(envelop: string, prj: any): GeoBounds;
 
 /**
  * 根据带系和坐标系来得到proj4的参数
@@ -4475,6 +4475,8 @@ export  interface IOpenMapResponse {
     mapBounds?: GeoBounds;
     /** 数据库地图范围*/
     dbBounds?: GeoBounds;
+    /** 图形中有数据的范围（此范围是非精确值，精确的数据范围需调用cmdGetDataBounds去获取）*/
+    dataBounds?: GeoBounds;
     /** 图层样式. */
     styles?: any;
     /** 图层列表. */
@@ -8209,6 +8211,13 @@ export  class Service {
      * @return {Promise<any>}
      */
     getSliceCacheZoom(param: ISliceCacheZoom): Promise<any>;
+    /**
+     * 获取图形中有数据的范围区域
+     * @param mapid 地图id
+     * @param version 版本号
+     * @return {Promise<any>}
+     */
+    cmdGetDataBounds(mapid?: string, version?: string): Promise<GeoBounds | null>;
     /**
      * 获取样式图层名
      * @param mapid 地图ID

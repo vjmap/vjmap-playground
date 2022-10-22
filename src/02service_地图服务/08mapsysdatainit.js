@@ -42,7 +42,7 @@ window.onload = async () => {
         map.fitMapBounds();
         await map.onLoad();
         
-        const fileNames = ["sys_world", "sys_hello", "sys_stats", "sys_symbols",  "sys_topo",  "sys_cad2000", "sys_webwms", "sys_cadcesium"];
+        const fileNames = ["sys_world", "sys_hello", "sys_stats", "sys_symbols",  "sys_topo",  "sys_cad2000", "sys_webwms", "sys_cadcesium", "sys_splitmap"];
         for(let i = 0; i < fileNames.length; i++) {
             await map.switchMap({
                 mapid: fileNames[i],
