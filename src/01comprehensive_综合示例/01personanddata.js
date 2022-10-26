@@ -99,13 +99,33 @@ window.onload = async () => {
         map.addControl(mousePositionControl, "bottom-left");
         
         
+        // 实体类型ID和名称映射
+        const { entTypeIdMap } = await svc.getConstData();
+        const getTypeNameById = name => {
+            for(let id in entTypeIdMap) {
+                if (entTypeIdMap[id] == name) {
+                    return id
+                }
+            }
+        }
         // 获取图中道路图层中两条最长的直线
         const getRoadways = async () => {
+            let entType = getTypeNameById('AcDbLine'); // 获取直线类型。或者直接写成 “1” 也可以。
+            let layerIndex = svc.getMapLayers().findIndex(t => t.name == "道路"); // 通过图层名称找到图层索引
+            // sql条件查询  sql查询（包括点查询，矩形查询，条件查询)。这个是直接在空间数据库是通过sql语句去查询的。所以效率快
+            let query = await svc.conditionQueryFeature({
+                condition: `name='${entType}' and layerindex=${layerIndex}`,
+                fields: "objectid,points",
+                limit: 100000
+            })
+        
+            /*
+            //也可以用表达式查询 一些复杂的，sql满足不了了，可以用这个。这个效率慢些。
             let query = await svc.exprQueryFeature({
                 expr: `gOutReturn := if((gInFeatureType == 'AcDbLine' and  gInLayerName == '道路'), 1, 0);`,
                 fields: "objectid,points",
                 limit: 100000
-            })
+            })*/
             let results = query.result;
             if (!results) return;
             let lines =  results.map(e => {

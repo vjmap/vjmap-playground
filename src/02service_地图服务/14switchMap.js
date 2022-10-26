@@ -9,7 +9,8 @@ window.onload = async () => {
     };
     try {
         // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/service/14switchMap
-        // --切换图形--通过图形id切换不同的图形
+        // --切换图形[地图对象不变]--通过图形id切换不同的图形，切换后地图对象map不会发生变化
+        // js代码
         // js代码
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         let res = await svc.openMap({
