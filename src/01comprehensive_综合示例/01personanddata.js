@@ -40,8 +40,6 @@ window.onload = async () => {
         // 使地图全部可见
         map.fitMapBounds();
         await map.onLoad();
-        // 限制地图范围为全图范围，防止多屏地图显示
-        map.setMaxBounds(map.toLngLat(prj.getMapExtent()));
         
         const len = mapExtent.width() / 80;
         // 获取所有图层

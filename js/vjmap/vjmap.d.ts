@@ -4756,6 +4756,20 @@ export  interface IWmsTileUrl {
     webMapType?: "WGS84" | "GCJ02" | "BD09LL" | "BD09MC";
 }
 
+/**
+ * 工作区（工作区主要用来对图纸进行分类管理。不同工作区的图纸存在的位置不同，查看不同工作区的图纸，需要切换到相应工作区才能查看）
+ */
+export  interface IWorkspace {
+    /** 工作区名称(英文名称，不要有特殊字符，用于做为键值和路由). */
+    name: string;
+    /** 工作区别名(可以是中文). */
+    alias?: string;
+    /** 工作区目录，如果是相对于工作区路径的一个路径或绝对路径，如为空的话，则用工作区名称做为工作目录. */
+    workDir?: string;
+    /** 是否公开（不公开的话，无法通过获取工作区功能来获取到此工作区信息）. */
+    isPublic?: boolean;
+}
+
 export  const kebabCase: (s: any) => any;
 
 export  interface KeyframeOptions<V = number> {
@@ -7948,10 +7962,11 @@ export  class Service {
     accessToken: string;
     private readonly _reqImpl;
     private _cur_map_param;
-    private readonly _svr_url_map;
+    private _svr_url_map;
     private readonly _svr_url_service;
     private _secretKeys?;
     private _accessKeys?;
+    private _workspaceName?;
     /**
      * 构造函数
      * @param url 服务地址
@@ -7966,6 +7981,40 @@ export  class Service {
      * @return string
      */
     serviceUrl(u: string): string;
+    /**
+     * 切换至工作区
+     * @param workspaceName 工作区名称
+     * @return
+     */
+    switchWorkspace(workspaceName: string): void;
+    /**
+     * 获取当前的工作区名称
+     * @return
+     */
+    getCurWorkspaceName(): string;
+    /**
+     * 获取所有工作区(如果不是root权限的token获取非公开的工作区名称将返回空)
+     * @return string
+     */
+    getWorkspaces(): Promise<any>;
+    /**
+     * 创建工作区(默认需要root权限)
+     * @param workspace 工作区设置
+     * @return string
+     */
+    workspaceCreate(workspace: IWorkspace): Promise<any>;
+    /**
+     * 修改工作区(默认需要root权限)
+     * @param workspace 工作区
+     * @return
+     */
+    workspaceModify(workspace: IWorkspace): Promise<any>;
+    /**
+     * 删除工作区（会同时删除工作区下面的所有目录文件）(默认需要root权限)
+     * @param name 要删除的工作区名称
+     * @return
+     */
+    workspaceDelete(name: string): Promise<any>;
     /**
      * 密码转换为秘钥
      * @param pwd 密码
@@ -8109,12 +8158,13 @@ export  class Service {
     metadata(mapid?: string, version?: string): Promise<any>;
     /**
      * 获取所有地图信息
-     * @param mapid 地图ID，为空，则获取所有的；如果不想一次性获取，可通过传入分页对象获取，如{curPage: 1, pageCount: 10}
+     * @param mapid 地图ID，为空，则获取所有的；如果传入的是地图ID数组，则获取指定的地图ID数组的信息。如果不想一次性获取，可通过传入分页对象获取，如{curPage: 1, pageCount: 10}
      * @param version 版本号，为空，则获取最新的; * 则获取所有的版本
      */
-    listMaps(mapid?: string | {
+    listMaps(mapid?: string | string[] | {
         curPage: number;
         pageCount: number;
+        mapIds?: string[];
     }, version?: string): Promise<any>;
     /**
      * 等待地图打开完成
