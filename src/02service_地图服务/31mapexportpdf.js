@@ -8,15 +8,14 @@ window.onload = async () => {
         ...__env__ // 如果您已私有化部署，需要连接已部署的服务器地址和token，请打开js/env.js,修改里面的参数
     };
     try {
-        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/service/08mapsysdatainit
-        // --初始化系统默认地图数据--初始化系统默认地图数据
+        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/service/31mapexportpdf
+        // --导出pdf--将地图导出为pdf文件
         // js代码
         // 新建地图服务对象，传入服务地址和token
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         // 打开地图
         let res = await svc.openMap({
-            mapid: "sys_zp", // 地图ID (每一次打开此地图ID时，会根据fileid去获取dwg路径打开，之后会读取缓存打开)
-            fileid: "https://vjmap.com/sysdwg/sys_zp.dwg" ,
+            mapid: env.exampleMapId, // 地图ID,(请确保此ID已存在，可上传新图形新建ID)
             mapopenway: vjmap.MapOpenWay.GeomRender, // 以几何数据渲染方式打开
             style: vjmap.openMapDarkStyle() // div为深色背景颜色时，这里也传深色背景样式
         })
@@ -31,7 +30,7 @@ window.onload = async () => {
         // 新建地图对象
         let map = new vjmap.Map({
             container: 'map', // container ID
-            style: svc.rasterStyle(), // 样式，这里是栅格样式,// 矢量瓦片样式
+            style: svc.rasterStyle(), // 栅格瓦片样式
             center: prj.toLngLat(mapExtent.center()), // 中心点
             zoom: 2,
             renderWorldCopies: false
@@ -42,14 +41,48 @@ window.onload = async () => {
         map.fitMapBounds();
         await map.onLoad();
         
-        const fileNames = ["sys_world", "sys_hello", "sys_stats", "sys_symbols",  "sys_topo",  "sys_contour",  "sys_cad2000", "sys_webwms", "sys_cadcesium", "sys_splitmap", "sys_exporttable"];
-        for(let i = 0; i < fileNames.length; i++) {
-            await map.switchMap({
-                mapid: fileNames[i],
-                fileid: `https://vjmap.com/sysdwg/${fileNames[i]}.dwg` ,
-                style: vjmap.openMapDarkStyle()
-            });
+        let mapid;  // 不填的话，用上面打开默认的
+        let version; // 不填的话，用上面打开默认的
+        let param; // 不填的话，用默认的
+        /*
+        param = {
+            bIncludeOffLayers: false, // 是否包含关闭的图层
+            bSearchableSHX: false, // 可搜索型文字
+            bSearchableTTF: false, // 可搜索ttf文字
+            pageWidth: 210, // 宽，单位mm
+            pageHeight: 297, // 高，单位mm
+            geomDPI: 600, // 矢量dpi
+            colorImagesDPI: 400 //图像dpi
+        }*/
+        
+        
+        // 导出pdf
+        const exportPdf = async () => {
+            message.info("正在导出pdf,请稍等...")
+            const result = await svc.execCommand("exportPdf", param, mapid, version, true);
+            if (result.error) {
+                message.error(result.error)
+            } else {
+                let pdfUrl = svc.baseUrl() + result.path + "?token=" + svc.accessToken;
+                window.open(pdfUrl, )
+            }
         }
+        
+        // UI界面
+        const App = () => {
+            return (
+                <div>
+                    <div className="info w260">
+                        <div className="input-item">
+                            <button id="clear-map-btn" className="btn btn-full mr0" onClick={exportPdf}>导出Pdf文件</button>
+                        </div>
+        
+        
+                    </div>
+                </div>
+            );
+        }
+        ReactDOM.render(<App />, document.getElementById('ui'));
         
     }
     catch (e) {

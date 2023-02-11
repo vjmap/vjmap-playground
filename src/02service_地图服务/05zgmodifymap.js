@@ -130,7 +130,7 @@ window.onload = async () => {
         
         // 创建一个几何对象
         let globalIndex = 0;
-        const createGeomData = async (entities = [], docMapBounds = null, environment = null, linetypes = null)=> {
+        const createGeomData = async (entities = [], docMapBounds = null, environment = null, linetypes = null, dbFrom = null)=> {
         	let doc = new vjmap.DbDocument();
         	if (environment) {
         		doc.environment = environment;// 文档环境
@@ -141,7 +141,11 @@ window.onload = async () => {
         	let param = map.getService().currentMapParam();
         	if (!docMapBounds) {
         		// 如果文档范围为空，则使用当前地图
-        		doc.from = `${param.mapid}/${param.version}`; // 从当前图
+        		if (!dbFrom) {
+        			doc.from = `${param.mapid}/${param.version}`; // 从当前图
+        		} else {
+        			doc.from = `${dbFrom.mapid}/${dbFrom.version}`; // 从指定的图
+        		}
         		doc.pickEntitys = entities.map(e => e.objectid);
         	}
         	doc.appendEntity(entities);
@@ -482,6 +486,116 @@ window.onload = async () => {
         
         }
         
+        // 创建有线型的线段
+        const createLineTypePolyline = async () => {
+        	// 先交互式绘制线段
+        	let drawLine = await vjmap.Draw.actionDrawLineSting(map);
+        	if (drawLine.cancel) {
+        		return; // 取消了
+        	}
+        	let coordinate = map.fromLngLat(drawLine.features[0].geometry.coordinates);
+        	let dbEnt = new vjmap.DbPolyline();
+        	dbEnt.objectid = '40D'; // 表示要修改此实体 sys_symbols图中的objectid
+        	dbEnt.color = vjmap.htmlColorToEntColor(vjmap.randomColor());
+        	dbEnt.linetypeScale = 100; // 填充比例
+        	// 如果要修改坐标，请用下面的代码，此示例演示还是用以前的坐标数据
+        	dbEnt.points = coordinate.map(p => {
+        		return [p.x, p.y];
+        	});
+        
+        	if (dbEnt) {
+        		let data = await createGeomData([dbEnt], null, null, null, {
+        			mapid: 'sys_symbols', // 上面的要修改的实体，来源于此图id
+        			version: 'v1'
+        		});
+        		addFeatures(data, draw);
+        	}
+        };
+        
+        const throttle = (method,delay,duration) => {
+        	let timer=null;
+        	let begin=new Date();
+        	return function(){
+        		let context=this, args=arguments;
+        		let current=new Date();
+        		clearTimeout(timer);
+        		if(current-begin>=duration){
+        			method.apply(context,args);
+        			begin=current;
+        		}else{
+        			timer=setTimeout(function(){
+        				method.apply(context,args);
+        			},delay);
+        		}
+        	}
+        }
+        
+        const createLineTypeCurve = async () => {
+        	// 先交互式绘制线段
+        	let color = vjmap.htmlColorToEntColor(vjmap.randomColor());
+        	const createCurve = async (coordinate, color) => {
+        		let dbEnt = {}; // 也可以直接赋属性也行不要new对象,只不过没有参数提示了
+        		dbEnt.objectid = '40E'; // 表示要修改此实体 sys_symbols图中的objectid
+        		dbEnt.color = color;
+        		dbEnt.linetypeScale = 100; // 线型比例
+        		// 如果要修改坐标，请用下面的代码，此示例演示还是用以前的坐标数据
+        		dbEnt.fitPoints = coordinate.map(p => {
+        			return [p.x, p.y];
+        		}); // 拟合点 用fitPoints; 控制点 用 controlPoints
+        
+        		if (dbEnt) {
+        			return await createGeomData([dbEnt], null, null, null, {
+        				mapid: 'sys_symbols',// 上面的要修改的实体，来源于此图id
+        				version: 'v1'
+        			});
+        		}
+        	}
+        
+        	let tempDraw = map.createDrawLayer() ;// 创建一个临时的绘图图层
+        	let drawLine = await vjmap.Draw.actionDrawLineSting(map, {
+        			updatecoordinate: throttle(async (e) => {
+        				let coordinate = map.fromLngLat(e.feature.coordinates);
+        				let data = await createCurve(coordinate, color);
+        				if (tempDraw) tempDraw.set(data);
+        			}, 200, 300)
+        		}
+        	);
+        	map.removeDrawLayer(tempDraw); // 把临时图层删除了
+        	tempDraw = null;
+        	if (drawLine.cancel) {
+        		return; // 取消了
+        	}
+        	let coordinate = map.fromLngLat(drawLine.features[0].geometry.coordinates);
+        	let data = await createCurve(coordinate, color);
+        	if (data) {
+        		addFeatures(data, draw);
+        	}
+        };
+        
+        const createHatch = async () => {
+        	let drawPolygon = await vjmap.Draw.actionDrawPolygon(map);
+        	if (drawPolygon.cancel) {
+        		return; // 取消了
+        	}
+        	let coordinate = map.fromLngLat(drawPolygon.features[0].geometry.coordinates[0]);
+        	let dbEnt = new vjmap.DbHatch();
+        	dbEnt.objectid = '42F'; // 表示要修改此实体 sys_symbols图中的objectid
+        	dbEnt.color = vjmap.htmlColorToEntColor(vjmap.randomColor());
+        	dbEnt.patternScale = 400; // 填充比例
+        	// 如果要修改坐标，请用下面的代码，此示例演示还是用以前的坐标数据
+        	dbEnt.points = coordinate.map(p => {
+        		return [p.x, p.y];
+        	});
+        
+        	if (dbEnt) {
+        		let data = await createGeomData([dbEnt], null, null, null, {
+        			mapid: 'sys_symbols',// 上面的要修改的实体，来源于此图id
+        			version: 'v1'
+        		});
+        		addFeatures(data, draw);
+        	}
+        }
+        
         // 选择实体进行删除
         const selectDelete = async () => {
         	let result = await selectFeatures();
@@ -565,6 +679,21 @@ window.onload = async () => {
         				</div>
         				<div className="input-item">
         					<button id="clear-map-btn" className="btn btn-full mr0"
+        							onClick={() => createLineTypePolyline()}>创建有线型的线段
+        					</button>
+        				</div>
+        				<div className="input-item">
+        					<button id="clear-map-btn" className="btn btn-full mr0"
+        							onClick={() => createLineTypeCurve()}>创建有线型的曲线
+        					</button>
+        				</div>
+        				<div className="input-item">
+        					<button id="clear-map-btn" className="btn btn-full mr0"
+        							onClick={() => createHatch()}>创建填充符号区域
+        					</button>
+        				</div>
+        				<div className="input-item">
+        					<button id="clear-map-btn" className="btn btn-full mr0"
         							onClick={() => selectDelete()}>选择实体进行删除
         					</button>
         				</div>
@@ -593,7 +722,6 @@ window.onload = async () => {
         	);
         }
         ReactDOM.render(<App/>, document.getElementById('ui'));
-        
         
     }
     catch (e) {

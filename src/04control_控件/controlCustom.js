@@ -48,7 +48,7 @@ window.onload = async () => {
             }
             _insertControl() {
                 this.container = document.createElement("div");
-                this.container.classList.add("vjmap-ctrl");
+                this.container.classList.add("vjmapgis-ctrl");
         
                 this.container.style.border = this.style.border || "1px";
                 this.container.style.backgroundColor = this.style.backgroundColor || "#A0CFFF";
@@ -84,6 +84,7 @@ window.onload = async () => {
         
         // [测试代码]过一分钟后移除（测试移除能否成功)
         setTimeout(() => map.removeControl(control), 60 * 1000)
+        
     }
     catch (e) {
         console.error(e);

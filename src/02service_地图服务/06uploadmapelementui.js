@@ -61,6 +61,8 @@ window.onload = async () => {
                     password2: '',
                     openway: '存储后渲染栅格',
                     uploadname: '',
+                    notUseDefaultShxFont: false,
+                    fontReplaceRule: ''
                 },
                 uploadMapResult: {
         
@@ -95,6 +97,14 @@ window.onload = async () => {
                             }
                         }
                         this.dialogVisible = false; // 关闭对话框
+                        let fontReplaceRule = undefined;
+                        if (this.form.fontReplaceRule) {
+                            try {
+                                fontReplaceRule = JSON.parse(this.form.fontReplaceRule)
+                            } catch (e) {
+        
+                            }
+                        }
                         let param = {
                             ...this.uploadMapResult,
                             // 图名称
@@ -108,6 +118,10 @@ window.onload = async () => {
                             // 如果要密码访问的话，设置秘钥值
                             secretKey: this.form.isPasswordProtection ? svc.pwdToSecretKey(this.form.password) : undefined,
                             style: vjmap.openMapDarkStyle(),// div为深色背景颜色时，这里也传深色背景样式
+                            /** 不使用缺省的型文字文件，将使用缺省的字体来代替型文件. */
+                            notUseDefaultShxFont: this.form.notUseDefaultShxFont,
+                            /* 字符替换规则. openMap返回的字段findFonts为系统查找的字体替换规则。如需修改默认的话，请传入替换的字体规则，如fontReplaceRule: {"tssdeng.shx_1": "_default_.ttc"} */
+                            fontReplaceRule: fontReplaceRule,
                             // 如果有密码保护的图，要求输入密码回调，如果不传回调函数的话，将用系统的prompt提示输入
                             cbInputPassword: (param) => {
                                 return new Promise((resolve) => {
@@ -119,12 +133,12 @@ window.onload = async () => {
                                             cancelButtonText: '取消',
                                             inputType: "password"
                                         })
-                                        .then(({value}) => {
-                                            resolve(value);
-                                        })
-                                        .catch(() => {
-                                            resolve('');
-                                        })
+                                            .then(({value}) => {
+                                                resolve(value);
+                                            })
+                                            .catch(() => {
+                                                resolve('');
+                                            })
                                     }
                                 })
                             }
@@ -189,6 +203,18 @@ window.onload = async () => {
         
                       <el-form-item label="上传时文件名">
                         <el-input v-model="form.uploadname"></el-input>
+                      </el-form-item>
+        
+                      <el-form-item label="不使用缺省字体型文件" >
+                        <el-switch
+                          v-model="form.notUseDefaultShxFont"
+                          inline-prompt
+                          active-text="是"
+                          inactive-text="否"
+                        />
+                      </el-form-item>
+                      <el-form-item label="字体替换规则">
+                        <el-input v-model="form.fontReplaceRule"></el-input>
                       </el-form-item>
                     </el-form>
                     <span slot="footer" class="dialog-footer">

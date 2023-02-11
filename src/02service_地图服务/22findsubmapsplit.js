@@ -54,16 +54,28 @@ window.onload = async () => {
             // 查找图中所有的直线，二三维多段线
             let queryEntTypes = ['AcDbLine', 'AcDbPolyline', 'AcDb2dPolyline', 'AcDb3dPolyline'];
             let cond = queryEntTypes.map(t => `name='${getTypeNameById(t)}'`).join(' or '); // sql条件
-            let query = await svc.conditionQueryFeature({
-                condition: cond, // 只需要写sql语句where后面的条件内容,字段内容请参考文档"服务端条件查询和表达式查询"
-                fields: "objectid,points,envelop", // 只要id,坐标
-                limit: 100000 //设置很大，相当于把所有的都查出来。不传的话，默认只能取100条
-            });
         
-            let result = query.result || [];
+            let result = [];
+            let beginPos = 0; // 记录查询开始位置
+            // 有可能记录数会很多，这里用分页查询
+            while(true) {
+                let limit = 50000 // 每次查5万条
+                let query = await svc.conditionQueryFeature({
+                    condition: cond, // 只需要写sql语句where后面的条件内容,字段内容请参考文档"服务端条件查询和表达式查询"
+                    fields: "objectid,points,envelop", // 只要id,坐标
+                    beginpos: beginPos, // 记录开始位置
+                    limit: limit // 每次查10万条
+                });
+                if (!query.result) break;
+                beginPos += limit; // 开始位置位置挪动
+                result.push(...query.result || []);
+                if (result.length >= query.recordCount) break;
+            }
+        
             result.forEach(rst => rst.envelop = map.getEnvelopBounds(rst.envelop));
             return result;
         }
+        
         
         
         // 得到一个图里面所有的矩形

@@ -16,8 +16,8 @@ window.onload = async () => {
         	mapid: env.exampleMapId,
         	mapopenway: vjmap.MapOpenWay.Memory, // 以几何数据渲染方式打开
         	style: {
-        		backcolor: 5188354
-        	} // backcolor和div的背景色一样 #022B4F，值为0xGBR，0x4F2B02 = 5188354
+        		backcolor: 0 // 如果div背景色是浅色，则设置为oxFFFFFF
+        	}
         })
         if (res.error) {
         	message.error(res.error)

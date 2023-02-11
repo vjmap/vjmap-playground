@@ -71,6 +71,7 @@ window.onload = async () => {
         const runButtonCmd = async cmdName => {
         	if (cmdName == "getWorkspaces") {
         		// 获取所有工作区信息 如果不是root权限的token去获取的话，设置了非公开的工作区，此工作区获取的数据返回为空
+        		// 如果isPublic为false, 默认权限获取所有工作区的时候，不公开的工作区是获取不到的。只有root权限的token获取的时候才能获取到
         		let res = await svc.getWorkspaces();
         		message.info(JSON.stringify(res, null, 4))
         	} else if (cmdName == "openWorkspaceMap") {

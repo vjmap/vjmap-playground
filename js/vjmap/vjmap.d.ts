@@ -609,6 +609,13 @@ export  function clipSegment(a: GeoPoint, b: GeoPoint, bounds: GeoBounds): GeoPo
 export  function cloneDeep<T>(obj: T): T;
 
 /**
+ * 闭合多边形
+ * @param points
+ * @return points
+ */
+export  function closePolygon(points: GeoPoint[]): GeoPoint[];
+
+/**
  * 点到多段线的最近点
  * @param p
  * @param points
@@ -960,7 +967,7 @@ export  interface createMarkerOptions extends MarkerOptions {
     /** 设置当marker不在当前地图视图范围内时，将自动移除。进入视图范围内时，将自动增加上*/
     removeWhenNoInMapView?: boolean;
     /** 设置当marker不在当前地图视图范围内时，将自动移除。范围向外扩的像素范围，默认500px，向视图范围往外扩些像素，在平移的时候，能看到marker，体验效果好些。*/
-    removeWhenNoInMapViewPadding?: boolean;
+    removeWhenNoInMapViewPadding?: number;
 }
 
 export  function createObjectOffset(): {
@@ -1396,6 +1403,20 @@ export  class DbHatch extends DbEntity {
     elevation?: number;
     /** 填充图案, 缺省 SOLID */
     pattern?: string;
+    /** 填充角度 */
+    patternAngle?: number;
+    /** 指定用户定义的图案填充是否双向填充 */
+    patternDouble?: boolean;
+    /** 填充间距 */
+    patternSpace?: number;
+    /** 填充比例 */
+    patternScale?: number;
+    /** 是否关联 */
+    patternAssociative?: boolean;
+    /** 填充原点坐标 */
+    patternOrigin?: [number, number];
+    /** 填充背景色 */
+    patternBackgroundColor?: number;
     /** 坐标. */
     points?: Array<[number, number, number?]>;
     /**
@@ -2453,8 +2474,10 @@ export  class GeoBounds {
      * @param maxLineCount 最多线的数目
      * @param maxPointCount 每条线最多的点的数目
      * @param propertiesCb 属性回调函数
+     * @param minLineCount 最少线的数目（缺省为1)
+     * @param minPointCount 每条线最少的点的数目（缺省为2)
      */
-    randomGeoJsonLineCollection(maxLineCount: number, maxPointCount: number, xRatio?: number, yRatio?: number, propertiesCb?: (index: number) => Object): GeoJsonGeomertry;
+    randomGeoJsonLineCollection(maxLineCount: number, maxPointCount: number, xRatio?: number, yRatio?: number, propertiesCb?: (index: number) => Object, minLineCount?: number, minPointCount?: number): GeoJsonGeomertry;
     /**
      * 生成一个随机geojson多边形集合
      * @return {GeoPoint}
@@ -2463,8 +2486,10 @@ export  class GeoBounds {
      * @param maxPolygonCount 最多多边形的数目
      * @param maxPointCount 每条线最多的点的数目
      * @param propertiesCb 属性回调函数
+     * @param minPolygonCount 最少多边形的数目(缺省为1)
+     * @param minPointCount 每条线最少的点的数目(缺省为3)
      */
-    randomGeoJsonPolygonCollection(maxPolygonCount: number, maxPointCount: number, xRatio?: number, yRatio?: number, propertiesCb?: (index: number) => Object): GeoJsonGeomertry;
+    randomGeoJsonPolygonCollection(maxPolygonCount: number, maxPointCount: number, xRatio?: number, yRatio?: number, propertiesCb?: (index: number) => Object, minPolygonCount?: number, minPointCount?: number): GeoJsonGeomertry;
     /**
      * 返回数组
      *
@@ -3317,6 +3342,10 @@ export  interface IAnimateFillLayerOptions extends Omit<PolygonOptions, "data"> 
         height: number;
         data: Uint8Array | Uint8ClampedArray;
     } | ImageData | ImageBitmap>;
+    /** 速度，默认1. */
+    speed?: number;
+    /** 开始时自动动画，默认true. */
+    startAutoAnimation?: boolean;
     /** 创建的图层位于哪个图层之前. */
     layerBefore?: string;
 }
@@ -4200,7 +4229,7 @@ export  interface IDrawTool {
     /** 此方法采用 GeoJSON Feature、FeatureCollection 或 Geometry 并将其添加到 Draw。它返回一个 id 数组，用于与添加的功能进行交互。如果某个功能没有自己的 id，则会自动生成一个 **/
     add: (geojson: any) => Array<string>;
     /**将绘图更改为另一种模式。返回用于链接的绘制实例 */
-    changeMode: (mode: string, modeOptions: any) => IDrawTool;
+    changeMode: (mode: string, modeOptions?: any) => IDrawTool;
     /** 调用当前模式的combineFeatures操作。返回用于链接的绘制实例 */
     combineFeatures: () => IDrawTool;
     /** 删除具有指定 ID 的功能。返回用于链接的绘制实例*/
@@ -4332,7 +4361,7 @@ export  interface IMapStyleParam {
     /** 颜色. */
     backcolor?: number;
     /** 线宽，格式如[1，1，1，1，0].表式第1，2，3，4级线宽开，第5级线宽关，大于第5级的，以最后设置的级别状态为主，所以也是关。如为空，则和原图线宽显示状态相同 */
-    lineweight?: string;
+    lineweight?: string | number[];
     /** 表达式. */
     expression?: string;
 }
@@ -4437,6 +4466,10 @@ export  interface IOpenMapBaseParam {
     renderAccuracy?: number;
     /** 样式. */
     style?: IMapStyleParam;
+    /** 不使用缺省的型文字文件，将使用缺省的字体来代替型文件. */
+    notUseDefaultShxFont?: boolean;
+    /** 字符替换规则. openMap返回的字段findFonts为系统查找的字体替换规则。如需修改默认的话，请传入替换的字体规则，如fontReplaceRule: {"tssdeng.shx_1": "_default_.ttc"}*/
+    fontReplaceRule?: Record<string, string>;
 }
 
 /**
@@ -4475,8 +4508,8 @@ export  interface IOpenMapResponse {
     mapBounds?: GeoBounds;
     /** 数据库地图范围*/
     dbBounds?: GeoBounds;
-    /** 图形中有数据的范围（此范围是非精确值，精确的数据范围需调用cmdGetDataBounds去获取）*/
-    dataBounds?: GeoBounds;
+    /** 图形中有数据的范围（此范围是非精确值，精确的数据范围需调用cmdGetDrawBounds去获取）*/
+    drawBounds?: GeoBounds;
     /** 图层样式. */
     styles?: any;
     /** 图层列表. */
@@ -4493,6 +4526,8 @@ export  interface IOpenMapResponse {
     uploadname?: string;
     /** 描述. */
     description?: string;
+    /** 默认是否显示线宽. */
+    lineWidthDisplay?: boolean;
     /** 所有布局. */
     layouts?: string[];
     /** 地图来源参数. */
@@ -4713,7 +4748,7 @@ export  interface IUpdateStyle {
     /** 颜色. */
     backcolor?: number;
     /** 线宽，格式如[1，1，1，1，0].表式第1，2，3，4级线宽开，第5级线宽关，大于第5级的，以最后设置的级别状态为主，所以也是关。如为空，则和原图线宽显示状态相同 */
-    lineweight?: string;
+    lineweight?: string | number[];
     /** 表达式. */
     expression?: string;
 }
@@ -6541,9 +6576,13 @@ export  class MiniMapControl {
     private _miniMap;
     private _trackingRect;
     constructor(options: MiniMapControlOption);
+    init(options: MiniMapControlOption): void;
     onAdd(parentMap: Map): HTMLElement;
+    _onAdd(parentMap: Map): HTMLElement;
+    _onSize(): void;
     _updateMapExtent(data: any): void;
     onRemove(): void;
+    _onRemove(): void;
     getMap(): Map;
     getDefaultPosition(): string;
     _load(): void;
@@ -7994,13 +8033,13 @@ export  class Service {
     getCurWorkspaceName(): string;
     /**
      * 获取所有工作区(如果不是root权限的token获取非公开的工作区名称将返回空)
-     * @return string
+     * @return
      */
     getWorkspaces(): Promise<any>;
     /**
      * 创建工作区(默认需要root权限)
      * @param workspace 工作区设置
-     * @return string
+     * @return
      */
     workspaceCreate(workspace: IWorkspace): Promise<any>;
     /**
@@ -8267,7 +8306,7 @@ export  class Service {
      * @param version 版本号
      * @return {Promise<any>}
      */
-    cmdGetDataBounds(mapid?: string, version?: string): Promise<GeoBounds | null>;
+    cmdGetDrawBounds(mapid?: string, version?: string): Promise<GeoBounds | null>;
     /**
      * 获取样式图层名
      * @param mapid 地图ID
@@ -8463,18 +8502,24 @@ export  class Service {
      * 保存用户自定义数据
      * @param key 键名(必须唯一，否则会覆盖之前的数据，同类型的key前缀尽量一样)，如果是数组的话，可以批量
      * @param value 键值
+     * @param prop 属性值
      * @param ttl 有效时间，单位秒，默认长期有效
      */
     saveCustomData(key: string | {
         key: string;
         value: any;
+        prop?: any;
         ttl?: number;
-    }[], value?: any, ttl?: number): Promise<any>;
+    }[], value?: any, prop?: any, ttl?: number): Promise<any>;
     /**
      * 获取用户自定义数据
-     * @param key 键名，如果是数组的话，可以查询
+     * @param key 键名，如果是数组的话，可以查询.
+     * @param options 选项 retDataType为空时查询数据及属性,"value"只查询数据，"prop"只查询属性。contentType返回类型,为空时为json，为"image"时为图片.
      */
-    getCustomData(key: string | string[]): Promise<any>;
+    getCustomData(key: string | string[], options?: {
+        retDataType?: "" | "value" | "prop";
+        contentType?: "" | "image";
+    }): Promise<any>;
     /**
      * 通过前缀获取用户自定义数据的键值
      * @param prefix 键名前缀
@@ -11530,14 +11575,14 @@ export  const wrap: (min: number, max: number, v: number) => number;
 
         /**
          * 地图加载时触发的回调，或者如果地图已经加载则立即触发
-         * @param cb
+         * @param cb 回调函数,地图加载时触发的回调 或  boolean,设置为true,表示等待loaded为true才返回
          */
-        onLoad(cb?: (arg0: void) => void): void | Promise<void>;
+        onLoad(cb?: ((arg0: void) => void) | boolean): void | Promise<void>;
 
-        /** 从 URL 添加用作符号图层的图像。
-         @example loadImageEx('marker', '/assets/marker-pin@2x.png', { pixelRatio: 2})
+        /** 从 URL 添加用作符号图层的图像，url可以是一个图片svg字符串内容或者图片的base64。如果是svg或base64，请在第三个参数选项中设置图片width, height的值。
+         @example loadImageEx('marker', '/assets/marker-pin@2x.png', { pixelRatio: 2}) 或 loadImageEx('marker2', '<svg>...<svg>', { width: 20, height:20}) 或 loadImageEx('marker3', 'data:image/png;base64,xxxx', { width: 20, height:20})
          */
-        loadImageEx(id: string, url: string, options?: object): any;
+        loadImageEx(id: string, url: string, options?: Record<string, any>): any;
 
         /**
          * 锁定方向

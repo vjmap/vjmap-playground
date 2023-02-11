@@ -10,6 +10,10 @@ window.onload = async () => {
     try {
         // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/map/closeMap
         // --销毁地图对象--
+        // 切换地图可以参考以下两个示例
+        // https://vjmap.com/demo/#/demo/map/service/14switchMap
+        // https://vjmap.com/demo/#/demo/map/service/14switchMapNew
+        
         /**
          * 创建地图对象
          * @param serviceUrl 服务地址接口

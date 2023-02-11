@@ -8,8 +8,8 @@ window.onload = async () => {
         ...__env__ // 如果您已私有化部署，需要连接已部署的服务器地址和token，请打开js/env.js,修改里面的参数
     };
     try {
-        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/openlayers/14olCadWmsLayer
-        // --互联网地图3857自动叠加CAD图[互联网图为底图]--底图为3857的坐标系
+        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/openlayers/14olCadWmsLayer4326
+        // --互联网地图4326自动叠加CAD图[互联网图为底图]--底图为4326的坐标系
         if (typeof ol !== "object") {
             // 如果没有openlayer环境
             await vjmap.addScript([{
@@ -27,7 +27,8 @@ window.onload = async () => {
             layers: layers,
             target: 'map',
             view: new ol.View({
-                center: vjmap.Projection.lngLat2Mercator([106.166187,  29.44102]),
+                center: [106.166187, 29.44102],
+                projection: 'EPSG:4326', // 底图设置是4326
                 zoom: 15,
             }),
         });
@@ -54,7 +55,7 @@ window.onload = async () => {
             mapid: mapId, // 地图id
             layers: layer, // 图层名称
             bbox: '', // bbox这里不需要
-            srs: "EPSG:3857", //
+            srs: "EPSG:4326", // 底图坐标系是 4326，这里也设置为4326
             crs: cadEpsg
         })
         
@@ -68,9 +69,6 @@ window.onload = async () => {
         // cad转wgs84经纬度
         let boundsMin = await cadToWebCoordinate(mapBounds.min);
         let boundsMax = await cadToWebCoordinate(mapBounds.max);
-        // wgs84经纬度转墨卡托
-        boundsMin = vjmap.Projection.lngLat2Mercator(boundsMin);
-        boundsMax = vjmap.Projection.lngLat2Mercator(boundsMax);
         
         // 在openlayer中增加wms图层
         map.addLayer(new ol.layer.Tile({
@@ -78,7 +76,15 @@ window.onload = async () => {
             extent: [boundsMin[0], boundsMin[1], boundsMax[0], boundsMax[1]],
             source: new ol.source.TileWMS({
                 url: wmsUrl,
-                params: {'TILED': true}
+                params: { 'TILED': true },
+                tileLoadFunction: function(image, src) {
+                    // openlayers 4326 下 bbox的xy是反的了，所以这里一定要处理下，把xy正过来
+                    let index = src.indexOf('?');
+                    let params = new URLSearchParams(src.slice(index));
+                    let bbox = params.get('BBOX').split(',');
+                    params.set('BBOX', [bbox[1], bbox[0], bbox[3], bbox[2]].toString());
+                    image.getImage().src = src.slice(0, index + 1) + params.toString();
+                }
             }),
         }))
         

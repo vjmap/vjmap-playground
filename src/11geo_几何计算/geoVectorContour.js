@@ -53,7 +53,10 @@ window.onload = async () => {
         map.setRasterOpacity(svc.rasterLayerId(), 0.4);
         
         //生成测试数据
-        let dataBounds = await svc.cmdGetDataBounds(); // 获取地图有数据的范围区域
+        let dataBounds = await svc.cmdGetDrawBounds(); // 获取地图有数据的范围区域
+        let isClipContour = false; // 是否裁剪等值线
+        let clipBounds = dataBounds.scale(0.5); // 默认用原来的范围一半做为裁剪范围。可自定义范围可用 vjmap.GeoBounds.fromArray([x1,y1,x2,y2]))
+        
         let extent = map.toLngLat(dataBounds).toArray();
         // 如果要根据数据范围自动生成此范围，则无需传此参数
         let pt1 = extent[0];
@@ -104,7 +107,7 @@ window.onload = async () => {
             let { grid, contour, variogram } = await createContourWorker(dataset, propField, contours, {
                 model: model || 'exponential', // 'exponential','gaussian','spherical'，三选一，默认exponential
                 sigma2:0, // sigma2是σ²，对应高斯过程的方差参数，也就是这组数据z的距离，方差参数σ²的似然性反映了高斯过程中的误差，并应手动设置。一般设置为 0 ，其他数值设了可能会出空白图
-                alpha:100, // [如果点数少，建议把此值改小] Alpha α对应方差函数的先验值，此参数可能控制钻孔扩散范围,越小范围越大,少量点效果明显，但点多了且分布均匀以后改变该数字即基本无效果了，默认设置为100
+                alpha:100, // [如果绘制不出来，修改此值，可以把此值改小] Alpha α对应方差函数的先验值，此参数可能控制钻孔扩散范围,越小范围越大,少量点效果明显，但点多了且分布均匀以后改变该数字即基本无效果了，默认设置为100
                 extent: extent // 如果要根据数据范围自动生成此范围，则无需传此参数
             }, []);
             variog = variogram;
@@ -140,6 +143,10 @@ window.onload = async () => {
         const addMarkers = ()=> {
             if (markers) return;
             markers = dataset.features.map(f => {
+                if (isClipContour && !clipBounds.contains(map.fromLngLat(f.geometry.coordinates))) {
+                    // 如果是裁剪等值线，则超出范围的marker不进行绘制
+                    return null;
+                }
                 // 再随机生成不同样式的
                 let _marker = new vjmap.DiffusedApertureMarker({
                     lngLat: f.geometry.coordinates,
@@ -158,7 +165,7 @@ window.onload = async () => {
         const removeMarkers = ()=> {
             if (!markers) return;
             for(let i = markers.length - 1; i >= 0; i--) {
-                markers[i].remove();
+                if (markers[i]) markers[i].remove();
             }
             markers = null;
         }
@@ -166,12 +173,15 @@ window.onload = async () => {
         let symbols = null;
         const addSymbols = async ()=> {
             if (symbols) return;
+            let contourData = contour;
+            if (isClipContour) contourData = clipContours(contour, clipBounds);
+        
             // 增加一个文字背景图片，背景色和地图背景色一样
             await map.addImageData("imgMaskText", `<svg viewBox="0 0 1024 1024" width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
                         <path d="M0 0L0 1024 1024 1024 1024 0z"  fill="#022B4F"></path>
                     </svg>`, 30, 15);
             symbols = new vjmap.Symbol({
-                data: contour,
+                data: contourData,
                 iconImage: "imgMaskText",
                 symbolSpacing: 250, // 符号空格,默认250像素
                 textField:  [
@@ -200,8 +210,10 @@ window.onload = async () => {
         let polyline = null;
         const addPolyline = ()=> {
             if (polyline) return;
+            let contourData = contour;
+            if (isClipContour) contourData = clipContours(contour, clipBounds);
             polyline = new vjmap.Polyline({
-                data: contour,
+                data: contourData,
                 lineColor: ['case', ['to-boolean', ['feature-state', 'hover']], '#00ffff', ['get', 'color']],
                 isHoverPointer: true,
                 isHoverFeatureState: true
@@ -256,12 +268,31 @@ window.onload = async () => {
             fillExtrusions = null;
         }
         
+        let clipPolyline = null;
+        const addClipPolyline = () => {
+            if (clipPolyline) return;
+            let points = clipBounds.toPointArray();
+            points.push(points[0]);
+            clipPolyline = new vjmap.Polyline({
+                data: map.toLngLat(points),
+                lineWidth: 2,
+                lineColor: 'red'
+            });
+            clipPolyline.addTo(map);
+        }
+        const removeClipPolyline = ()=> {
+            if (!clipPolyline) return;
+            clipPolyline.remove();
+            clipPolyline = null;
+        }
+        
         const mockDataChange = async ()=> {
             dataset.features.forEach(f => f.properties.value = vjmap.randInt(dataMinValue, dataMaxValue));
             contour = await createContour(dataset, contoursSize, "value" /*geojson的哪个属性值用于计算*/, colors, dataMinValue, dataMaxValue, maxHeight);
             contour.features.forEach(f => {
                 f.properties.formatValue = Math.round(f.properties.value) // 多加一个用于格式化的注记的值
             })
+            setNoClipContour();
             if (markers) {
                 removeMarkers();
                 addMarkers();
@@ -278,6 +309,75 @@ window.onload = async () => {
             if (fillExtrusions) {
                 fillExtrusions.setData(contour)
             }
+        }
+        
+        // 要裁剪的多段线数组和要裁剪的范围
+        const clipContours = (polylineData, clipBounds) => {
+            let data = {
+                type: 'FeatureCollection',
+                features: []
+            }
+            for(let k = 0; k < polylineData.features.length; k++) {
+                // 遍历每一个子多边形
+                for(let n = 0; n < polylineData.features[k].geometry.coordinates.length; n++) {
+                    let coordinates = map.fromLngLat(polylineData.features[k].geometry.coordinates[n]);
+                    // 一段一段的与范围去裁剪
+                    let clipCoordinates = [];
+                    let clipSubCoordinates = [];
+                    for(let j = 1; j < coordinates.length; j++) {
+                        let p1 = vjmap.geoPoint(coordinates[j - 1]);
+                        let p2 = vjmap.geoPoint(coordinates[j]);
+                        let res = vjmap.clipSegment(p1, p2, clipBounds);
+                        if (res === false) {
+                            // 在范围外，之前的线段弄个单独一条线段，后面的重新做为一条新的线段
+                            if (clipSubCoordinates.length > 0) {
+                                clipCoordinates.push(map.toLngLat(clipSubCoordinates));
+                                clipSubCoordinates = [];
+                            }
+                            continue;
+                        }
+                        let pt1 = [res[0].x, res[0].y];
+                        let pt2 = [res[1].x, res[1].y];
+                        clipSubCoordinates.push(pt1, pt2);
+                    }
+                    if (clipSubCoordinates.length > 0) {
+                        clipCoordinates.push(map.toLngLat(clipSubCoordinates));
+                    }
+                    if (clipCoordinates.length > 0) {
+                        for(let i = 0; i < clipCoordinates.length; i++) {
+                            let feature = vjmap.cloneDeep(polylineData.features[k]);
+                            feature.geometry.type = "LineString" ;// 由多边形改成多段线
+                            feature.geometry.coordinates = clipCoordinates[i];
+                            data.features.push(feature);
+                        }
+                    }
+                }
+            }
+            return data
+        }
+        
+        const setClipContour = () => {
+            if (isClipContour) return;
+            isClipContour = true;
+            removeMarkers();
+            addMarkers();
+            removePolyline();
+            addPolyline();
+            removeSymbols();
+            addSymbols();
+            addClipPolyline();
+        }
+        
+        const setNoClipContour = () => {
+            if (!isClipContour) return;
+            isClipContour = false;
+            removeMarkers();
+            addMarkers();
+            removePolyline();
+            addPolyline();
+            removeSymbols();
+            addSymbols();
+            removeClipPolyline();
         }
         
         addMarkers();
@@ -378,6 +478,16 @@ window.onload = async () => {
                         </div>
                         <div className="input-item">
                             <button id="clear-map-btn" className="btn btn-full mr0"
+                                    onClick={() => setClipContour()}>裁剪等值线
+                            </button>
+                        </div>
+                        <div className="input-item">
+                            <button id="clear-map-btn" className="btn btn-full mr0"
+                                    onClick={() => setNoClipContour()}>不裁剪等值线
+                            </button>
+                        </div>
+                        <div className="input-item">
+                            <button id="clear-map-btn" className="btn btn-full mr0"
                                     onClick={() => mockDataChange()}>模拟值变化
                             </button>
                         </div>
@@ -386,7 +496,6 @@ window.onload = async () => {
             );
         }
         ReactDOM.render(<App/>, document.getElementById('ui'));
-        
         
     }
     catch (e) {

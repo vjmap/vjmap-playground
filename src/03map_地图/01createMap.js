@@ -55,6 +55,21 @@ window.onload = async () => {
         map.on("load",function(){
         	message.info("地图创建成功！");
         });
+        
+        /*
+        // 等待地图加载完成
+        await map.onLoad();
+        
+        map.on("load", function () {
+        	message.info("因为已经加载完成了，所以不会执行了！");
+        });
+        
+        // 下面这个回调，如果已经加载了，则直接调用 ，如果没有加载完，则会等加载完再执行回调
+        map.onLoad(() => {
+        	message.info("地图已经创建成功了！--- 这个回调不管之前加没加载成功过，都会执行的！");
+        });
+        */
+        
     }
     catch (e) {
         console.error(e);

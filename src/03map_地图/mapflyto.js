@@ -56,6 +56,15 @@ window.onload = async () => {
                 return t;
             }
         });
+        
+        map.on('moveend', ({ originalEvent }) => {
+            if (originalEvent) {
+                console.log('usermoveend');
+            } else {
+                console.log('flyend');
+            }
+        });
+        
     }
     catch (e) {
         console.error(e);

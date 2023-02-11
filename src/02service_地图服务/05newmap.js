@@ -90,6 +90,24 @@ window.onload = async () => {
         blockRef2.rotation = Math.PI;
         doc.appendEntity(blockRef2);
         
+        /*
+        // 可以增加文字样式
+        let textStyle = new vjmap.DbTextStyle({
+            name: "mytext",
+            isShapeFile: false,
+            textSize: 0.0,
+            xScale: 1.0,
+            priorSize: 22,
+            obliquingAngle: 0.0,
+            fileName: "msyh.ttc",
+            typeFace: "Microsoft YaHei",
+            bold: false,
+            italic: false,
+            charset: 0,
+            pitchAndFamily: 34
+        })
+        doc.appendTextStyle(textStyle);
+         */
         let otherEnts = [
             new vjmap.DbLine({
                 start: [0, 15],
@@ -115,6 +133,7 @@ window.onload = async () => {
                 colorIndex: 1,
                 horizontalMode: 4,
                 height: 1,
+                // textStyle: "mytext", // 如果设置了自定义的文字样式
             })
         ]
         
@@ -126,8 +145,8 @@ window.onload = async () => {
             filedoc: doc.toDoc(),
             mapopenway: vjmap.MapOpenWay.Memory,
             style: {
-                backcolor: 5188354
-            }  // backcolor和div的背景色一样 #022B4F，值为0xGBR，0x4F2B02 = 5188354
+                backcolor: 0 // 如果div背景色是浅色，则设置为oxFFFFFF
+            }
         })
         if (res.error) {
             message.error(res.error)
@@ -151,6 +170,7 @@ window.onload = async () => {
         map.enableLayerClickHighlight(svc, e => {
             e && message.info(`type: ${e.name}, id: ${e.objectid}, layer: ${e.layerindex}`);
         })
+        
     }
     catch (e) {
         console.error(e);

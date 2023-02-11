@@ -8,8 +8,8 @@ window.onload = async () => {
         ...__env__ // 如果您已私有化部署，需要连接已部署的服务器地址和token，请打开js/env.js,修改里面的参数
     };
     try {
-        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/service/14switchLayerRaster
-        // --切换图层[几何栅格渲染]--在后台获取几何数据并进行渲染至前端，并切换图层
+        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/service/14switchLayerVector
+        // --切换图层[几何矢量渲染]--在后台获取几何数据并进行渲染至前端，并切换图层
         // js代码
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         let res = await svc.openMap({
@@ -25,7 +25,7 @@ window.onload = async () => {
         
         let map = new vjmap.Map({
             container: 'map', // container ID
-            style: svc.rasterStyle(),
+            style: svc.vectorStyle(),
             center: prj.toLngLat(mapExtent.center()),
             zoom: 2,
             renderWorldCopies: false
@@ -36,11 +36,44 @@ window.onload = async () => {
         map.addControl(new vjmap.NavigationControl());
         map.addControl(new vjmap.MousePositionControl({showZoom: true}));
         
-        map.enableLayerClickHighlight(svc, e => {
-            e && message.info(`type: ${e.name}, id: ${e.objectid}, layer: ${e.layerindex}`);
-        })
+        
+        // 通过图层名称来查找图层id
+        const getLayerIdByName = name => {
+            return svc.getMapLayers().findIndex(layer => layer.name === name)
+        }
         
         let layers = svc.getMapLayers();
+        
+        // 增加实体图层判断条件,只要满足任何一种类型即可,如 ['图层一','图层二']
+        const conditionLayers = (layers, inputIsIndex) => {
+            if (!Array.isArray(layers)) layers = [layers];// 先转成数组，再统一用数组去算吧
+            if (!inputIsIndex) {
+                // 如果输入的不是图层索引，是图层名称，则需要转成图层索引
+                layers = layers.map(layer => getLayerIdByName(layer)); // 把图层名称转为图层索引，在矢量瓦片中图层是用索引来表示的
+            }
+            return [
+                "match",
+                ['get', 'layer'],
+                layers,
+                true,
+                false
+            ]
+        }
+        
+        // 切换图层 onLayers 要显示的图层名称数组
+        const switchLayers = (onLayers) => {
+            // 获取之前的默认的矢量图层样式，然后在当前样式中，对矢量图层的数据进行图层进行过滤
+            let style = map.getStyle();
+            let vectorStyle = svc.vectorStyle();
+            let vectorLayerIds = vectorStyle.layers.map(layer => layer.id);
+            let filter = conditionLayers(onLayers, false);
+            for(let i = 0; i < style.layers.length; i++) {
+                if (vectorLayerIds.includes(style.layers[i].id)) {
+                    style.layers[i].filter = filter; // 设置过滤条件
+                }
+            }
+            map.setStyle(style);
+        }
         function showUI() {
             vjgui.init();
             let element = vjgui.createElement("div", "sidebar .sidebar", "", "")
@@ -51,12 +84,13 @@ window.onload = async () => {
                     let res = await showSelectLayers(layers);
                     if (res) {
                         layers = res;
-                        map.switchLayers(svc, res.reduce((sum, val) => {
+                        let onLayers = res.reduce((sum, val) => {
                             if (!val.isOff) {
                                 sum.push(val.name);
                             }
                             return sum;
-                        }, []))
+                        }, []); // 要开的图层
+                        switchLayers(onLayers);
                     }
                 }});
         
