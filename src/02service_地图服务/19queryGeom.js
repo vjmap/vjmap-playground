@@ -45,6 +45,7 @@ window.onload = async () => {
         const App = () => {
             const handleClick = async () => {
                 // 通过查询几何数据库，查询图层为'网格线'，范围在图的右边的所有"多段线"
+                // 不建议使用exprQueryFeature进行查询。推荐使用conditionQueryFeature查询，效率高。可参考示例 条件查询定位闪烁实体
                 let query = await svc.exprQueryFeature({
                     expr: `gOutReturn := if((gInFeatureType == 'AcDbPolyline' and  gInLayerName == '网格线' and gInExtendMinX >= ${center.x} ), 1, 0);`,
                     fields: "name,objectid,layername"
@@ -60,6 +61,7 @@ window.onload = async () => {
             );
         }
         ReactDOM.render(<App />, document.getElementById('ui'));
+        
     }
     catch (e) {
         console.error(e);

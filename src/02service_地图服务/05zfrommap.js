@@ -41,7 +41,8 @@ window.onload = async () => {
         
         // js代码
         let res = await svc.updateMap({
-        	mapid: "newBasketballCourt",
+        	// 获取一个临时的图id(临时图形只会用临时查看，过期会自动删除)
+        	mapid: vjmap.getTempMapId(1), // 临时图形不浏览情况下过期自动删除时间，单位分钟。默认30
         	filedoc: doc.toDoc(),
         	mapopenway: vjmap.MapOpenWay.Memory,
         	style: {

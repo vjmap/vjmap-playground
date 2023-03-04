@@ -356,6 +356,12 @@ export  function buildTransformer(src: number[], dest: number[]): number[] | und
  */
 export  function buildTransformerMatrix3d(src: number[], dest: number[]): string | undefined;
 
+export  class ButtonGroupControl {
+    constructor(options?: Record<string, any>);
+    onAdd(map: Map): HTMLElement;
+    onRemove(): void;
+}
+
 /**
  * 计算多边形面积
  * @param points
@@ -1163,6 +1169,21 @@ export  class DbArcDimension extends DbDimension {
 }
 
 /**
+ * `DbText` 属性定义实体.
+ *
+ */
+export  class DbAttributeDefinition extends DbText {
+    /** 属性名. */
+    tag?: string;
+    /** 属性提示. */
+    prompt?: string;
+    /**
+     * 构造函数
+     */
+    constructor(prop?: IDbText);
+}
+
+/**
  * `DbBlock` 块定义.
  *
  */
@@ -1202,8 +1223,10 @@ export  class DbBlockReference extends DbEntity {
     normal?: [number, number, number?];
     /** 旋转角度. */
     rotation?: number;
-    /** 缩放因子. */
-    scaleFactors?: number;
+    /** 缩放因子. [x方向，y方向,z方向]*/
+    scaleFactors?: [number, number, number?];
+    /** 属性字段值*/
+    attribute?: Record<string, string | number | DbText>;
     /**
      * 构造函数
      */
@@ -1283,6 +1306,7 @@ export  class DbDocument {
     pickLayers?: string[];
     /** 来源于哪个图时有效，表示从此图中选择指定的实体ID，不在指定的实体ID将不会显示 */
     pickEntitys?: string[];
+    isClearFromDb?: boolean;
     /** 文档环境，用于设置是否显示线宽等设置, 设置线宽为 LWDISPLAY ,true显示或 false不显示线宽*/
     environment?: Record<string, any>;
     /** 实体集. */
@@ -1387,10 +1411,14 @@ export  abstract class DbEntity implements IDbEntity {
     matrix?: IDbMatrixOp[];
     /** 扩展数据. */
     xdata?: string;
+    /** 克隆的实体ID，DbDocument有from图形来源字段时有效. */
+    cloneObjectId?: string;
+    /** 克隆的实体ID来源的图形，如为空，则取DbDocument中from的图形。也可以指定另外的图形*/
+    cloneFromDb?: string;
     /**
-     * 构造函数
-     * @param prop
-     */
+    * 构造函数
+    * @param prop
+    */
     protected constructor(prop?: IDbEntity);
 }
 
@@ -1418,7 +1446,7 @@ export  class DbHatch extends DbEntity {
     /** 填充背景色 */
     patternBackgroundColor?: number;
     /** 坐标. */
-    points?: Array<[number, number, number?]>;
+    points?: Array<[number, number, number?]> | Array<Array<[number, number, number?]>>;
     /**
      * 构造函数
      */
@@ -1706,7 +1734,7 @@ export  class DbText extends DbEntity {
     constructor(prop?: IDbText);
 }
 
- enum DbTextHorzMode {
+export  enum DbTextHorzMode {
     kTextLeft = 0,
     kTextCenter = 1,
     kTextRight = 2,
@@ -1750,7 +1778,7 @@ export  class DbTextStyle {
     constructor(prop?: IDbTextStyle);
 }
 
- enum DbTextVertMode {
+export  enum DbTextVertMode {
     kTextBase = 0,
     kTextBottom = 1,
     kTextVertMid = 2,
@@ -1909,7 +1937,7 @@ export  namespace Dom {
 
 export  const Draw: {
     /** 工具类. */
-    Tool: (options?: IDrawOptions | undefined) => IDrawTool | any;
+    Tool: new (options?: IDrawOptions | undefined) => IDrawTool;
     /** 缺省配置项. */
     defaultOptions: () => any;
     /** 模式. */
@@ -3138,6 +3166,13 @@ export  function getOptionValue<T>(a: T | undefined, b: T | undefined, c: T | un
 export  function getOptionValue<T>(...values: Array<T | undefined>): T | undefined;
 
 /**
+ * 获取一个临时的图id(临时图形只会用临时查看，过期会自动删除)
+ * @param expireTime 临时图形不浏览情况下过期自动删除时间，单位分钟。默认30
+ * @return
+ */
+export  function getTempMapId(expireTime?: number): string;
+
+/**
  * 具有深度优先搜索和拓扑排序的图数据结构。
  *
  * @example
@@ -3536,6 +3571,8 @@ export  interface ICreateEntitiesGeomData {
     renderAccuracy?: number;
     /** 返回的数据中排除属性数据( 默认true) */
     excludeAttribute?: boolean;
+    /** 返回的数据是否启用zip压缩( 默认true) */
+    useZip?: boolean;
 }
 
 export  interface ICreateFillAnimateLayerResult extends ICreateAnimateLayerResult {
@@ -3562,7 +3599,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 2d折线实体类型接口
  */
- interface IDb2dPolyline extends IDbCurve {
+export  interface IDb2dPolyline extends IDbCurve {
     /** 是否闭合. */
     closed?: boolean;
     /** 高程. */
@@ -3576,7 +3613,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 角度标注[两条线]实体类型接口
  */
- interface IDb2LineAngularDimension extends IDbDimension {
+export  interface IDb2LineAngularDimension extends IDbDimension {
     /** 圆弧点位置. */
     arcPoint?: Array<[number, number, number?]>;
     /** 线1起点. */
@@ -3592,7 +3629,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 3d折线实体类型接口
  */
- interface IDb3dPolyline extends IDbCurve {
+export  interface IDb3dPolyline extends IDbCurve {
     /** 是否闭合. */
     closed?: boolean;
     /** 3d折线类型*/
@@ -3604,7 +3641,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 角度标注[三点]实体类型接口
  */
- interface IDb3PointAngularDimension extends IDbDimension {
+export  interface IDb3PointAngularDimension extends IDbDimension {
     /** 圆弧点位置. */
     arcPoint?: Array<[number, number, number?]>;
     /** 中点. */
@@ -3618,7 +3655,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 对齐标注实体类型接口
  */
- interface IDbAlignedDimension extends IDbDimension {
+export  interface IDbAlignedDimension extends IDbDimension {
     /** 线1点. */
     xLine1Point?: Array<[number, number, number?]>;
     /** 线2点. */
@@ -3632,7 +3669,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 圆弧实体类型接口
  */
- interface IDbArc extends IDbCurve {
+export  interface IDbArc extends IDbCurve {
     /** 中心坐标. */
     center?: [number, number, number?];
     /** 半径. */
@@ -3650,7 +3687,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 圆弧标注实体类型接口
  */
- interface IDbArcDimension extends IDbDimension {
+export  interface IDbArcDimension extends IDbDimension {
     /** 线1点. */
     xLine1Point?: Array<[number, number, number?]>;
     /** 线2点. */
@@ -3666,7 +3703,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 块定义接口
  */
- interface IDbBlock {
+export  interface IDbBlock {
     /** 块名称. */
     name?: string;
     /** 设置此块的参照的缩放特征. */
@@ -3686,7 +3723,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 块参照实体类型接口
  */
- interface IDbBlockReference extends IDbEntity {
+export  interface IDbBlockReference extends IDbEntity {
     /** 块名称. */
     blockname?: string;
     /** 参考外部图形，形式为 mapid/version,如 exam/v1. */
@@ -3704,7 +3741,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 圆实体类型接口
  */
- interface IDbCircle extends IDbCurve {
+export  interface IDbCircle extends IDbCurve {
     /** 中心坐标. */
     center?: [number, number, number?];
     /** 半径. */
@@ -3718,13 +3755,13 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 曲线实体类型接口
  */
- interface IDbCurve extends IDbEntity {
+export  interface IDbCurve extends IDbEntity {
 }
 
 /**
  * 直径标注实体类型接口
  */
- interface IDbDiametricDimension extends IDbDimension {
+export  interface IDbDiametricDimension extends IDbDimension {
     /** 圆上1点. */
     chordPoint?: Array<[number, number, number?]>;
     /** 圆上2点. */
@@ -3736,7 +3773,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 标注实体类型接口
  */
- interface IDbDimension extends IDbEntity {
+export  interface IDbDimension extends IDbEntity {
     /** 标注样式. */
     dimStyle?: string;
     /** 文字位置. */
@@ -3746,7 +3783,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 标注样式接口
  */
- interface IDbDimStyle {
+export  interface IDbDimStyle {
     /** 样式名称. */
     name?: string;
     /** 文字样式名称. */
@@ -3762,7 +3799,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * DB文档定义接口
  */
- interface IDbDocument {
+export  interface IDbDocument {
     /** 来源于哪个图，会在此图的上面进行修改或新增删除，格式如 形式为 mapid/version,如 exam/v1 . */
     from?: string;
     /** 实体集. */
@@ -3782,7 +3819,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 椭圆实体类型接口
  */
- interface IDbEllipse extends IDbCurve {
+export  interface IDbEllipse extends IDbCurve {
     /** 中心坐标. */
     center?: [number, number, number?];
     /** 主轴方向. */
@@ -3798,7 +3835,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 实体类型接口
  */
- interface IDbEntity {
+export  interface IDbEntity {
     /** 类型. */
     typename?: string;
     /** 颜色. */
@@ -3830,7 +3867,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 填充实体类型接口
  */
- interface IDbHatch extends IDbEntity {
+export  interface IDbHatch extends IDbEntity {
     /** 高程. */
     elevation?: number;
     /** 填充图案, 缺省 SOLID */
@@ -3842,7 +3879,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 图层接口
  */
- interface IDbLayer {
+export  interface IDbLayer {
     /** 图层名称. */
     name?: string;
     /** 图层颜色索引. */
@@ -3854,7 +3891,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 线实体类型接口
  */
- interface IDbLine extends IDbEntity {
+export  interface IDbLine extends IDbEntity {
     /** 起点. */
     start?: [number, number, number?];
     /** 终点. */
@@ -3866,7 +3903,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 线型接口
  */
- interface IDbLinetype {
+export  interface IDbLinetype {
     /** 线型名称. */
     name?: string;
     /** 评论. */
@@ -3878,14 +3915,14 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 线型样式接口
  */
- interface IDbLinetypeStyle {
+export  interface IDbLinetypeStyle {
     /** 方法. */
     method?: IDbLinetypeStyleMethod;
     /** 参数. */
     parameter?: string;
 }
 
- enum IDbLinetypeStyleMethod {
+export  enum IDbLinetypeStyleMethod {
     /** [int count] . */
     numDashes = "numDashes",
     /** [double dPatLen] . */
@@ -3911,7 +3948,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 矩阵操作接口
  */
- interface IDbMatrixOp {
+export  interface IDbMatrixOp {
     /** 操作名称. */
     op?: IDbMatrixOpName;
     /** 平移的向量. */
@@ -3924,7 +3961,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
     origin?: [number, number, number?];
 }
 
- enum IDbMatrixOpName {
+export  enum IDbMatrixOpName {
     /** 平移 . */
     translation = "translation",
     /** 缩放 . */
@@ -3936,7 +3973,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 多行文本实体类型接口
  */
- interface IDbMText extends IDbEntity {
+export  interface IDbMText extends IDbEntity {
     /** 宽. */
     width?: number;
     /** 高. */
@@ -3958,7 +3995,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 坐标标注实体类型接口
  */
- interface IDbOrdinateDimension extends IDbDimension {
+export  interface IDbOrdinateDimension extends IDbDimension {
     /** 基点. */
     origin?: Array<[number, number, number?]>;
     /** 定义点. */
@@ -3970,9 +4007,17 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 }
 
 /**
+ * 实体基本属性
+ */
+/**
+ * 坐标类型接口
+ */
+export  type IDbPoint = [number, number, number?];
+
+/**
  * 折线实体类型接口
  */
- interface IDbPolyline extends IDbCurve {
+export  interface IDbPolyline extends IDbCurve {
     /** 是否闭合. */
     closed?: boolean;
     /** 高程. */
@@ -3990,7 +4035,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 半径标注实体类型接口
  */
- interface IDbRadialDimension extends IDbDimension {
+export  interface IDbRadialDimension extends IDbDimension {
     /** 中心点. */
     center?: Array<[number, number, number?]>;
     /** 圆上点. */
@@ -4002,7 +4047,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 半径折线标注实体类型接口
  */
- interface IDbRadialDimensionLarge extends IDbDimension {
+export  interface IDbRadialDimensionLarge extends IDbDimension {
     /** 中心点. */
     center?: Array<[number, number, number?]>;
     /** 圆上点. */
@@ -4018,7 +4063,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 栅格图片实体类型接口
  */
- interface IDbRasterImage extends IDbEntity {
+export  interface IDbRasterImage extends IDbEntity {
     /** 明亮度 [0.0 .. 100.0] */
     brightness?: number;
     /** 图片url地址. */
@@ -4052,7 +4097,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 转角标注实体类型接口
  */
- interface IDbRotatedDimension extends IDbDimension {
+export  interface IDbRotatedDimension extends IDbDimension {
     /** 线上点1. */
     xLine1Point?: Array<[number, number, number?]>;
     /** 线上点2. */
@@ -4064,7 +4109,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 型实体类型接口
  */
- interface IDbShape extends IDbEntity {
+export  interface IDbShape extends IDbEntity {
     /** 旋转角度. */
     rotation?: number;
     /** 位置. */
@@ -4080,7 +4125,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 样条曲线实体类型接口
  */
- interface IDbSpline extends IDbCurve {
+export  interface IDbSpline extends IDbCurve {
     /** the curve fitting tolerance for this Spline entity. */
     fitTol?: number;
     /** Increased the degree of this spline to the specified value. */
@@ -4094,7 +4139,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 单行文本实体类型接口
  */
- interface IDbText extends IDbEntity {
+export  interface IDbText extends IDbEntity {
     /** 高. */
     height?: number;
     /** 旋转角度. */
@@ -4118,7 +4163,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 文字样式接口
  */
- interface IDbTextStyle {
+export  interface IDbTextStyle {
     /** 文字样式名称. */
     name?: string;
     /** 是否型文件. */
@@ -4148,7 +4193,7 @@ export  interface ICreateSymbolAnimateLayerResult extends ICreateAnimateLayerRes
 /**
  * 遮罩实体类型接口
  */
- interface IDbWipeout extends IDbRasterImage {
+export  interface IDbWipeout extends IDbRasterImage {
     /** 坐标. */
     points?: Array<[number, number, number?]>;
 }
@@ -4181,7 +4226,7 @@ export  interface IDeleteStyle {
 
 export  interface IDraw {
     /** 工具类. */
-    Tool: (options?: IDrawOptions) => IDrawTool | any;
+    Tool: new (options?: IDrawOptions) => IDrawTool;
     /** 缺省配置项. */
     defaultOptions: () => any;
     /** 模式. */
@@ -4284,8 +4329,6 @@ export  interface IExprQueryFeatures extends IQueryBaseFeatures {
     expr: string;
     /** 记录开始位置. */
     beginpos?: number;
-    /** 启动cache(内存打开的图形有效). */
-    useCache?: boolean;
 }
 
 export  type ImageSourceSpecification = {
@@ -4591,20 +4634,22 @@ export  interface IQueryBaseFeatures {
     geom?: boolean;
     /** GeoJSON几何数据简化墨托卡距离，默认为零，不简化。例如允许10级别以上一个像素级别的误差，可用 map.pixelToGeoLength(1, 10) * vjmap.Projection.EQUATORIAL_SEMIPERIMETER * 2 / map.getGeoBounds(1.0).width() */
     simplifyTolerance?: boolean;
+    /** 启动cache(内存打开的图形有效). */
+    useCache?: boolean;
 }
 
 /**
  * 矩形查询实体参数
  */
 export  interface IRectQueryFeatures extends IQueryBaseFeatures {
-    /** 查询的坐标X1. */
-    x1: number;
+    /** 查询的坐标X1. (如果x1,y1,x2,y2同时不输的话，表示是查询整个图的范围 */
+    x1?: number;
     /** 查询的坐标Y1. */
-    y1: number;
+    y1?: number;
     /** 查询的坐标X2. */
-    x2: number;
+    x2?: number;
     /** 查询的坐标Y2. */
-    y2: number;
+    y2?: number;
     /** 条件. */
     condition?: string;
     /** 返回最大的几何字节数. */
@@ -6676,7 +6721,7 @@ export  interface MousePositionControlOption {
     showPitch?: boolean;
 }
 
- enum MTextAttachmentPoint {
+export  enum MTextAttachmentPoint {
     kTopLeft = 1,
     kTopCenter = 2,
     kTopRight = 3,
@@ -6950,7 +6995,7 @@ export  function pointToSegmentDistance(p: GeoPoint, p1: GeoPoint, p2: GeoPoint)
 /**
  * 2d折线类型接口
  */
- enum Poly2dType {
+export  enum Poly2dType {
     k2dSimplePoly = 0,
     k2dFitCurvePoly = 1,
     k2dQuadSplinePoly = 2,
@@ -6960,7 +7005,7 @@ export  function pointToSegmentDistance(p: GeoPoint, p1: GeoPoint, p2: GeoPoint)
 /**
  * 3d折线类型接口
  */
- enum Poly3dType {
+export  enum Poly3dType {
     k3dSimplePoly = 0,
     k3dQuadSplinePoly = 1,
     k3dCubicSplinePoly = 2
@@ -7686,7 +7731,7 @@ export  type RasterDEMSourceSpecification = {
     volatile?: boolean;
 };
 
- enum RasterImageUnits {
+export  enum RasterImageUnits {
     /** No measurement units are used. */
     kNone = 0,
     /** Millimeters are used. */
@@ -11361,6 +11406,7 @@ export  const wrap: (min: number, max: number, v: number) => number;
          * @return
          */
         addImageData(id: string, data: string, width: number, height: number, options?: Record<string, any>): Promise<any>
+
         
 
         /** 每当鼠标悬停在这些图层上时，将地图的光标设置为“指针”。

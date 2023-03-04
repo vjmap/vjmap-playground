@@ -91,7 +91,7 @@ window.onload = async () => {
         const App = () => {
             const handleClick = async () => {
                 let query = await svc.conditionQueryFeature({
-                    condition: `objectid='10D#111'`, // 只需要写sql语句where后面的条件内容,字段内容请参考文档"服务端条件查询和表达式查询"
+                    condition: `objectid='53D'`, // 只需要写sql语句where后面的条件内容,字段内容请参考文档"服务端条件查询和表达式查询"
                     // 查询所有文字(包括单行文本，多行文本、块注记文字，属性文字) 具体类型数字参考文档"服务端条件查询和表达式查询-支持的cad实体类型"
                     // condition: `name='12' or name='13' or name='26' or name='27'`,
                     fields: ""
@@ -144,10 +144,11 @@ window.onload = async () => {
                  */
             };
             return (
-                <Button type="primary" onClick={handleClick}>请点击此按钮查询objectid为'111‘实体并定位闪烁此实体"</Button>
+                <Button type="primary" onClick={handleClick}>请点击此按钮查询objectid为'53D‘实体并定位闪烁此实体"</Button>
             );
         }
         ReactDOM.render(<App />, document.getElementById('ui'));
+        
         
     }
     catch (e) {

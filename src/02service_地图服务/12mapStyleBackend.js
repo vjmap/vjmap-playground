@@ -157,7 +157,7 @@ window.onload = async () => {
         
         const setObjectsVisible = async () => {
             // objectId
-            let condition = conditionObjectIds(["10D#110", "10D#111"]);
+            let condition = conditionObjectIds(["10D_10F__111_#", "10D_10F__110_#"]);
             let value1 = modifyVisible(false, 1); // 1-3级不可见
             let value2 = modifyVisible(true, 3); // 3级以上可见了
             let expr = `if(${condition}) {${value1} ${value2}} `;

@@ -53,7 +53,11 @@ window.onload = async () => {
             let blocks = {} // 块信息
             let featureIdBlock = {} // 实体id与块id对应关系
             let query = await svc.conditionQueryFeature({
-                condition: `objectid like '%#%' or objectid like '%$%' `, // 实体id(块objectid命名规则:块id#实体id&块参照id_实体内元素索引; 组objectid命名规则:组id$实体id_实体内元素索引;表格命名规则:表格id@实体id_实体内元素索引，其余实体命名规则: id_实体内元素索引
+                // 实体id
+                // 块objectid命名规则:块id_引用的块定义id1_引用的块定义id2(可能有多个)_实体id_#;
+                // 表格命名规则:objectid命名规则:块id_引用的块定义id1_引用的块定义id2(可能有多个)_实体id_@;
+                // 组objectid命名规则:组id$实体id_实体内元素索引;
+                condition: `objectid like '%#%' or objectid like '%$%' `,
                 // 只获取id,objectid,和外包矩形
                 fields: "id,objectid,envelop",
                 limit: 100000 //设置很大，相当于把所有的都查出来。不传的话，默认只能取100条
@@ -67,9 +71,9 @@ window.onload = async () => {
                         let bounds = map.getEnvelopBounds(item.envelop);
                         let objectId = item.objectid;
                         let blockId;
-                        if (objectId.indexOf("#") > 0) {
+                        if (objectId.indexOf("_") > 0) {
                             // 块
-                            let ids = objectId.split("#");
+                            let ids = objectId.split("_");
                             blockId = ids[0];
                         } else if (objectId.indexOf("$") > 0) {
                             // 组
@@ -252,6 +256,7 @@ window.onload = async () => {
         }
         
         ReactDOM.render(<App/>, document.getElementById('ui'));
+        
         
     }
     catch (e) {

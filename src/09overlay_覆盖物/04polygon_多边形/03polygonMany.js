@@ -70,10 +70,40 @@ window.onload = async () => {
         });
         polygon.addTo(map);
         polygon.clickLayer(e => message.info(`您点击了第 ${e.features[0].id} 个，名称为 ${e.features[0].properties.name}，颜色为 ${e.features[0].properties.color} 的多边形`))
-        polygon.hoverPopup(f => `<h3>ID: ${f.properties.name}</h3>Color: ${f.properties.color}`, { anchor: 'bottom' });
         polygon.clickPopup(f => {
             return `<h3>点击事件</h3><h3>ID: ${f.properties.name}</h3>Color: ${f.properties.color}`
         }, { anchor: 'top', closeOnClick: false , closeOnMove: true});
+        
+        // 悬浮在多边形上面时显示信息框
+        // 方案一，直接用hoverPopup，如果多边形没有重叠时可以用这个。有重叠时因为响应不了mouseout事件，所以会导致只会在重叠的第一个显示
+        //polygon.hoverPopup(f => `<h3>ID: ${f.properties.name}</h3>Color: ${f.properties.color}`, { anchor: 'bottom' });
+        // 方案二，用hoverFeatureState事件。这个能解决多边形重叠的问题。代码量稍多点
+        let popup;
+        polygon.hoverFeatureState((e) => {
+            // 通过当前的点查询实体
+            let features = map.queryRenderedFeatures(e.point, {
+                layers: [polygon.layerId]
+            });
+            // 如果在多边形上面时
+            if (features) {
+                let isNew = false;
+                if (!popup) {
+                    // 第一次时创建
+                    isNew = true;
+                    popup = new vjmap.Popup({ closeButton: false });
+                }
+                popup.setLngLat(e.lngLat);
+                const f = features[0];
+                popup.setHTML(`<h3>ID: ${f.properties.name}</h3>Color: ${f.properties.color}`);
+                if(isNew) popup.addTo(map);
+            }
+        }, () => {
+            // 不在多边形上面时
+            if (popup) {
+                popup.remove();
+                popup = null;
+            }
+        })
         
     }
     catch (e) {

@@ -86,11 +86,15 @@ window.onload = async () => {
                 isHoverFeatureState: true
             });
             polygonLayer.addTo(map);
-            polygonLayer.hoverFeatureState(e => message.info({
-                content: `名称为 ${e.features[0].properties.name}，值为 ${e.features[0].properties.text} 的文字`,
-                key: "info",
-                duration: 5
-            }))
+            polygonLayer.hoverFeatureState(e => {
+                if (e.features) {
+                    message.info({
+                        content: `名称为 ${e.features[0].properties.name}，值为 ${e.features[0].properties.text} 的文字`,
+                        key: "info",
+                        duration: 5
+                    })
+                }
+            })
         }
         // UI界面
         const App = () => {
