@@ -51,9 +51,11 @@ window.onload = async () => {
         let app = new Vue({
             el: '#ui',
             data: {
+                acceptFormat: ".dwg, .dxf",
                 fileList: [],
                 isSelectFile: true,
                 dialogVisible: false,
+                maptype: '',// 地图类型，为空的话为cad图，"image"为图像类型
                 form: {
                     mapid: '',
                     isPasswordProtection: false,
@@ -68,14 +70,29 @@ window.onload = async () => {
         
                 }
             },
+            async mounted() {
+                let formats = await svc.cmdGetSupportFormat();
+                this.acceptFormat = '';
+                if (formats.cad) {
+                    this.acceptFormat = formats.cad.split(";").map(f => '.' + f).join(",")
+                }
+                if (formats.image) {
+                    this.acceptFormat += ";" + formats.image.split(";").map(f => '.' + f).join(",")
+                }
+            },
             methods: {
                 async onChangeFile(file) {
                     try {
                         message.info('文件上传中，请稍候...')
                         this.isSelectFile = false;
                         this.uploadMapResult = await svc.uploadMap(file.raw);
+                        if (this.uploadMapResult.error) {
+                            message.error('上传图形失败!' + this.uploadMapResult.error)
+                            return
+                        }
                         this.form.mapid = this.uploadMapResult.mapid;
                         this.form.uploadname = this.uploadMapResult.uploadname;
+                        this.maptype = this.uploadMapResult.maptype || '';
                         this.dialogVisible = true;
                     } catch (error) {
                         console.error(error);
@@ -122,6 +139,10 @@ window.onload = async () => {
                             notUseDefaultShxFont: this.form.notUseDefaultShxFont,
                             /* 字符替换规则. openMap返回的字段findFonts为系统查找的字体替换规则。如需修改默认的话，请传入替换的字体规则，如fontReplaceRule: {"tssdeng.shx_1": "_default_.ttc"} */
                             fontReplaceRule: fontReplaceRule,
+                            // 图像类型设置地图左上角坐标和分辨率
+                            imageLeft: this.form.imageLeft ? +this.form.imageLeft : undefined,
+                            imageTop: this.form.imageTop ? +this.form.imageTop : undefined,
+                            imageResolution: this.form.imageResolution ? +this.form.imageResolution : undefined,
                             // 如果有密码保护的图，要求输入密码回调，如果不传回调函数的话，将用系统的prompt提示输入
                             cbInputPassword: (param) => {
                                 return new Promise((resolve) => {
@@ -159,12 +180,12 @@ window.onload = async () => {
                     v-if="isSelectFile"
                     ref="upload"
                     drag
-                    accept=".dwg, .dxf"
+                    :accept="acceptFormat"
                     action="#"
                     :auto-upload="false"
                     :on-change="onChangeFile">
                     <i class="el-icon-upload"></i>
-                    <div class="el-upload__text">将CAD的Dwg或Dxf文件拖到此处，或<em>点击上传</em></div>
+                    <div class="el-upload__text">将CAD的Dwg或Dxf或图像文件拖到此处，或<em>点击上传</em></div>
                   </el-upload>
                   <el-dialog
                     title="设置"
@@ -193,13 +214,26 @@ window.onload = async () => {
                       </el-form-item>
         
         
-                      <el-form-item label="打开方式">
+                      <el-form-item label="打开方式" v-if="maptype == ''">
                         <el-radio-group v-model="form.openway">
                           <el-radio-button label="直接打开图形"></el-radio-button>
                           <el-radio-button label="存储后渲染栅格"></el-radio-button>
                           <el-radio-button label="存储后渲染矢量"></el-radio-button>
                         </el-radio-group>
                       </el-form-item>
+        
+                      <el-form-item label="图像左上角坐标X" v-if="maptype == 'image'" prop="imageLeft">
+                        <el-input v-model="form.imageLeft"  placeholder="图像左上角坐标X, 缺省0" ></el-input>
+                      </el-form-item>
+        
+                      <el-form-item label="图像左上角坐标Y" v-if="maptype == 'image'" prop="imageTop">
+                        <el-input v-model="form.imageTop"  placeholder="图像左上角坐标Y, 缺省0" ></el-input>
+                      </el-form-item>
+        
+                      <el-form-item label="图像分辨率" v-if="maptype == 'image'" prop="imageResolution">
+                        <el-input v-model="form.imageResolution"  placeholder="一个像素表示多少地理长度。地理长度/像素宽。缺省1" ></el-input>
+                      </el-form-item>
+        
         
                       <el-form-item label="上传时文件名">
                         <el-input v-model="form.uploadname"></el-input>

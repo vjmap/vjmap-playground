@@ -3467,6 +3467,8 @@ export  interface IComposeNewMap {
     layerSuffix?: string;
     /** 保存的文件名称，为空的时候，自根据参数自动生成 */
     savefilename?: string;
+    /** 生成后清理图形数据以减少dwg文件大小 */
+    purge?: boolean;
 }
 
 /**
@@ -4322,6 +4324,20 @@ export  interface IDrawTool {
 }
 
 /**
+ * 导出布局空间为dwg图
+ */
+export  interface IExportLayout {
+    /** 地图ID. */
+    mapid: string;
+    /** 地图版本(为空时采用当前打开的地图版本). */
+    version?: string;
+    /** 布局索引，layoutIndex和layoutName只要输入一个就行，layoutIndex优先。如果都为空，则使用dwg当前的布局空间. */
+    layoutIndex?: string;
+    /** 布局名称. layoutIndex和layoutName只要输入一个就行，layoutIndex优先。如果都为空，则使用dwg当前的布局空间. */
+    layoutName?: string;
+}
+
+/**
  * 表达式查询实体参数
  */
 export  interface IExprQueryFeatures extends IQueryBaseFeatures {
@@ -4513,6 +4529,12 @@ export  interface IOpenMapBaseParam {
     notUseDefaultShxFont?: boolean;
     /** 字符替换规则. openMap返回的字段findFonts为系统查找的字体替换规则。如需修改默认的话，请传入替换的字体规则，如fontReplaceRule: {"tssdeng.shx_1": "_default_.ttc"}*/
     fontReplaceRule?: Record<string, string>;
+    /** 图像左上角坐标x 第一次打开图像类型时有效*/
+    imageLeft?: number;
+    /** 图像左上角坐标y 第一次打开图像类型时有效*/
+    imageTop?: number;
+    /** 图像分辨率 第一次打开图像类型时有效, 一个像素单位代表多少地理长度，计算公式为 真实坐标长度 / 图像像素宽 */
+    imageResolution?: number;
 }
 
 /**
@@ -4557,6 +4579,8 @@ export  interface IOpenMapResponse {
     styles?: any;
     /** 图层列表. */
     layers?: any;
+    /** 地图类型. 为空时表示是cad类型，image表示是图像 */
+    maptype?: string;
     /** 状态. */
     status?: string;
     /** 暗黑模式(背景色为黑时). */
@@ -4594,6 +4618,18 @@ export  interface IOpenMapResponse {
         /** 初始视图方位角. */
         bearing?: number;
     };
+    /** 图像类型时最大级别 */
+    maxzoom?: number;
+    /** 图像类型时图像像素宽 */
+    imageWidth?: number;
+    /** 图像类型时图像像素高 */
+    imageHeight?: number;
+    /** 图像左上角坐标x */
+    imageLeft?: number;
+    /** 图像左上角坐标y */
+    imageTop?: number;
+    /** 图像分辨率  一个像素单位代表多少地理长度，计算公式为 真实坐标长度 / 图像像素宽 */
+    imageResolution?: number;
 }
 
 /**
@@ -8241,6 +8277,13 @@ export  class Service {
      */
     metadata(mapid?: string, version?: string): Promise<any>;
     /**
+     * 修改地图元数据
+     * @param meta 要修改的元数据项
+     * @param mapid 地图ID ，为空, 则为当前打开的图形
+     * @param version 版本号，为空 则为当前打开的版本;
+     */
+    updateMetadata(meta: Record<string, number | boolean | string | undefined | null>, mapid?: string, version?: string): Promise<any>;
+    /**
      * 获取所有地图信息
      * @param mapid 地图ID，为空，则获取所有的；如果传入的是地图ID数组，则获取指定的地图ID数组的信息。如果不想一次性获取，可通过传入分页对象获取，如{curPage: 1, pageCount: 10}
      * @param version 版本号，为空，则获取最新的; * 则获取所有的版本
@@ -8440,6 +8483,11 @@ export  class Service {
      */
     cmdRunStatus(bDetail?: boolean): Promise<any>;
     /**
+     * 获取支持的格式类型
+     * @return {Promise<any>}
+     */
+    cmdGetSupportFormat(): Promise<any>;
+    /**
      * 获取服务后台常量设置
      * @return {Promise<any>}
      */
@@ -8527,6 +8575,12 @@ export  class Service {
      * @return {Promise<any>}
      */
     cmdMapDiff(param: IMapDiff): Promise<any>;
+    /**
+     * 导出布局空间为dwg图
+     * @param param 参数
+     * @return {Promise<any>}
+     */
+    cmdExportLayout(param: IExportLayout): Promise<any>;
     /**
      * 获取创建实体的几何数据
      * @param param 参数
