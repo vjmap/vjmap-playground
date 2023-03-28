@@ -2430,7 +2430,7 @@ export  class GeoBounds {
      *
      * Example:
      * ```typescript
-     * const b = GeoBounds.fromArray(left, bottom, right, top);
+     * const b = GeoBounds.fromArray([left, bottom, right, top]);
      * ```
      */
     static fromArray(input: [number, number, number, number]): GeoBounds;
@@ -2469,6 +2469,26 @@ export  class GeoBounds {
      * @return {GeoPoint}
      */
     center(): GeoPoint;
+    /**
+     * 得到左上角
+     * @return {GeoPoint}
+     */
+    leftTop(): GeoPoint;
+    /**
+     * 得到左下角
+     * @return {GeoPoint}
+     */
+    leftBottom(): GeoPoint;
+    /**
+     * 得到右上角
+     * @return {GeoPoint}
+     */
+    rightTop(): GeoPoint;
+    /**
+     * 得到右下角
+     * @return {GeoPoint}
+     */
+    rightBottom(): GeoPoint;
     /**
      * 生成一个随机点
      * @return {GeoPoint}
@@ -3126,7 +3146,7 @@ export  function getEnvelopBounds(envelop: string, prj: any): GeoBounds;
 } | null;
 
 /**
- * 获取一个geojson的
+ * 获取一个geojson的范围值
  * @param data 输入值
  * @return {GeoBounds} 获取的范围值
  */
@@ -3459,6 +3479,8 @@ export  interface IComposeNewMap {
     selByCrossing?: boolean;
     /** 四参数(x偏移,y偏移,缩放，旋转弧度)，可选，对坐标最后进行修正*/
     fourParameter?: [number, number, number, number];
+    /** 是否用上面的四参数进行反算，默认false*/
+    isInverseFourParamter?: boolean;
     /** 要显示的图层名称，为空的时候，表示全部图层 */
     layers?: string[];
     /** 生新成图的图层名称前缀 */
@@ -4848,7 +4870,7 @@ export  interface IWmsTileUrl {
     bbox?: string;
     /** 当前坐标系,缺省(EPSG:3857). */
     srs?: string;
-    /** cad图的坐标系，为空的时候由元数据坐标系决定. */
+    /** cad图的坐标系，为空的时候由元数据坐标系决定. 也可直接输入proj4字符串*/
     crs?: string | string[];
     /** 地理真实范围，如有值时,srs将不起作用 */
     mapbounds?: string;
@@ -4862,6 +4884,8 @@ export  interface IWmsTileUrl {
     backgroundColor?: string;
     /** 四参数(x偏移,y偏移,缩放，旋转弧度)，可选，对坐标最后进行修正*/
     fourParameter?: string | string[];
+    /** 是否用上面的四参数进行反算，默认false*/
+    isInverseFourParamter?: boolean | boolean[];
     /** 是否是矢量瓦片. */
     mvt?: boolean;
     /** 是否考虑旋转，在不同坐标系中转换是需要考虑。默认自动考虑是否需要旋转. */
@@ -8595,8 +8619,9 @@ export  class Service {
      * @param crs 目标坐标系名称，如 EPSG:3857
      * @param points 要转换的坐标
      * @param fourParameter 四参数(x偏移,y偏移,缩放，旋转弧度)，可选，对坐标最后进行修正
+     * @param isInverseFourParamter 是否是上面四参数坐标的反算
      */
-    cmdTransform(srs: string, crs: string, points: GeoPoint | GeoPoint[], fourParameter?: string | string[]): Promise<any>;
+    cmdTransform(srs: string, crs: string, points: GeoPoint | GeoPoint[], fourParameter?: string | string[], isInverseFourParamter?: boolean): Promise<any>;
     /**
      * 保存用户自定义数据
      * @param key 键名(必须唯一，否则会覆盖之前的数据，同类型的key前缀尽量一样)，如果是数组的话，可以批量

@@ -52,7 +52,9 @@ window.onload = async () => {
             pageWidth: 210, // 宽，单位mm
             pageHeight: 297, // 高，单位mm
             geomDPI: 600, // 矢量dpi
-            colorImagesDPI: 400 //图像dpi
+            colorImagesDPI: 400, //图像dpi
+            isBlackWhiteMode: false, // 是否导出为黑白模式
+            isUseGrayPolicy: false, // 黑白模式下使用灰度策略
         }*/
         
         
