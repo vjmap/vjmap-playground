@@ -187,7 +187,90 @@ window.onload = async () => {
             }
             // 设置数据源数据
             map.setData('test-points', geoJsonData);
-        }, 5000)
+        }, 15000)
+        
+        // 模拟增加数据的情况
+        map.addControl(
+            new vjmap.ButtonGroupControl(
+                {
+                    buttons: [
+                        {
+                            id: "addPoint",
+                            text: "加点",
+                            title: "绑定一个新的点坐标至聚合中",
+                            onActivate: async (ctx, e) => {
+                                let marker;
+                                let actionPoint = await vjmap.Draw.actionDrawPoint(map, {
+                                    /* 如果需要捕捉cad图上面的点
+                                     api: {
+                                        getSnapFeatures: snapObj //要捕捉的数据项在后面，通过属性features赋值
+                                     },
+                                     */
+                                    updatecoordinate: (e) => {
+                                        if (!e.lnglat) return;
+                                        if (!marker) {
+                                            // 如果第一次新增
+                                            marker = new vjmap.Marker();
+                                            marker.setLngLat(e.lnglat);
+                                            marker.addTo(map);
+                                        } else {
+                                            // 更新坐标
+                                            marker.setLngLat(e.lnglat);
+                                        }
+                                    },
+                                    contextMenu: (e) => {
+                                        // 点击右键弹出菜单
+                                        new vjmap.ContextMenu({
+                                            event: e.event.originalEvent,
+                                            theme: "dark", //light
+                                            width: "250px",
+                                            items: [
+                                                {
+                                                    label: '取消',
+                                                    onClick: () => {
+                                                        // 给地图发送ESC键消息即可取消，模拟按ESC键
+                                                        map.fire("keyup", {keyCode:27})
+                                                    }
+                                                }
+                                            ]
+                                        });
+        
+                                    }
+                                });
+                                if (actionPoint.cancel) {
+                                    // 如果是按ESC键取消了
+                                    if (marker) marker.remove();
+                                    return null;
+                                }
+                                // 获取点的cad坐标
+                                let co = map.fromLngLat(actionPoint.features[0].geometry.coordinates);
+                                // 先获取数据源之前的数据
+                                let data = map.getSourceData('test-points');
+                                data = vjmap.cloneDeep(data);
+                                // 更新数据
+                                data.features.push({
+                                    geometry: {
+                                        coordinates: map.toLngLat(co),
+                                        type: "Point"
+                                    },
+                                    id: data.features.length + 1,
+                                    properties: {
+                                        index: data.features.length + 1,
+                                    },
+                                    type: "Feature"
+                                })
+                                // 更新数据源
+                                map.setData('test-points', data);
+                                if (marker) marker.remove(); // 删除临时绘制绑点的marker
+                                // 更新下之前的数据变量
+                                geoJsonData = data;
+                            },
+                        },
+                    ],
+                },
+                "top-right"
+            )
+        );
         
     }
     catch (e) {

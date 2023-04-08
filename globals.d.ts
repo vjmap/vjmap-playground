@@ -1,7 +1,7 @@
 
 /// <reference types="geojson" />
 
-export = vjmap;
+
 export as namespace vjmap;
 
 declare namespace vjmap {
@@ -4447,6 +4447,52 @@ export  interface IMapStyleParam {
     expression?: string;
 }
 
+/**
+ * 目标匹配
+ */
+export  interface IMatchObject {
+    /** 地图ID. */
+    mapid: string;
+    /** 地图版本(为空时采用当前打开的地图版本). */
+    version?: string;
+    /** 图层样式名.为空时，将由选择的实体的图层来决定 */
+    layer?: string;
+    /** 目标匹配的地图范围，默认为全图的数据范围. */
+    mapBounds?: string;
+    /** 目标匹配的实体objectid数组，用||隔开. */
+    objectIds?: string;
+    /** 目标匹配的实体范围 */
+    objectBounds: string;
+    /** 目标匹配的地图打开的图层 */
+    layeron?: string;
+    /** 匹配时的图像尺寸，默认10000 */
+    size?: number;
+    /** 方法. 默认 matchPattern */
+    method?: "matchTemplate" | "matchPattern";
+    /** 允许返回的最大条数. 默认 200 */
+    maxCount?: number;
+    /** 分数，小于此分类将不显示 (0 -1)，默认 0.6 . */
+    score?: number;
+    /** 金字塔大小 范围(64-2048).默认256， 方法为matchPattern有效*/
+    minReduceArea?: number;
+    /** 允许重叠 (默认false). */
+    canOverlap?: boolean;
+    /** 重叠比例 范围(0-0.8)，默认 0.3. */
+    maxOverlap?: number;
+    /** 角度范围(-180, 180)有旋转的时候需要。方法为matchPattern有效. 默认180*/
+    toleranceAngle?: number;
+    /** 是否使用角度区间范围,默认false. 方法为matchPattern有效*/
+    useToleranceRange?: boolean;
+    /** 角度区间1开始角度. 方法为matchPattern有效*/
+    tolerance1?: number;
+    /** 角度区间1结束角度. 方法为matchPattern有效*/
+    tolerance2?: number;
+    /** 角度区间1开始角度. 方法为matchPattern有效*/
+    tolerance3?: number;
+    /** 角度区间2结束角度. 方法为matchPattern有效*/
+    tolerance4?: number;
+}
+
 export  function inertia({ from, velocity, min, max, power, timeConstant, bounceStiffness, bounceDamping, restDelta, modifyTarget, driver, onUpdate, onComplete, onStop }: InertiaOptions): {
     stop: () => void;
 };
@@ -8434,8 +8480,9 @@ export  class Service {
      * @param version
      * @param width
      * @param height
+     * @param darkTheme 是否是深色主题，是的话，图片将反色（黑色变白色）
      */
-    thumbnailUrl(mapid?: string, version?: string, width?: number, height?: number): string;
+    thumbnailUrl(mapid?: string, version?: string, width?: number, height?: number, darkTheme?: boolean): string;
     wmsTileUrl(param: IWmsTileUrl): string;
     /**
      * 删除地图
@@ -8605,6 +8652,12 @@ export  class Service {
      * @return {Promise<any>}
      */
     cmdExportLayout(param: IExportLayout): Promise<any>;
+    /**
+     * 目标匹配
+     * @param param 参数
+     * @return {Promise<any>}
+     */
+    cmdMatchObject(param: IMatchObject): Promise<any>;
     /**
      * 获取创建实体的几何数据
      * @param param 参数
@@ -15208,5 +15261,797 @@ export  const wrap: (min: number, max: number, v: number) => number;
     export type ElevationQueryOptions = {
         exaggerated: boolean;
     };
+
+}
+
+
+export as namespace vjcommon;
+declare namespace vjcommon {
+export  const addExportRefInfoInText: (prj: any, data: any) => any;
+
+export  const addFeaturesToDraw: (data: any, drawLayer: any, combineInObject?: boolean) => any;
+
+export  const addHighLightSourceLayer: (map: vjmap.Map, layerId?: string, highlightColor?: string) => void;
+
+export  const base2OverlayCoordinate: (pt: vjmap.GeoPoint, coordinates: {
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+}[], isSetRotateZero?: boolean, basemapIsWeb?: boolean) => vjmap.GeoPoint;
+
+export  class CacheDbStorage {
+    dbName: string;
+    tableName: string;
+    isInitDb: boolean;
+    constructor();
+    init(): Promise<void>;
+    getInst(): TsIndexDb;
+    getAll(): Promise<DbRecord[]>;
+    getRecordByKey(key: string): Promise<DbRecord[]>;
+    getValueByKey(key: string, parseJson?: boolean): Promise<any>;
+    setValueByKey(key: string, value: any, toJson?: boolean): Promise<DbRecord>;
+    upsert(record: DbRecord): Promise<DbRecord>;
+    deleteRecord(key: string): Promise<DbRecord>;
+    deleteTable(): Promise<unknown>;
+    deleteDb(): Promise<unknown>;
+    toStringKey(key: Record<string, any>, prefix?: string): string;
+}
+
+export  const cacheStorage: CacheDbStorage;
+
+export  const cad2webCoordinate: (svc: vjmap.Service, pt: vjmap.GeoPoint, crs: string, fourParameterStr?: string, isWgs84?: boolean) => Promise<any>;
+
+export  const cancelDraw: (map: vjmap.Map) => void;
+
+export  const clearHighlight: (map: vjmap.Map, layerId?: string) => void;
+
+export  const clearHighLightSourceLayer: (map: vjmap.Map, layerId?: string) => void;
+
+export  const convertArrayToGeoJson: (value: Array<[number, number]>) => any;
+
+export  const copyCadEntity: (map: vjmap.Map, draw: vjmap.IDrawTool, updateMapStyleObj: any, showInfoFunc?: Function, dlgConfirmInfo?: Function, isRectSel?: boolean, promptFunc?: Function) => Promise<void>;
+
+export  const createGeomData: (map: vjmap.Map, entities?: any, docMapBounds?: any, environment?: any, linetypes?: any, dbFrom?: any) => Promise<{
+    type: string;
+    features: {
+        id: string;
+        type: string;
+        properties: any;
+        geometry: any;
+    }[];
+}>;
+
+export  const createHatch: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<void>;
+
+export  const createLineTypeCurve: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<void>;
+
+export  const createLineTypePolyline: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<void>;
+
+export  const createMapStyleLayerName: (svc: vjmap.Service, overMapType: WmsOverlayMapType, overMapParam: WmsMapParam | WmsMapParam[], backcolor?: number) => Promise<WmsMapParam | WmsMapParam[]>;
+
+export  const createOutSymbol: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<void>;
+
+export  const createUpdateMapStyleObj: (map: vjmap.Map, option?: Record<string, any>) => {
+    addHideObjectIds: (objectIds: string[], noUpdate?: boolean, isClear?: boolean) => Promise<void>;
+    refresh: () => Promise<void>;
+    hideObjectIds: Set<string>;
+    getClipBounds: () => any;
+};
+
+export  const createUpdateMapStyleRasterObj: (map: vjmap.Map, option?: Record<string, any>) => {
+    addHideObjectIds: (objectIds: string[], noUpdate?: boolean, isClear?: boolean) => Promise<void>;
+    refresh: () => Promise<void>;
+    hideObjectIds: Set<string>;
+    getClipBounds: () => any;
+};
+
+export  const createUpdateMapStyleVectorObj: (map: vjmap.Map, option?: Record<string, any>) => {
+    addHideObjectIds: (objectIds: string[], noUpdate?: boolean, isClear?: boolean) => Promise<void>;
+    refresh: () => Promise<void>;
+    hideObjectIds: Set<string>;
+    getClipBounds: () => any;
+};
+
+export  type DbIndex = {
+    key: string;
+    option?: IDBIndexParameters;
+};
+
+export  interface DbOperate<T> {
+    tableName: string;
+    key: string;
+    data: T | T[];
+    value: string | number;
+    condition(data: T): boolean;
+    success(res: T[] | T): void;
+    handle(res: T): void;
+}
+
+export  type DbRecord = {
+    id?: string;
+    key: string;
+    value: string;
+};
+
+export  type DbTable = {
+    tableName: string;
+    option?: IDBObjectStoreParameters;
+    indexs: DbIndex[];
+};
+
+export  const deleteCadEntity: (map: vjmap.Map, draw: vjmap.IDrawTool, updateMapStyleObj: any, showInfoFunc?: Function, dlgConfirmInfo?: Function, isRectSel?: boolean, promptFunc?: Function) => Promise<void>;
+
+export  const drawArrow: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<void>;
+
+export  const drawCircle: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, isFill?: boolean) => Promise<void>;
+
+export  const drawEllipseArc: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => void;
+
+export  const drawEllipseEdge: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => void;
+
+export  const drawEllipseFill: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => void;
+
+export  const drawEllipseFillArc: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => void;
+
+export  const drawFillExrusion: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>) => Promise<void>;
+
+export  const drawLineSting: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>) => Promise<void>;
+
+export  const drawPoint: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>) => Promise<void>;
+
+export  const drawPolygon: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>) => Promise<void>;
+
+export  const drawRectangle: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, isFill?: boolean) => Promise<void>;
+
+export  const drawSlantRectangle: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, isFill?: boolean) => Promise<void>;
+
+export  const drawText: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => Promise<void>;
+
+export  const editCadEntity: (map: vjmap.Map, draw: vjmap.IDrawTool, updateMapStyleObj: any, editOp: "delete" | "modify" | "copy", showInfoFunc?: Function, dlgConfirmInfo?: Function, isRectSel?: boolean, promptFunc?: Function) => Promise<void>;
+
+export  function evalDataConvert(featureCollection: any, code: string, map: vjmap.Map, mapApp: any): Promise<any>;
+
+export  function execProgram(code: string, map: vjmap.Map, mapApp: any, context?: any): Promise<any>;
+
+export  const exportDwg: (map: vjmap.Map, draw: vjmap.IDrawTool, newMapId?: string) => Promise<any>;
+
+export  const gaodeProviderTiles: (isImageUrl?: boolean) => string[];
+
+export  const getEntityObjectId: (id: string) => string;
+
+export  const getEpsgRange: (type: "BEIJING54_3" | "BEIJING54_6" | "XIAN80_3" | "XIAN80_6" | "CGCS2000_3" | "CGCS2000_6") => any;
+
+export  const getGeoJsonBounds: (data: any) => vjmap.GeoBounds;
+
+export  const getHighlightEntities: (map: vjmap.Map, bounds: [number, number, number, number] | undefined, useGeomCoord?: boolean, queryParam?: vjmap.IConditionQueryFeatures, includeWholeEntity?: boolean, disableSelectEntities?: Set<String>, isClearOld?: boolean, layerId?: string, highlightColor?: string) => Promise<{
+    features: never[];
+    type: string;
+}>;
+
+/**
+ * @method 获取单例的单个对象
+ */
+export  const getInstance: (dbName: string) => TsIndexDb;
+
+export  const getMapSnapPoints: (map: vjmap.Map, snapObj: any, snapQueryLimit?: number) => Promise<void>;
+
+export  const getPointOnePixelDrawStyleOption: () => any;
+
+export  const getShardsTileUrl: (tileUrl: string, map?: vjmap.Map) => string[];
+
+export  const getTileShards: (tileUrl: string) => {
+    tileUrl: string;
+    tileShards: string;
+};
+
+export  const getTrackFeatureProperty: (draw: vjmap.IDrawTool, key?: string) => any;
+
+export  const getWmsAutoCadBaseMapTileUrl: (svc: vjmap.Service, baseMapParam: WmsBaseMapParam, overMapParam: WmsMapParam | WmsMapParam[], layerProps?: Record<string, any>) => Promise<string | undefined>;
+
+export  const getWmsAutoWebBaseMapTileUrl: (svc: vjmap.Service, overMapType: WmsOverlayMapType, baseMapParam: WmsBaseMapParam, overMapParam: WmsMapParam | WmsMapParam[], layerProps?: Record<string, any>) => Promise<string>;
+
+export  const getWmsDirectTileUrl: (svc: vjmap.Service, overMapType: WmsOverlayMapType, baseMapParam: WmsBaseMapParam, overMapParam: WmsMapParam | WmsMapParam[], layerProps?: Record<string, any>) => Promise<string>;
+
+export  const getWmsMapsBounds: (svc: vjmap.Service, overMapType: WmsOverlayMapType, baseMapType: "" | "CAD" | "WGS84" | "GCJ02", overMapParam: WmsMapParam | WmsMapParam[]) => Promise<GeoBounds | undefined>;
+
+export  const getWmsParamTileUrl: (svc: vjmap.Service, overMapType: WmsOverlayMapType, baseMapParam: WmsBaseMapParam, overMapParam: WmsMapParam | WmsMapParam[], layerProps?: Record<string, any>) => Promise<string>;
+
+export  const getWmsTileUrl: (svc: vjmap.Service, baseMapParam: WmsBaseMapParam, overMapType: WmsOverlayMapType, overMapParam: OverMapParam) => Promise<string[] | undefined>;
+
+export  type IIndexDb = {
+    dbName: string;
+    version: number;
+    tables: DbTable[];
+};
+
+/**
+ * @method 初始化函数
+ * @param param0
+ * @param isMany
+ */
+export  const initIndexDb: ({ dbName, version, tables }: IIndexDb) => Promise<TsIndexDb>;
+
+export  const interactiveCreateGeom: (data: any, map: vjmap.Map, options?: Record<string, any>, showInfoFunc?: Function, param?: {
+    disableScale?: boolean;
+    disableRotate?: boolean;
+    drawInitPixelLength?: number;
+    tempLineColor?: string;
+    baseAlign?: "leftBottom" | "center" | "leftTop";
+}) => Promise<{
+    feature: any;
+    rotation: number;
+} | undefined>;
+
+export  const isAlphanumeric: (char: string) => boolean;
+
+export  const isTrackFeature: (feature: any) => boolean;
+
+export  const isWebBaseMap: (baseMapType?: string) => boolean;
+
+export  class LayerBase {
+    map: vjmap.Map;
+    mapLayer: MapLayer;
+    visibleOff?: boolean;
+    constructor();
+    addLayer(map: vjmap.Map, mapLayer: MapLayer): Promise<void>;
+    setLayerStyle(map: vjmap.Map, layerId: string, layerProps: Record<string, any>, oldLayer: MapLayer): void;
+    setVisible(map: vjmap.Map, layerId: string, visibleOff?: boolean): void;
+    removeLayer(map: vjmap.Map, layerId: string): void;
+    getLayerId(): string | string[] | undefined;
+    onSourceDataChange(map: vjmap.Map, sourceId?: string, forceUpdate?: boolean, timerUpdate?: boolean): void;
+    loadUrlImage(src: string): Promise<HTMLImageElement>;
+    evalValue(options: Record<string, any> | string, properties: Record<string, any>, map: vjmap.Map): any;
+    createAnimateImages(map: vjmap.Map, mapLayer: MapLayer): Promise<string[] | ImageData[]>;
+    setMarkerOptions(marker: vjmap.Marker, options: Record<string, any>): void;
+}
+
+export  const listenKeyEvent: () => {
+    removeEventListener: () => void;
+    isAltKey: () => boolean | undefined;
+    isCtrlKey: () => boolean | undefined;
+    isShiftKey: () => boolean | undefined;
+    curKey: () => KeyboardEvent | undefined;
+};
+
+export  const loadDataToDraw: (map: vjmap.Map, draw: vjmap.IDrawTool, data: string, updateMapStyleObj: any) => Promise<void>;
+
+export  const loadWebMap: (map: vjmap.Map, config: MapAppConfig) => void;
+
+export  class MapApp {
+    config: MapAppConfig;
+    svc: vjmap.Service;
+    map: vjmap.Map;
+    sources: MapSource[];
+    layers: MapLayer[];
+    controls: (vjmap.Control | vjmap.IControl | null)[];
+    layersInst: Record<string, LayerBase>;
+    projectKey: string | undefined;
+    containerId: string;
+    private timeMgr;
+    isEditorMode?: boolean;
+    isDisableRunProgram?: boolean;
+    context?: any;
+    private programCleaner?;
+    private oldCacheImages?;
+    keyEvent?: ReturnType<typeof listenKeyEvent>;
+    constructor(config?: MapAppConfig);
+    mount(containerId: string, env?: {
+        serviceUrl: string;
+        serviceToken: string;
+    }): void;
+    attachMap(map: vjmap.Map): void;
+    isWebBaseMap(config?: MapAppConfig): boolean;
+    setConfig(config?: MapAppConfig, noSetMapOptions?: boolean): Promise<{
+        error: any;
+    } | undefined>;
+    setMapOpenOptions(option: Partial<MapOpenOptions>): Promise<void>;
+    setMapOptions(option: MapOption): void;
+    /**
+     * 增加地图图像资源
+     */
+    addMapImages(): Promise<void>;
+    /**
+     * 清空地图上的所有数据
+     */
+    clearData(): Promise<void>;
+    /**
+     * 移除所有逻辑程序段
+     */
+    removePrograms(): void;
+    /**
+     * 移除所有逻辑程序段
+     */
+    execProgram(): Promise<void>;
+    /**
+     * 销毁
+     */
+    destory(): Promise<void>;
+    /**
+     * 切换地图
+     * @param param 打开选项
+     */
+    switchMap(param: MapOpenOptions): Promise<any>;
+    /**
+     * 增加数据源
+     */
+    addSource(source: MapSource, isUpdateConfig?: boolean): Promise<boolean>;
+    /**
+     * 获取数据源数据
+     */
+    getSourceData(sourceId: string): Promise<any>;
+    /**
+     * 设置数据源数据
+     */
+    setSourceData(sourceId: string, data?: any, isUpdateConfig?: boolean): Promise<void>;
+    /**
+     * 更新除geojson之外的数据源
+     */
+    updateSource(source: MapSource, isRemove?: boolean): Promise<void>;
+    /**
+     * 删除数据源
+     */
+    removeSource(sourceId: string, isUpdateConfig?: boolean): void;
+    /**
+     * 增加图层
+     */
+    addLayer(layer: MapLayer, isUpdateConfig?: boolean): Promise<void>;
+    /**
+     * 设置图层属性
+     */
+    setLayerStyle(layerId: string, layerProps: Record<string, any>, isUpdateConfig?: boolean): Promise<void>;
+    /**
+     * 设置图层开关
+     */
+    setLayerVisible(layerId: string, visibleOff?: boolean, isUpdateConfig?: boolean): Promise<void>;
+    /**
+     * 设置数据源开关
+     */
+    setSourceVisible(sourceId: string, visibleOff?: boolean, isUpdateConfig?: boolean): Promise<void>;
+    /**
+     * 删除图层
+     */
+    removeLayer(layerId: string, isUpdateConfig?: boolean): void;
+    /**
+     * 增加定时器
+     */
+    addTimer(mapSource: MapSource): void;
+    /**
+     * 清空定时器
+     */
+    clearTimer(sourceId: string): void;
+    /**
+     * 移除所有控件
+     */
+    removeControls(): void;
+    /**
+     * 增加控件
+     */
+    addControls(): void;
+    /**
+     * 获取配置
+     */
+    getConfig(): MapAppConfig;
+    private findDepsSourceId;
+    /**
+     * 通知数据源数据改变
+     */
+    notifySourceDataChange(sourceId?: string, forceUpdate?: boolean, timerUpdate?: boolean): Promise<void>;
+    getSysImages(): string[];
+    static guid(digit?: number): string;
+}
+
+ interface MapAppConfig {
+    title?: string;
+    description?: string;
+    serviceUrl?: string;
+    serviceToken?: string;
+    accessKey?: string;
+    workspace?: string;
+    thumbnail?: string;
+    mapInitBounds?: string;
+    backgroundColor?: string;
+    baseMapType?: "" | "CAD" | "WGS84" | "GCJ02";
+    webMapTiles?: string[];
+    mapOpenOptions?: MapOpenOptions;
+    mapOptions?: MapOption;
+    mapSources?: MapSource[];
+    mapLayers?: MapLayer[];
+    controls?: {
+        name: string;
+        position: string;
+        options?: string;
+    }[];
+    mapImages?: {
+        key: string;
+        value: string;
+        options?: string;
+    }[];
+    program?: Record<string, string>;
+}
+
+ interface MapLayer {
+    layerId: string;
+    sourceId: string;
+    memo?: string;
+    tag?: string;
+    type: string;
+    before?: string;
+    visibleOff?: boolean;
+    [key: string]: any;
+}
+
+ interface MapOpenOptions extends vjmap.IOpenMapParam {
+    isKeepOldLayers?: boolean;
+    isVectorStyle?: boolean;
+    isSetCenter?: boolean;
+    isFitBounds?: boolean;
+}
+
+ type MapOption = Omit<vjmap.MapOptions, "container">;
+
+ interface MapSource {
+    id: string;
+    source: vjmap.SourceSpecification;
+    tag?: string;
+    props?: Record<string, any>;
+    visibleOff?: boolean;
+    memo?: string;
+    [key: string]: any;
+}
+
+export  const modifyCadEntity: (map: vjmap.Map, draw: vjmap.IDrawTool, updateMapStyleObj: any, showInfoFunc?: Function, dlgConfirmInfo?: Function, isRectSel?: boolean, promptFunc?: Function) => Promise<void>;
+
+export  const osmProviderTiles: () => string[];
+
+export  const overlay2BaseCoordinate: (pt: vjmap.GeoPoint, coordinates: {
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+}[], isSetRotateZero?: boolean, basemapIsWeb?: boolean) => vjmap.GeoPoint;
+
+export  interface OverMapParam {
+    maps: WmsMapParam | WmsMapParam[];
+    layerProps: Record<string, any>;
+}
+
+export  const polygonToPolyline: (feature: any) => any;
+
+export  function ProcessDataToFeatureCollection(map: vjmap.Map, res: any, isUseGeomCoord: boolean): any;
+
+export  const providerLayers: Record<string, typeof LayerBase>;
+
+export  type providerLayerTypes = keyof typeof providerLayers;
+
+export  function queryMapData(map: vjmap.Map, queryParam: {
+    condition: string;
+    bounds: string;
+    isContains: boolean;
+    coordType: 0 | 1;
+    clearPropData: boolean;
+}, condition?: Record<string, any>): Promise<any>;
+
+export  function requestChangeData(map: vjmap.Map, param: {
+    reqType: 'GET' | 'POST' | "SOURCE";
+    url: string;
+    data?: any;
+    header?: Record<string, string>;
+    processJS?: string;
+    fromSourceId?: string;
+}, mapApp?: any): Promise<any>;
+
+export  function runMeasureCmd(map: vjmap.Map, cmd: string): Promise<void>;
+
+export  const selectFeatures: (map: vjmap.Map, useGeomCoord?: boolean, includeWholeEntity?: boolean, isPointSel?: boolean, disableSnap?: boolean, disableSelectEntities?: Set<String>) => Promise<any>;
+
+export  const selectRotate: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, showInfoFunc?: Function) => Promise<void>;
+
+export  const setFeatureProperty: (feature: any, drawProperty?: Record<string, any>) => void;
+
+export  const setLayerOpacity: (map: vjmap.Map, opacity: number, rasterLayerIdMatch?: string) => void;
+
+export  const setLayerToLowest: (map: vjmap.Map, layerId: string) => void;
+
+export  const setTrackFeatureProperty: (draw: vjmap.IDrawTool, props: Record<string, any>) => void;
+
+export  function sleep(ms?: number): Promise<unknown>;
+
+export  const switchCadLayers: (map: vjmap.Map, layers: {
+    name: string;
+    isOff: boolean;
+}[], isVectorStyle: boolean) => Promise<void>;
+
+export  const switchVectorLayers: (map: vjmap.Map, onLayers: string[]) => void;
+
+export  const tiandituProviderTiles: (isImageUrl?: boolean) => string[];
+
+export  const toBezierCurve: (map: vjmap.Map, draw: vjmap.IDrawTool) => void;
+
+export  function toMapLayer(layer: MapLayer, props: Record<string, any>): MapLayer;
+
+export  const toProperties: (param: Record<string, any>) => Record<string, any>;
+
+export  const transformGeoJsonData: (map: vjmap.Map, data: any, basePt: any, destPt: any, scale?: number, angle?: number) => any;
+
+export  class TsIndexDb {
+    private dbName;
+    private version;
+    private tableList;
+    private db;
+    private queue;
+    constructor({ dbName, version, tables }: IIndexDb);
+    private static _instance;
+    static getInstance(dbOptions: IIndexDb): TsIndexDb;
+    /**
+     * @method 查询某张表的所有数据(返回具体数组)
+     * @param {Object}
+     *   @property {String} tableName 表名
+     */
+    queryAll<T>({ tableName }: Pick<DbOperate<T>, 'tableName'>): Promise<T[]>;
+    /**
+     * @method 查询(返回具体数组)
+     * @param {Object}
+     *   @property {String} tableName 表名
+     *   @property {Function} condition 查询的条件
+     * */
+    query<T>({ tableName, condition }: Pick<DbOperate<T>, 'condition' | 'tableName'>): Promise<T[]>;
+    /**
+     * @method 查询数据(更具表具体属性)返回具体某一个
+     * @param {Object}
+     *   @property {String} tableName 表名
+     *   @property {Number|String} key 名
+     *   @property {Number|String} value 值
+     *
+     * */
+    query_by_keyValue<T>({ tableName, key, value }: Pick<DbOperate<T>, 'tableName' | 'key' | 'value'>): Promise<T>;
+    /**
+     * @method 查询数据（主键值）
+     * @param {Object}
+     *   @property {String} tableName 表名
+     *   @property {Number|String} value 主键值
+     *
+     * */
+    query_by_primaryKey<T>({ tableName, value }: Pick<DbOperate<T>, 'tableName' | 'value'>): Promise<T>;
+    /**
+     * @method 修改数据(返回修改的数组)
+     * @param {Object}
+     *   @property {String} tableName 表名
+     *   @property {Function} condition 查询的条件，遍历，与filter类似
+     *      @arg {Object} 每个元素
+     *      @return 条件
+     *   @property {Function} handle 处理函数，接收本条数据的引用，对其修改
+     * */
+    update<T>({ tableName, condition, handle }: Pick<DbOperate<T>, 'tableName' | 'condition' | 'handle'>): Promise<T>;
+    /**
+     * @method 修改某条数据(主键)返回修改的对象
+     * @param {Object}
+     *   @property {String} tableName 表名
+     *   @property {String\|Number} value 目标主键值
+     *   @property {Function} handle 处理函数，接收本条数据的引用，对其修改
+     * */
+    update_by_primaryKey<T>({ tableName, value, handle }: Pick<DbOperate<T>, 'tableName' | 'value' | 'handle'>): Promise<T>;
+    /**
+     * @method 增加数据
+     * @param {Object}
+     *   @property {String} tableName 表名
+     *   @property {Object} data 插入的数据
+     * */
+    insert<T>({ tableName, data }: Pick<DbOperate<T>, 'tableName' | 'data'>): Promise<T>;
+    /**
+     * @method 删除数据(返回删除数组)
+     * @param {Object}
+     *   @property {String} tableName 表名
+     *   @property {Function} condition 查询的条件，遍历，与filter类似
+     *      @arg {Object} 每个元素
+     *      @return 条件
+     * */
+    delete<T>({ tableName, condition }: Pick<DbOperate<T>, 'tableName' | 'condition'>): Promise<T>;
+    /**
+     * @method 删除数据(主键)
+     * @param {Object}
+     *   @property {String} tableName 表名
+     *   @property {String\|Number} value 目标主键值
+     * */
+    delete_by_primaryKey<T>({ tableName, value }: Pick<DbOperate<T>, 'tableName' | 'value'>): Promise<T>;
+    /**
+     * @method 打开数据库
+     */
+    open_db(): Promise<TsIndexDb>;
+    /**
+     *@method 关闭数据库
+     * @param  {[type]} db [数据库名称]
+     */
+    close_db(): Promise<unknown>;
+    /**
+     * @method 删除数据库
+     * @param {String}name 数据库名称
+     */
+    delete_db(name: string): Promise<unknown>;
+    /**
+     * @method 删除表数据
+     * @param {String}name 数据库名称
+     */
+    delete_table(tableName: string): Promise<unknown>;
+    /**
+     * 创建table
+     * @option<Object>  keyPath指定主键 autoIncrement是否自增
+     * @index 索引配置
+     * */
+    private create_table;
+    /**
+     * 提交Db请求
+     * @param tableName  表名
+     * @param commit 提交具体函数
+     * @param mode 事物方式
+     * @param backF 游标方法
+     */
+    private commitDb;
+    /**
+     * @method 游标开启成功,遍历游标
+     * @param {Function} 条件
+     * @param {Function} 满足条件的处理方式 @arg {Object} @property cursor游标 @property currentValue当前值
+     * @param {Function} 游标遍历完执行的方法
+     * @return {Null}
+     * */
+    cursor_success(e: any, { condition, handler, success }: any): void;
+}
+
+ 
+    export {
+        MapApp,
+        providerLayerTypes,
+        providerLayers,
+        LayerBase,
+        exportDwg,
+        setFeatureProperty,
+        cancelDraw,
+        drawPoint,
+        drawLineSting,
+        drawPolygon,
+        drawFillExrusion,
+        polygonToPolyline,
+        drawCircle,
+        drawRectangle,
+        drawSlantRectangle,
+        selectRotate,
+        toBezierCurve,
+        drawEllipseFill,
+        drawEllipseEdge,
+        drawEllipseFillArc,
+        drawEllipseArc,
+        getGeoJsonBounds,
+        interactiveCreateGeom,
+        drawArrow,
+        createLineTypePolyline,
+        createLineTypeCurve,
+        createHatch,
+        createOutSymbol,
+        drawText,
+        addFeaturesToDraw,
+        getPointOnePixelDrawStyleOption,
+        isTrackFeature,
+        setTrackFeatureProperty,
+        getTrackFeatureProperty,
+        addExportRefInfoInText,
+        editCadEntity,
+        deleteCadEntity,
+        modifyCadEntity,
+        copyCadEntity,
+        createGeomData,
+        loadDataToDraw,
+        DbRecord,
+        CacheDbStorage,
+        cacheStorage,
+        IIndexDb,
+        DbIndex,
+        DbTable,
+        DbOperate,
+        TsIndexDb,
+        initIndexDb,
+        getInstance,
+        switchCadLayers,
+        switchVectorLayers,
+        setLayerOpacity,
+        setLayerToLowest,
+        queryMapData,
+        ProcessDataToFeatureCollection,
+        requestChangeData,
+        evalDataConvert,
+        toProperties,
+        convertArrayToGeoJson,
+        runMeasureCmd,
+        addHighLightSourceLayer,
+        clearHighLightSourceLayer,
+        getHighlightEntities,
+        clearHighlight,
+        selectFeatures,
+        getMapSnapPoints,
+        createUpdateMapStyleObj,
+        createUpdateMapStyleRasterObj,
+        createUpdateMapStyleVectorObj,
+        listenKeyEvent,
+        WmsOverlayMapType,
+        WmsBaseMapParam,
+        WmsMapParam,
+        OverMapParam,
+        createMapStyleLayerName,
+        getWmsMapsBounds,
+        getWmsDirectTileUrl,
+        getWmsAutoWebBaseMapTileUrl,
+        getWmsAutoCadBaseMapTileUrl,
+        getWmsParamTileUrl,
+        getWmsTileUrl,
+        cad2webCoordinate,
+        web2cadCoordinate,
+        overlay2BaseCoordinate,
+        base2OverlayCoordinate,
+        getEpsgRange,
+        osmProviderTiles,
+        tiandituProviderTiles,
+        gaodeProviderTiles,
+        loadWebMap,
+        toMapLayer,
+        sleep,
+        execProgram,
+        getShardsTileUrl,
+        getTileShards,
+        isAlphanumeric,
+        isWebBaseMap,
+        getEntityObjectId,
+    }
+
+
+export  const web2cadCoordinate: (svc: vjmap.Service, pt: vjmap.GeoPoint, crs: string, fourParameterStr?: string, isWgs84?: boolean) => Promise<number[]>;
+
+export  interface WmsBaseMapParam {
+    baseMapType?: "" | "CAD" | "WGS84" | "GCJ02";
+    /** 地图ID. */
+    mapid?: string;
+    /** 地图版本. */
+    version?: string;
+    /** 地理真实范围 */
+    mapbounds?: string;
+}
+
+export  interface WmsMapParam {
+    /** 地图ID(为空时采用当前打开的mapid) */
+    mapid: string;
+    /** 地图版本(为空时采用当前打开的地图版本). */
+    version?: string;
+    /** 图层样式名称. (如果图层样式名称为空时，则根据下面的样式去获取图层样式名称) */
+    layer?: string;
+    /** 图层样式. */
+    style?: vjmap.IMapStyleParam;
+    /** cad图的坐标系 */
+    crs?: string;
+    /** 四参数(x偏移,y偏移,缩放，旋转弧度)*/
+    fourParameterX?: number;
+    fourParameterY?: number;
+    fourParameterScale?: number;
+    fourParameterRotate?: number;
+    baseMapType?: "" | "CAD" | "WGS84" | "GCJ02";
+    webMapTiles?: string[];
+    isSetRotateZero?: boolean;
+    coordinates?: {
+        x1: number;
+        y1: number;
+        x2: number;
+        y2: number;
+    }[];
+}
+
+export  enum WmsOverlayMapType {
+    /** 不叠加. */
+    None = "none",
+    /** 直接叠加. */
+    Direct = "direct",
+    /** 自动叠加 */
+    Auto = "auto",
+    /** 四参数叠加 */
+    Param = "param"
+}
+
+export { }
 
 }

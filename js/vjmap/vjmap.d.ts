@@ -4447,6 +4447,52 @@ export  interface IMapStyleParam {
     expression?: string;
 }
 
+/**
+ * 目标匹配
+ */
+export  interface IMatchObject {
+    /** 地图ID. */
+    mapid: string;
+    /** 地图版本(为空时采用当前打开的地图版本). */
+    version?: string;
+    /** 图层样式名.为空时，将由选择的实体的图层来决定 */
+    layer?: string;
+    /** 目标匹配的地图范围，默认为全图的数据范围. */
+    mapBounds?: string;
+    /** 目标匹配的实体objectid数组，用||隔开. */
+    objectIds?: string;
+    /** 目标匹配的实体范围 */
+    objectBounds: string;
+    /** 目标匹配的地图打开的图层 */
+    layeron?: string;
+    /** 匹配时的图像尺寸，默认10000 */
+    size?: number;
+    /** 方法. 默认 matchPattern */
+    method?: "matchTemplate" | "matchPattern";
+    /** 允许返回的最大条数. 默认 200 */
+    maxCount?: number;
+    /** 分数，小于此分类将不显示 (0 -1)，默认 0.6 . */
+    score?: number;
+    /** 金字塔大小 范围(64-2048).默认256， 方法为matchPattern有效*/
+    minReduceArea?: number;
+    /** 允许重叠 (默认false). */
+    canOverlap?: boolean;
+    /** 重叠比例 范围(0-0.8)，默认 0.3. */
+    maxOverlap?: number;
+    /** 角度范围(-180, 180)有旋转的时候需要。方法为matchPattern有效. 默认180*/
+    toleranceAngle?: number;
+    /** 是否使用角度区间范围,默认false. 方法为matchPattern有效*/
+    useToleranceRange?: boolean;
+    /** 角度区间1开始角度. 方法为matchPattern有效*/
+    tolerance1?: number;
+    /** 角度区间1结束角度. 方法为matchPattern有效*/
+    tolerance2?: number;
+    /** 角度区间1开始角度. 方法为matchPattern有效*/
+    tolerance3?: number;
+    /** 角度区间2结束角度. 方法为matchPattern有效*/
+    tolerance4?: number;
+}
+
 export  function inertia({ from, velocity, min, max, power, timeConstant, bounceStiffness, bounceDamping, restDelta, modifyTarget, driver, onUpdate, onComplete, onStop }: InertiaOptions): {
     stop: () => void;
 };
@@ -8434,8 +8480,9 @@ export  class Service {
      * @param version
      * @param width
      * @param height
+     * @param darkTheme 是否是深色主题，是的话，图片将反色（黑色变白色）
      */
-    thumbnailUrl(mapid?: string, version?: string, width?: number, height?: number): string;
+    thumbnailUrl(mapid?: string, version?: string, width?: number, height?: number, darkTheme?: boolean): string;
     wmsTileUrl(param: IWmsTileUrl): string;
     /**
      * 删除地图
@@ -8605,6 +8652,12 @@ export  class Service {
      * @return {Promise<any>}
      */
     cmdExportLayout(param: IExportLayout): Promise<any>;
+    /**
+     * 目标匹配
+     * @param param 参数
+     * @return {Promise<any>}
+     */
+    cmdMatchObject(param: IMatchObject): Promise<any>;
     /**
      * 获取创建实体的几何数据
      * @param param 参数

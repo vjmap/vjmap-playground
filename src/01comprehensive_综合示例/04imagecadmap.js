@@ -12,7 +12,7 @@ window.onload = async () => {
         // --影像与CAD图叠加校准--以影像以背景，根据选定的对应点自动校准CAD地图并修改地图坐标导出为DWG图
         // 注: 此示例中引用了vjcommon库。此库是对唯杰地图常用的功能做了一定程度的封装，方便其他工程共用
         // vjcommon库可在 html 中引入`vjcommon.min.js`即可,或npm install vjcommon`通过`import vjcommon from 'vjcommon'`引入
-        // vjcommon库是开源的。具体开源地址可与唯杰地图技术人员索取。
+        // vjcommon库是开源的。开源地址 https://github.com/vjmap/vjmap-common
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken);
         message.info("请调节上面两幅图的公共点对CAD地图进行校准")
         const imageMapId = "sys_image"; // 影像地图ID
