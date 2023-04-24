@@ -97,6 +97,7 @@ window.onload = async () => {
         }
         
         const selectFeature = async (isPoint) => {
+            message.info("请选择实体，按右键结束选择")
             let param = {};
             res = await vjcommon.selectFeatures(map, true, isPoint, isPoint, true);
             vjcommon.clearHighlight(map);

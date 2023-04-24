@@ -46,25 +46,62 @@ window.onload = async () => {
         const poly1 = {
             points: map.toLngLat([mapBounds.min, mapBounds.center(), vjmap.geoPoint([mapBounds.min.x, mapBounds.max.y])]),
             properties: {
-                name: "polygon1"
+                name: "polygon1",
+                color: "#00ffff"
             }
         };
         const poly2= {
             points: map.toLngLat([mapBounds.max, mapBounds.center(), vjmap.geoPoint([mapBounds.max.x, mapBounds.min.y])]),
             properties: {
-                name: "polygon2"
+                name: "polygon2",
+                color: "#ff00ff"
             }
         }
         
         let polygon = new vjmap.Polygon({
             data: [poly1, poly2],
-            fillColor: ['case', ['to-boolean', ['feature-state', 'hover']], 'red', 'yellow'],
+            fillColor: ['case', ['to-boolean', ['feature-state', 'hover']], 'red', ['get', 'color']],
             fillOpacity: 0.8,
             fillOutlineColor: "#f00",
             isHoverPointer: true,
             isHoverFeatureState: true
         });
         polygon.addTo(map);
+        
+        
+        let scale = 0.3;
+        const changeCoordinate = () => {
+            scale -= 0.05;
+            if (scale <= 0) scale = 0.3;
+            mapBounds = map.getGeoBounds(scale);
+            // 也可以通过 polygon.getData 获取之前的数据
+            poly1.points = map.toLngLat([mapBounds.min, mapBounds.center(), vjmap.geoPoint([mapBounds.min.x, mapBounds.max.y])]);
+            poly2.points = map.toLngLat([mapBounds.max, mapBounds.center(), vjmap.geoPoint([mapBounds.max.x, mapBounds.min.y])]);
+            polygon.setData([poly1, poly2]);
+        }
+        
+        const changeColor = () => {
+            //  改变颜色，只需改变属性中的颜色字段即可
+            // 也可以通过 polygon.getData 获取之前的数据
+            poly1.properties.color = vjmap.randomColor();
+            poly2.properties.color = vjmap.randomColor();
+            polygon.setData([poly1, poly2])
+        }
+        // UI界面
+        const App = () => {
+            return (
+                <div className="input-card">
+                    <h4>数据</h4>
+                    <div className="input-item">
+                        <button className="btn" onClick={() => changeCoordinate()}>改变坐标</button>
+                        <button className="btn" onClick={() => changeColor()}>改变颜色</button>
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('ui'));
+        
     }
     catch (e) {
         console.error(e);

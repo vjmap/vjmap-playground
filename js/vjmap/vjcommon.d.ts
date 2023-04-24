@@ -57,13 +57,12 @@ export declare const convertArrayToGeoJson: (value: Array<[number, number]>) => 
 
 export declare const copyCadEntity: (map: Map_2, draw: IDrawTool, updateMapStyleObj: any, showInfoFunc?: Function, dlgConfirmInfo?: Function, isRectSel?: boolean, promptFunc?: Function) => Promise<void>;
 
-export declare const createGeomData: (map: Map_2, entities?: any, docMapBounds?: any, environment?: any, linetypes?: any, dbFrom?: any) => Promise<{
+export declare const createGeomData: (map: Map_2, entities?: any, docMapBounds?: any, environment?: any, linetypes?: any, dbFrom?: any, asFeatureCollection?: boolean) => Promise<{
     type: string;
     features: {
-        id: string;
+        id: any;
         type: string;
         properties: any;
-        geometry: any;
     }[];
 }>;
 

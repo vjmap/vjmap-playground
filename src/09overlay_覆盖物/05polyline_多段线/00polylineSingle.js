@@ -59,6 +59,36 @@ window.onload = async () => {
         });
         polyline.addTo(map);
         
+        let scale = 0.3;
+        const changeCoordinate = () => {
+            scale -= 0.05;
+            if (scale <= 0) scale = 0.3;
+            // 通过setData来改变坐标
+            let mapBounds = map.getGeoBounds(scale);
+            const newPath = [];
+            newPath.push(mapBounds.min);
+            newPath.push(mapBounds.center());
+            newPath.push(vjmap.geoPoint([mapBounds.max.x, mapBounds.min.y]));
+            newPath.push(mapBounds.max);
+            newPath.push(vjmap.geoPoint([mapBounds.min.x, mapBounds.max.y]));
+            polyline.setData(map.toLngLat(newPath));
+        }
+        
+        
+        // UI界面
+        const App = () => {
+            return (
+                <div className="input-card">
+                    <h4>数据</h4>
+                    <div className="input-item">
+                        <button className="btn" onClick={() => changeCoordinate()}>改变坐标</button>
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('ui'));
+        
     }
     catch (e) {
         console.error(e);

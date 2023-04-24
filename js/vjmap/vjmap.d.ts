@@ -1289,6 +1289,24 @@ export  class DbDimension extends DbEntity {
     dimStyle?: string;
     /** 文字位置. */
     textPosition?: Array<[number, number, number?]>;
+    /** 文字高度. */
+    textHeight?: number;
+    /** 文字旋转角度. */
+    textRotation?: number;
+    /** 注记比例. */
+    dimScale?: number;
+    /** 设置标注主单位显示的小数位位数. */
+    dimDec?: number;
+    /** 箭头大小. */
+    arrowSize?: number;
+    /** 所有标注距离舍入到指定值. */
+    dimRnd?: number;
+    /** 文本颜色. */
+    textColor?: number;
+    /** 箭头颜色. */
+    arrowColor?: number;
+    /** 引线颜色. */
+    lineColor?: number;
     /**
      * 构造函数
      */
@@ -1630,10 +1648,10 @@ export  class DbRasterImage extends DbEntity {
     xPelsPerUnit?: number;
     /** y轴每像素代表长度. */
     yPelsPerUnit?: number;
-    /** 宽. */
-    width?: number;
-    /** 高. */
-    height?: number;
+    /** 宽比例. */
+    widthRatio?: number;
+    /** 高比例.. */
+    heightRatio?: number;
     /** 位置. */
     position?: [number, number, number?];
     /** 是否显示. */
@@ -1705,6 +1723,66 @@ export  class DbSpline extends DbCurve {
      * 构造函数
      */
     constructor(prop?: IDbSpline);
+}
+
+/**
+ * `DbBlockReference` 块参照实体.
+ *
+ */
+export  class DbTable extends DbBlockReference {
+    /** 表样式名称. */
+    tableStyleName?: string;
+    /** 表格列数. */
+    numColumns?: number;
+    /** 表格行数. */
+    numRows?: number;
+    /** 列宽. */
+    columnWidth?: number;
+    /** 行高. */
+    rowHeight?: number;
+    /** 是否禁用标题. */
+    disableTitle?: boolean;
+    /** 表格方向是否从上至上. */
+    directionBottomToTop?: boolean;
+    /** 文字高度(所有单元格). */
+    textHeight?: number;
+    /** 显示网格线.第二个参数(kHorzTop(1), kHorzInside(2), kHorzBottom(4), kVertLeft(8), kVertInside(16), kVertRight(32);  第三个参数 kTitleRow(1), kHeaderRow(2), kDataRow(4) */
+    gridVisibility?: [boolean, number, number];
+    /** 背景颜色(所有单元格). */
+    backgroundColor?: number;
+    /** 文字颜色(所有单元格). */
+    contentColor?: number;
+    /** 网格线颜色(所有单元格). */
+    gridColor?: number;
+    /** 单元格对齐方式(所有单元格). */
+    alignment?: TableCellAlignment;
+    /** 水平方向单元格边距. */
+    horzCellMargin?: number;
+    /** 竖直方向单元格边距. */
+    vertCellMargin?: number;
+    /** 需要合并的单元格 [[minRow, maxRow,minColumn, maxColumn], ...]  */
+    mergeCells?: Array<[number, number, number, number]>;
+    /** 数据. */
+    data?: Array<Array<string | {
+        /** 单元格文本内容. */
+        text: string;
+        /** 单元格对齐方式. */
+        alignment: TableCellAlignment;
+        /** 单元格背景色. */
+        backgroundColor: number;
+        /** 单元格网格线颜色. */
+        gridColor: number;
+        /** 单元格文本颜色. */
+        contentColor: number;
+        /** 单元格文本高度. */
+        textHeight: number;
+        /** 是否显示单元格网格线. */
+        gridVisibility: boolean;
+    }>>;
+    /**
+     * 构造函数
+     */
+    constructor(prop?: IDbTable);
 }
 
 /**
@@ -3188,9 +3266,10 @@ export  function getOptionValue<T>(...values: Array<T | undefined>): T | undefin
 /**
  * 获取一个临时的图id(临时图形只会用临时查看，过期会自动删除)
  * @param expireTime 临时图形不浏览情况下过期自动删除时间，单位分钟。默认30
+ * @param isVisible 是否可见，（可见的话，将可通过ListMaps获取，否则为隐藏图）。默认不可见
  * @return
  */
-export  function getTempMapId(expireTime?: number): string;
+export  function getTempMapId(expireTime?: number, isVisible?: boolean): string;
 
 /**
  * 具有深度优先搜索和拓扑排序的图数据结构。
@@ -3491,6 +3570,8 @@ export  interface IComposeNewMap {
     savefilename?: string;
     /** 生成后清理图形数据以减少dwg文件大小 */
     purge?: boolean;
+    /** 导出的CAD版本号。如果为*表示为当前CAD图的版本 */
+    cadVersion?: string | "*" | "cad2000" | "cad2004" | "cad2007" | "cad2010" | "cad2013" | "cad2018";
 }
 
 /**
@@ -4161,6 +4242,65 @@ export  interface IDbSpline extends IDbCurve {
 }
 
 /**
+ * 表格实体类型接口
+ */
+export  interface IDbTable extends IDbBlockReference {
+    /** 表样式名称. */
+    tableStyleName?: string;
+    /** 表格列数. */
+    numColumns?: number;
+    /** 表格行数. */
+    numRows?: number;
+    /** 列宽. */
+    columnWidth?: number;
+    /** 行高. */
+    rowHeight?: number;
+    /** 表格总共的宽度. */
+    width?: number;
+    /** 表格总共的高度. */
+    height?: number;
+    /** 是否禁用标题. */
+    disableTitle?: boolean;
+    /** 表格方向是否从上至上. */
+    directionBottomToTop?: boolean;
+    /** 文字高度(所有单元格). */
+    textHeight?: number;
+    /** 显示网格线.第二个参数(kHorzTop(1), kHorzInside(2), kHorzBottom(4), kVertLeft(8), kVertInside(16), kVertRight(32);  第三个参数 kTitleRow(1), kHeaderRow(2), kDataRow(4) */
+    gridVisibility?: [boolean, number, number];
+    /** 背景颜色(所有单元格). */
+    backgroundColor?: number;
+    /** 文字颜色(所有单元格). */
+    contentColor?: number;
+    /** 网格线颜色(所有单元格). */
+    gridColor?: number;
+    /** 单元格对齐方式(所有单元格). */
+    alignment?: TableCellAlignment;
+    /** 水平方向单元格边距. */
+    horzCellMargin?: number;
+    /** 竖直方向单元格边距. */
+    vertCellMargin?: number;
+    /** 需要合并的单元格 [[minRow, maxRow,minColumn, maxColumn], ...]  */
+    mergeCells?: Array<[number, number, number, number]>;
+    /** 数据. */
+    data?: Array<Array<string | {
+        /** 单元格文本内容. */
+        text: string;
+        /** 单元格对齐方式. */
+        alignment: TableCellAlignment;
+        /** 单元格背景色. */
+        backgroundColor: number;
+        /** 单元格网格线颜色. */
+        gridColor: number;
+        /** 单元格文本内容. */
+        contentColor: number;
+        /** 单元格文本高度. */
+        textHeight: number;
+        /** 是否显示单元格网格线. */
+        gridVisibility: boolean;
+    }>>;
+}
+
+/**
  * 单行文本实体类型接口
  */
 export  interface IDbText extends IDbEntity {
@@ -4603,6 +4743,12 @@ export  interface IOpenMapBaseParam {
     imageTop?: number;
     /** 图像分辨率 第一次打开图像类型时有效, 一个像素单位代表多少地理长度，计算公式为 真实坐标长度 / 图像像素宽 */
     imageResolution?: number;
+    /** 判断是否打开或更新成功重试间隔（秒）。默认 5s 一次 */
+    openFinishTryInterval?: number;
+    /** 判断是否打开或更新成功重试最大次数。默认 120 次 */
+    openFinishMaxTryCount?: number;
+    /** 新建地图有fileDoc时有效 */
+    cadVersion?: string;
 }
 
 /**
@@ -8166,6 +8312,12 @@ export  class Service {
     constructor(url: string, token?: string, req?: IRequest);
     private _url;
     /**
+     * 克隆一个新的服务实例对象
+     * @param isCloneWorkspace 是否克隆当前工作区 (默认是)
+     * @return Service
+     */
+    clone(isCloneWorkspace?: boolean): Service;
+    /**
      * 得到服务地址
      * @param u 要拼接的地址
      * @return string
@@ -9313,6 +9465,21 @@ export  interface SymbolOptions extends OverlayLayerBaseOptions {
  *
  */
 export  function syncMaps(...args: Map[]): () => void;
+
+/**
+ * 表格单元格对齐方式
+ */
+export  enum TableCellAlignment {
+    kTopLeft = 1,
+    kTopCenter = 2,
+    kTopRight = 3,
+    kMiddleLeft = 4,
+    kMiddleCenter = 5,
+    kMiddleRight = 6,
+    kBottomLeft = 7,
+    kBottomCenter = 8,
+    kBottomRight = 9
+}
 
 export  type TerrainSpecificationEx = {
     source: string;
@@ -11538,6 +11705,18 @@ export  const wrap: (min: number, max: number, v: number) => number;
          * @return
          */
         addImageData(id: string, data: string, width: number, height: number, options?: Record<string, any>): Promise<any>
+
+
+        /**
+         * 根据数据库文档对象创建数据库几何数据，返回创建完的geojson
+         * @param doc 数据库文档对象
+         * @param isAutoUpdateMapExtent 是否根据返回的数据更新当前地图的范围
+         * @param isDarkMode 是否深色背景，如不填，则用当前地图的
+         * @param options cmdCreateEntitiesGeomData的选项
+         * @param includeAttrSet 返回数据属性中需包含的属性项
+         * @return {number}
+         */
+        createDbGeomData(doc: DbDocument, isAutoUpdateMapExtent?: boolean, isDarkMode?: boolean, options?: ICreateEntitiesGeomData, includeAttrSet?: string[]): Promise<any>
 
         
 

@@ -16,7 +16,7 @@ window.onload = async () => {
         // 打开地图
         // 地图ID (如果换成了您自定义的url地址，记得修改此名称id，改成您想要的唯一的名称即可)
         const mapid = "gym";
-        // 地图url地址
+        // 地图url地址，注意：url地址后四个字母必须为.dwg。如果实际中的地址四4位不是.dwg可以随便加个参数如 url?param=xxx&filetype=.dwg
         const httpDwgUrl = "https://vjmap.com/../../assets/data/gym.dwg" ;
         
         let res = await svc.openMap({

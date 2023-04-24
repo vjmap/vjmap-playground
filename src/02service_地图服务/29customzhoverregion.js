@@ -88,14 +88,18 @@ window.onload = async () => {
         
         // 加载数据
         const loadData = async ()=> {
-            let svc = map.getService();
-            // 用地图的mapid和版本号做为key值, 这里演示只是从localStorage去加载,实际中请从后台去请求数据加载
-            let curParam = svc.currentMapParam() || {};
-            let key = `map_drawdata_${curParam.mapid}_${curParam.version}`;
-            let res = await svc.getCustomData(key);
-            if (res.data) {
-                draw.set(map.toLngLat(res.data));
-                message.info("加载数据成功")
+            try {
+                let svc = map.getService();
+                // 用地图的mapid和版本号做为key值, 这里演示只是从localStorage去加载,实际中请从后台去请求数据加载
+                let curParam = svc.currentMapParam() || {};
+                let key = `map_drawdata_${curParam.mapid}_${curParam.version}`;
+                let res = await svc.getCustomData(key);
+                if (res.data) {
+                    draw.set(map.toLngLat(res.data));
+                    message.info("加载数据成功")
+                }
+            } catch (e) {
+                console.error(e)
             }
         
         }

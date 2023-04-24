@@ -44,7 +44,7 @@ window.onload = async () => {
         //map.fitMapBounds();
         await map.onLoad();
         
-        const mapBounds = map.getGeoBounds(0.6);
+        const mapBounds = map.getGeoBounds();
         const center = map.getCenter();
         
         if (typeof vjThree !== "object") {
@@ -60,10 +60,16 @@ window.onload = async () => {
             defaultLights: true,
             enableSelectingObjects: true // 将此更改为 false 以禁用 3D 对象选择
         });
+        
+        let modelSize = 1.8 // soldier.glb 的模型大小是 1.8
+        let modelMapLength = mapBounds.width() / 10; // 假设模型放大地图上为地图长度的10分之一大小
+        // 计算需要缩放的比例
+        let scale = map.getMapProjection().toMeter(modelMapLength) / modelSize;
+        
         const options = {
             obj: env.assetsPath + 'data/soldier.glb',
             type: 'gltf',
-            scale: 1000000,
+            scale: scale,
             units: 'meters',
             rotation: { x: 90, y: 0, z: 0 }, //default rotation
             anchor: 'center'
@@ -74,6 +80,7 @@ window.onload = async () => {
             threeContext.add(soldier);
         })
         map.addLayer(new vjmap.ThreeLayer({context: threeContext}));
+        
     }
     catch (e) {
         console.error(e);

@@ -17,7 +17,6 @@ window.onload = async () => {
             vjgui.init();
             let element = vjgui.createElement("div", "sidebar .sidebar", "", "")
             vjgui.add(element)
-            vjgui.add(element)
             let sidebar = new vjgui.Inspector();
             sidebar.addButton("所有图形","选择删除的图",{callback: async function(name) {
                     let allmaps = await svc.listMaps("", "*");

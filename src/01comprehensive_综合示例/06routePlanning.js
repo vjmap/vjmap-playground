@@ -11,6 +11,7 @@ window.onload = async () => {
         // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/comprehensive/06routePlanning
         // --路径规划--自动从CAD图中提取车位置，定义好路线，点击车时，自动规划到出口的位置
         // 下面的数据来源于唯杰地图可视化平台，此项目地址 https://vjmap.com/app/visual/#/edit?key=sys_be517afb&isLocal=false 可以配置或下载相关源码
+        // 视频教程地址 https://mp.weixin.qq.com/s?__biz=MzkyOTMyMzAxMw==&mid=2247483910&idx=1&sn=79a94bfe1401ab3f522148a88231d383&chksm=c20a036cf57d8a7a3cfa43272e4805dd8f4707a9bbdc2a07133d59429924c9b24125421000c3#rd
         // 注: 此示例中引用了vjcommon库。此库是对唯杰地图常用的功能做了一定程度的封装，方便其他工程共用
         // vjcommon库可在 html 中引入`vjcommon.min.js`即可,或npm install vjcommon`通过`import vjcommon from 'vjcommon'`引入
         // vjcommon库是开源的。开源地址 https://github.com/vjmap/vjmap-common

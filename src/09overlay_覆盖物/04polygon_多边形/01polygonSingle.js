@@ -41,16 +41,22 @@ window.onload = async () => {
         // 根据地图本身范围缩放地图至全图显示
         map.fitMapBounds();
         await map.onLoad();
-        let mapBounds = map.getGeoBounds(0.3);
-        const routePath = [];
-        routePath.push(mapBounds.min);
-        routePath.push(mapBounds.center());
-        routePath.push(vjmap.geoPoint([mapBounds.max.x, mapBounds.min.y]));
-        routePath.push(mapBounds.max);
-        routePath.push(vjmap.geoPoint([mapBounds.min.x, mapBounds.max.y]));
+        let scale = 0.3;
+        const getRoute = (s) => {
+            let mapBounds = map.getGeoBounds(s);
+            const routePath = [];
+            routePath.push(mapBounds.min);
+            routePath.push(mapBounds.center());
+            routePath.push(vjmap.geoPoint([mapBounds.max.x, mapBounds.min.y]));
+            routePath.push(mapBounds.max);
+            routePath.push(vjmap.geoPoint([mapBounds.min.x, mapBounds.max.y]));
+            return routePath
+        }
+        
+        let path = getRoute(scale);
         
         let polygon = new vjmap.Polygon({
-            data: map.toLngLat(routePath),
+            data: map.toLngLat(path),
             fillColor: ['case', ['to-boolean', ['feature-state', 'hover']], 'red', 'yellow'],
             fillOpacity: 0.8,
             fillOutlineColor: "#f00",
@@ -58,6 +64,31 @@ window.onload = async () => {
             isHoverFeatureState: true
         });
         polygon.addTo(map);
+        
+        
+        const changeCoordinate = ()=> {
+            scale -= 0.05;
+            if (scale <= 0) scale = 0.3;
+            // 通过setData来改变坐标
+            let newPath = getRoute(scale);
+            polygon.setData(map.toLngLat(newPath));
+        }
+        
+        
+        // UI界面
+        const App = () => {
+            return (
+                <div className="input-card">
+                    <h4>数据</h4>
+                    <div className="input-item">
+                        <button className="btn" onClick={() => changeCoordinate()}>改变坐标</button>
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('ui'));
+        
     }
     catch (e) {
         console.error(e);

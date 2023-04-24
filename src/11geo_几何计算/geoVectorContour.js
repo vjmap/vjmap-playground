@@ -57,6 +57,10 @@ window.onload = async () => {
         let isClipContour = false; // 是否裁剪等值线
         let clipBounds = dataBounds.scale(0.5); // 默认用原来的范围一半做为裁剪范围。可自定义范围可用 vjmap.GeoBounds.fromArray([x1,y1,x2,y2]))
         
+        // 如果要一开始不显示边界，可以用下面的设置。默认用小于范围一点点的范围去裁剪等值线
+        //isClipContour = true; // 是否裁剪等值线
+        //clipBounds = dataBounds.scale(0.9999);
+        
         let extent = map.toLngLat(dataBounds).toArray();
         // 如果要根据数据范围自动生成此范围，则无需传此参数
         let pt1 = extent[0];

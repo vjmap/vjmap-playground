@@ -395,6 +395,17 @@ window.onload = async () => {
                             featureAttr.color = clr; // 颜色
                             featureAttr.line_width = ent.lineWidth; // 线宽
                         }
+                        for(let g = 0; g < ent.geom.geometries.length; g++) {
+                            if (ent.geom.geometries[g].type == "Point") {
+                                // 改成起始和终点一样的线
+                                ent.geom.geometries[g].type = "LineString";
+                                ent.geom.geometries[g].coordinates = [
+                                    ent.geom.geometries[g].coordinates, // 始点
+                                    ent.geom.geometries[g].coordinates // 终点
+                                ]
+                            }
+                        }
+        
                         let ft = {
                             id: vjmap.RandomID(10),
                             type: "Feature",
@@ -446,17 +457,7 @@ window.onload = async () => {
         const createDataMap = async (doc) => {
             clearMapData();
             let geojson = await createGeomData(map, doc);
-            const opts = vjmap.Draw.defaultOptions();
-            // 修改默认样式，把点的半径改成1，没有边框，默认为5
-            let pointIdx = opts.styles.findIndex(s => s.id === "gl-draw-point-point-stroke-inactive");
-            if (pointIdx >= 0) {
-                opts.styles[pointIdx]['paint']['circle-radius'][3][3] = 0
-            }
-            pointIdx = opts.styles.findIndex(s => s.id === "gl-draw-point-inactive");
-            if (pointIdx >= 0) {
-                opts.styles[pointIdx]['paint']['circle-radius'][3][3] = 1
-            }
-            map.getDrawLayer(opts).set(geojson);
+            map.getDrawLayer().set(geojson);
         }
         
         // 创建一个dwg的地图
