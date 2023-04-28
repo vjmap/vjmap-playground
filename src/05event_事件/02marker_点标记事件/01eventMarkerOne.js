@@ -71,7 +71,6 @@ window.onload = async () => {
         function addMarder() {
             marker && marker.remove();
             marker = new vjmap.Marker({
-                anchor: 'bottom',
                 draggable: true,    // 默认允许拖拽
             }).setLngLat(map.getCenter());
             marker.addTo(map);

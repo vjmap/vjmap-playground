@@ -13,6 +13,11 @@ window.onload = async () => {
         // 注: 此示例中引用了vjcommon库。此库是对唯杰地图常用的功能做了一定程度的封装，方便其他工程共用
         // vjcommon库可在 html 中引入`vjcommon.min.js`即可,或npm install vjcommon`通过`import vjcommon from 'vjcommon'`引入
         // vjcommon库是开源的。开源地址 https://github.com/vjmap/vjmap-common
+        // 注: 此示例中引用了vjgeo库。此库是对几何模型做了一定程度的封装，方便其他工程共用
+        // vjgeo库可在 html 中引入`vjgeo.min.js`即可,或npm install vjgeo`通过`import vjgeo from 'vjgeo'`引入
+        // 几何模型帮助文档 https://vjmap.com/guide/geomodel.html
+        // 几何模型API文档 https://vjmap.com/docs/geomodel/
+        // 几何模型的更多示例代码地址 https://vjmap.com/demo/#/demo/map/models/01geomodels
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         // 打开地图
         let res = await svc.openMap({
@@ -32,14 +37,14 @@ window.onload = async () => {
         let map = new vjmap.Map({
             container: 'map', // container ID
             style: svc.vectorStyle(), // 矢量瓦片样式
-            center: prj.toLngLat(mapExtent.center()), // 中心点
-            zoom: 2,
+            center: [45.14,4.47], // 中心点
+            zoom: 6,
             renderWorldCopies: false
         });
         // 地图关联服务对象和坐标系
         map.attach(svc, prj);
         // 使地图全部可见
-        map.fitMapBounds();
+        // map.fitMapBounds();
         await map.onLoad();
         map.doubleClickZoom.disable(); // 禁止双击放大
         
@@ -86,6 +91,47 @@ window.onload = async () => {
                 }
             }
         }
+        
+        const addDwgDocToMap = async (doc) => {
+            let dwgDoc = new vjmap.DbDocument();
+            dwgDoc.entitys = doc.entitys
+            let geojson = await map.createDbGeomData(dwgDoc);
+            let result = await vjcommon.interactiveCreateGeom(geojson, map);
+            if (!(result && result.feature && result.feature.features)) return;
+            let mapJson = draw.getAll();
+            result.feature.features.forEach(f => f.id = vjmap.RandomID(10)); //防止加入后 id 重复
+            mapJson.features.push(...result.feature.features);
+            draw.set(mapJson);
+        }
+        const addModelToMap = async (modelName, context) => {
+            // 先获取模型默认的参数
+            let param = vjgeo.models[modelName].metaParameters;
+            if (context) {
+                let value = JSON.stringify(param.map(p => {return {title: p.title, value: (p.type == 'select') ? p.value[0] : p.value}}), null, 0)
+                let content = await context.prompt("请输入绘制的参数", value);
+                if (!content) return;
+                param = JSON.parse(content)
+            }
+            let args = param.map(p => p.value); // 获取参数值
+            let model = new vjgeo.models[modelName](...args);
+            model.data = {
+                ...model.data,
+                color: vjmap.htmlColorToEntColor(strokeColor),
+                isFill: vjmap.randInt(0, 3) == 0
+            }
+            let dwgDoc = vjgeo.exporter.toDWG(model);
+            await addDwgDocToMap(dwgDoc);
+        }
+        let geoModelMenus = []; // 几何模型的菜单, 根据内置的几何模型自动生成
+        geoModelMenus = Object.keys(vjgeo.models).sort().map(modelName => {
+            return {
+                id: modelName,
+                name: modelName,
+                cb: (context) => {
+                    addModelToMap(modelName, context)
+                }
+            }
+        })
         
         const menus = [
             {
@@ -704,6 +750,48 @@ window.onload = async () => {
                     }
                 ]
             }, {
+                name: "几何模型",
+                menus: [...geoModelMenus]
+            }, {
+                name: "布局克隆",
+                menus: [{
+                    id: "cloneToRow",
+                    name: "行布局",
+                    cb: (context) => {
+                        cloneModel("cloneToRow", context)
+                    }
+                },{
+                    id: "cloneToColumn",
+                    name: "列布局",
+                    cb: (context) => {
+                        cloneModel("cloneToColumn", context)
+                    }
+                },{
+                    id: "cloneToGrid",
+                    name: "网格布局",
+                    cb: (context) => {
+                        cloneModel("cloneToGrid", context)
+                    }
+                },{
+                    id: "cloneToBrick",
+                    name: "砖块布局",
+                    cb: (context) => {
+                        cloneModel("cloneToBrick", context)
+                    }
+                },{
+                    id: "cloneToHoneycomb",
+                    name: "蜂窝布局",
+                    cb: (context) => {
+                        cloneModel("cloneToHoneycomb", context)
+                    }
+                },{
+                    id: "cloneToRadial",
+                    name: "径向布局",
+                    cb: (context) => {
+                        cloneModel("cloneToRadial", context)
+                    }
+                }]
+            },{
                 name: "其他",
                 menus: [
                     {
@@ -741,6 +829,51 @@ window.onload = async () => {
                 ]
             }
         ]
+        
+        // 克隆模型
+        const cloneModel = async (methodName, context) => {
+            message.info("请选择已绘制好的，要克隆的实体，按右键结束.")
+            let selected = await vjmap.Draw.actionSelect(map, draw);
+            if (selected.features.length == 0) {
+                message.info("您没有选择任何实体哦")
+                return
+            }
+            // 把查询的geojson转成几何模型
+            let symbol = vjgeo.importer.fromGeoJsonData(map.fromLngLat(selected));
+            // 获取符号的范围
+            let extent = vjgeo.measure.modelExtents(symbol)
+            // 对模型进行网格布局
+            let model;
+            let param;
+            let margin = +(extent.width / 2).toFixed(2);
+            if (methodName == "cloneToRow" || methodName == "cloneToColumn") {
+                param = [{title:"count",value:4},{title:"margin",value:margin}]
+            } else  if (methodName == "cloneToGrid" || methodName == "cloneToBrick" || methodName == "cloneToHoneycomb") {
+                param = [{title:"xCount",value:4},{title:"yCount",value:3},{title:"margin",value:margin}]
+            } else if (methodName == "cloneToRadial") {
+                message.info("请指定中心点")
+                let origin = await vjmap.Draw.actionDrawPoint(map);
+                let center = map.fromLngLat(origin.features[0].geometry.coordinates);
+                param = [{title:"count",value:8},{title:"angleInDegrees",value:45},{title:"rotationOrigin",value:[center.x,center.y]}]
+            }
+            if (!param) return;
+            param = JSON.stringify(param, null, 0)
+            let content = await context.prompt("请输入布局克隆的参数", param);
+            if (!content) return;
+            param = JSON.parse(content)
+            let args = param.map(p => p.value); // 获取参数值
+            model = vjgeo.layout[methodName](symbol, ...args);
+            if (!model) return;
+            // 直接转成geojson
+            let json = vjgeo.exporter.toDWG(model, { isGeoJson: true});
+            // 交互式绘制geojson
+            let result = await vjcommon.interactiveCreateGeom(map.toLngLat(json), map, null, null, {disableScale: true,keepGeoSize:true});
+            if (!(result && result.feature && result.feature.features)) return;
+            let mapJson = draw.getAll();
+            result.feature.features.forEach(f => f.id = vjmap.RandomID(10)); //防止加入后 id 重复
+            mapJson.features.push(...result.feature.features);
+            draw.set(mapJson);
+        }
         
         // 颜色值改变事件
         const onColorChange = (props) => {
@@ -833,11 +966,13 @@ window.onload = async () => {
                         message.error("unknown command " + cmdId)
                     }
                 },
-                prompt(content) {
+                prompt(content, inputValue) {
                     return new Promise((resolve, reject) => {
                         this.$prompt(content, '提示', {
+                            inputValue,
                             confirmButtonText: '确定',
-                            cancelButtonText: '取消'
+                            cancelButtonText: '取消',
+                            closeOnClickModal: false
                         }).then(({ value }) => {
                             resolve(value)
                         }).catch(() => {

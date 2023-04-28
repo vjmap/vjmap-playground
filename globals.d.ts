@@ -15616,6 +15616,24 @@ export  const getMapSnapPoints: (map: vjmap.Map, snapObj: any, snapQueryLimit?: 
 
 export  const getPointOnePixelDrawStyleOption: () => any;
 
+export  const getQueryGeomData: (map: vjmap.Map, queryParam: any, propData?: Record<string, any>) => Promise<{
+    type: string;
+    features: {
+        id: string;
+        type: string;
+        properties: {
+            objectid: string;
+            color: string;
+            alpha: number;
+            lineWidth: number;
+            name: any;
+            isline: any;
+            layerindex: any;
+        };
+        geometry: any;
+    }[];
+}>;
+
 export  const getShardsTileUrl: (tileUrl: string, map?: vjmap.Map) => string[];
 
 export  const getTileShards: (tileUrl: string) => {
@@ -15656,6 +15674,7 @@ export  const interactiveCreateGeom: (data: any, map: vjmap.Map, options?: Recor
     drawInitPixelLength?: number;
     tempLineColor?: string;
     baseAlign?: "leftBottom" | "center" | "leftTop";
+    keepGeoSize?: boolean;
 }) => Promise<{
     feature: any;
     rotation: number;
@@ -15903,11 +15922,12 @@ export  const providerLayers: Record<string, typeof LayerBase>;
 export  type providerLayerTypes = keyof typeof providerLayers;
 
 export  function queryMapData(map: vjmap.Map, queryParam: {
-    condition: string;
-    bounds: string;
-    isContains: boolean;
-    coordType: 0 | 1;
-    clearPropData: boolean;
+    condition?: string;
+    bounds?: string;
+    isContains?: boolean;
+    coordType?: 0 | 1;
+    clearPropData?: boolean;
+    disableCacheData?: boolean;
 }, condition?: Record<string, any>): Promise<any>;
 
 export  function requestChangeData(map: vjmap.Map, param: {
@@ -16104,6 +16124,7 @@ export  class TsIndexDb {
         createLineTypePolyline,
         createLineTypeCurve,
         createHatch,
+        getQueryGeomData,
         createOutSymbol,
         drawText,
         addFeaturesToDraw,

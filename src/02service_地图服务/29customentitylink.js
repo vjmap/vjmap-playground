@@ -43,10 +43,23 @@ window.onload = async () => {
         
         await map.onLoad();
         let featureLinks = {};
+        
+        // 点击有高亮状态（鼠标点击地图元素上时，会高亮)
+        map.enableLayerClickHighlight(svc, e => {
+            vjcommon.clearHighlight(map);
+            if (!e) return;
+            let links = featureLinks[e.objectid] || [];
+            let linkObjectIds = new Set(links);
+            if (linkObjectIds.size == 0) {
+                message.info(`没有实体与这个实体相关联呢`);
+            } else {
+                message.info(`有 ${linkObjectIds.size} 实体与这个实体相关联`);
+                highLightObjectIds(Array.from(linkObjectIds))
+            }
+        })
         // 绑定关联实体
         const bindConnect = async () => {
             vjcommon.clearHighlight(map); // 清空之前选择高亮的
-            map.disableLayerClickHighlight(); // 先不能点击高亮
             // 进入选择实体状态
             message.info("请选择要关联的实体，点击右键结束")
             let srcFeature = await vjcommon.selectFeatures(map, true, true, true, true);
@@ -68,27 +81,13 @@ window.onload = async () => {
                 })
             })
             message.info(`${srcObjectIds.length } 个实体  与 ${destObjectIds.length} 个实体已建立关联`);
+        
         }
         
         // 定位关联实体
-        const posToConnectObject = async (tip) => {
-            if (tip) message.info("请点击选择要定位关联的实体")
-            vjcommon.clearHighlight(map);
-            map.disableLayerClickHighlight(); // 先不能点击高亮
-            map.setIsInteracting(false);
-            // 点击有高亮状态（鼠标点击地图元素上时，会高亮)
-            map.enableLayerClickHighlight(svc, e => {
-                vjcommon.clearHighlight(map);
-                if (!e) return;
-                let links = featureLinks[e.objectid] || [];
-                let linkObjectIds = new Set(links);
-                if (linkObjectIds.size == 0) {
-                    message.info(`没有实体与这个实体相关联呢`);
-                } else {
-                    message.info(`有 ${linkObjectIds.size} 实体与这个实体相关联`);
-                    highLightObjectIds(Array.from(linkObjectIds))
-                }
-            })
+        const posToConnectObject = async () => {
+            message.info(`请在图上点击一个实体查看相关联的实体`);
+            // 因为之前map.enableLayerClickHighlight里实现了，所以这里不用写了
         }
         
         const highLightObjectIds = async (objectIds) => {
@@ -125,7 +124,7 @@ window.onload = async () => {
             }
         }
         await loadData();
-        posToConnectObject();
+        
         // UI界面
         const App = () => {
             return (

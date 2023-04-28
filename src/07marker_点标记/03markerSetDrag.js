@@ -41,7 +41,6 @@ window.onload = async () => {
         const mapBounds = map.getGeoBounds(0.6);
         // marker
         let marker = new vjmap.Marker({
-            anchor: 'bottom',
             color: 'red',
             draggable: true
         });
@@ -67,6 +66,7 @@ window.onload = async () => {
             );
         }
         ReactDOM.render(<App/>, document.getElementById('ui'));
+        
     }
     catch (e) {
         console.error(e);
