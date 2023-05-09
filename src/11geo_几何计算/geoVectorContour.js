@@ -235,8 +235,10 @@ window.onload = async () => {
         let polygon = null;
         const addPolygon = ()=> {
             if (polygon) return;
+            let contourData = contour;
+            if (isClipContour) contourData = clipContoursPolygon(contour, clipBounds);
             polygon = new vjmap.Polygon({
-                data: contour,
+                data: contourData,
                 fillColor: ['case', ['to-boolean', ['feature-state', 'hover']], '#00ffff', ['get', 'color']],
                 fillOpacity: 0.9,
                 isHoverPointer: true,
@@ -289,6 +291,7 @@ window.onload = async () => {
             clipPolyline.remove();
             clipPolyline = null;
         }
+        
         
         const mockDataChange = async ()=> {
             dataset.features.forEach(f => f.properties.value = vjmap.randInt(dataMinValue, dataMaxValue));
@@ -360,12 +363,36 @@ window.onload = async () => {
             return data
         }
         
+        // 要裁剪的多边形和要裁剪的范围
+        const clipContoursPolygon = (polygonData, clipBounds) => {
+            let data = {
+                type: 'FeatureCollection',
+                features: []
+            }
+            for(let k = 0; k < polygonData.features.length; k++) {
+                // 遍历每一个子多边形
+                for(let n = 0; n < polygonData.features[k].geometry.coordinates.length; n++) {
+                    let feature = vjmap.cloneDeep(polygonData.features[k]);
+                    feature.geometry.coordinates = []
+                    let coordinates = map.fromLngLat(polygonData.features[k].geometry.coordinates[n]);
+                    let clipCoordinates = vjmap.clipPolygon(coordinates, clipBounds)
+                    if (clipCoordinates.length > 2) {
+                        clipCoordinates.push(clipCoordinates[0]); //闭合
+                        feature.geometry.coordinates.push(map.toLngLat(clipCoordinates));
+                        data.features.push(feature)
+                    }
+                }
+            }
+            return data
+        }
+        
+        
         const setClipContour = () => {
-            if (isClipContour) return;
             isClipContour = true;
             removeMarkers();
             addMarkers();
             removePolyline();
+            removePolygon();
             addPolyline();
             removeSymbols();
             addSymbols();
@@ -373,12 +400,35 @@ window.onload = async () => {
         }
         
         const setNoClipContour = () => {
-            if (!isClipContour) return;
             isClipContour = false;
             removeMarkers();
             addMarkers();
             removePolyline();
             addPolyline();
+            removeSymbols();
+            addSymbols();
+            removeClipPolyline();
+        }
+        
+        const setClipContourPolygon = () => {
+            isClipContour = true;
+            removeMarkers();
+            addMarkers();
+            removePolyline();
+            removePolygon();
+            addPolygon();
+            removeSymbols();
+            addSymbols();
+            addClipPolyline();
+        }
+        
+        const setNoClipContourPolygon = () => {
+            isClipContour = false;
+            removeMarkers();
+            addMarkers();
+            removePolyline();
+            removePolygon();
+            addPolygon();
             removeSymbols();
             addSymbols();
             removeClipPolyline();
@@ -488,6 +538,16 @@ window.onload = async () => {
                         <div className="input-item">
                             <button id="clear-map-btn" className="btn btn-full mr0"
                                     onClick={() => setNoClipContour()}>不裁剪等值线
+                            </button>
+                        </div>
+                        <div className="input-item">
+                            <button id="clear-map-btn" className="btn btn-full mr0"
+                                    onClick={() => setClipContourPolygon()}>裁剪等值面
+                            </button>
+                        </div>
+                        <div className="input-item">
+                            <button id="clear-map-btn" className="btn btn-full mr0"
+                                    onClick={() => setNoClipContourPolygon()}>不裁剪等值面
                             </button>
                         </div>
                         <div className="input-item">

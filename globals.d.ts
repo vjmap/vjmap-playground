@@ -4886,6 +4886,8 @@ export  interface IQueryBaseFeatures {
     simplifyTolerance?: boolean;
     /** 启动cache(内存打开的图形有效). */
     useCache?: boolean;
+    /** 查询返回的坐标默认为墨卡托坐标，返回会程序会自动转化为cad坐标，如果要直接返回cad地图坐标，需要把toMapCoordinate设置为true. */
+    toMapCoordinate?: boolean;
 }
 
 /**
