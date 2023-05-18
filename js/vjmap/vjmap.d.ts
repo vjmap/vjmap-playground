@@ -9566,6 +9566,10 @@ export  type TerrainSpecificationEx = {
      */
     getElement(): HTMLElement;
     /**
+     * 返回 `Text` 的 Marker 对象。
+     */
+    getMarker(): Marker;
+    /**
      * Binds a `Popup` to the `Text`
      * @param popup
      * @return {this}
@@ -10962,6 +10966,7 @@ export  type vec4type = [number, number, number, number] | Float32Array;
          xlim: number, // canvas有效
          ylim: number, // canvas有效
          colors:string[] // canvas有效 等值面分级区间
+         width: number // 生成等值线宽度参数。像素长度。默认200。宽度值越大，绘制越精确，但也会导致速度变慢，内存占用越多
   }
  */
 export  function vectorContour(featureCollection: FeatureCollection, weight: string, breaks: number[], params?: {
@@ -10973,6 +10978,7 @@ export  function vectorContour(featureCollection: FeatureCollection, weight: str
     ylim?: number;
     colors?: string[];
     extent?: [number, number, number, number];
+    width?: number;
 }): {
     grid?: {
         grid: number[];
@@ -11414,7 +11420,7 @@ export  const wrap: (min: number, max: number, v: number) => number;
          * 使图层点击高亮
          * @param svc 服务接口实例
          * @param cb 回调
-         * @param HighlightColor?: string,
+         * @param HighlightColor  高亮时的颜色，（颜色为#0000时，则不会绘制）
          * @param prefix 高亮图层名称前缀，缺省(highlight)
          * @param filterCb 结果过滤回调
          * @param enterQueryCb 进入查询前回调，可用来修改查询的参数，如坐标等

@@ -1,5 +1,6 @@
 import { Control } from 'vjmap';
 import { GeoBounds } from 'vjmap';
+import { GeoPoint } from 'vjmap';
 import type { IConditionQueryFeatures } from 'vjmap';
 import { IControl } from 'vjmap';
 import { IDrawTool } from 'vjmap';
@@ -241,6 +242,7 @@ export declare const interactiveCreateGeom: (data: any, map: Map_2, options?: Re
     tempLineColor?: string;
     baseAlign?: "leftBottom" | "center" | "leftTop";
     keepGeoSize?: boolean;
+    position?: GeoPoint;
 }) => Promise<{
     feature: any;
     rotation: number;

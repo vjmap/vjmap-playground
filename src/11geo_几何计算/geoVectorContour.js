@@ -108,12 +108,14 @@ window.onload = async () => {
         
             // 启动webworker计算函数
             let createContourWorker = vjmap.WorkerProxy(vjmap.vectorContour);
-            let { grid, contour, variogram } = await createContourWorker(dataset, propField, contours, {
+            let { grid, contour, variogram } = await createContourWorker(map.fromLngLat(dataset), propField, contours, {
                 model: model || 'exponential', // 'exponential','gaussian','spherical'，三选一，默认exponential
                 sigma2:0, // sigma2是σ²，对应高斯过程的方差参数，也就是这组数据z的距离，方差参数σ²的似然性反映了高斯过程中的误差，并应手动设置。一般设置为 0 ，其他数值设了可能会出空白图
                 alpha:100, // [如果绘制不出来，修改此值，可以把此值改小] Alpha α对应方差函数的先验值，此参数可能控制钻孔扩散范围,越小范围越大,少量点效果明显，但点多了且分布均匀以后改变该数字即基本无效果了，默认设置为100
-                extent: extent // 如果要根据数据范围自动生成此范围，则无需传此参数
+                extent: map.fromLngLat(vjmap.GeoBounds.fromArray(extent)).toArray(), // 如果要根据数据范围自动生成此范围，则无需传此参数
+                width: 500 // 生成等值线宽度参数。像素长度。默认200。宽度值越大，绘制越精确，但也会导致速度变慢，内存占用越多
             }, []);
+            contour = map.toLngLat(contour);
             variog = variogram;
         
             // 根据比例插值颜色
