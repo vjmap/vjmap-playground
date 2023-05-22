@@ -192,7 +192,7 @@ window.onload = async () => {
         }
         
         // 移动一个marker至新的位置
-        const moveMarkerToPos =  (marker, pos) => {
+        const moveMarkerToPos =  (marker, pos, duration, cb) => {
             return new Promise((resolve => {
                 // 得到地理坐标
                 const co = map.fromLngLat(marker.getLngLat())
@@ -205,11 +205,16 @@ window.onload = async () => {
                 vjmap.createAnimation({
                     from: 0,
                     to: 1,
-                    duration: 2000,
+                    duration: duration || 2000,
                     ease:vjmap.linear, //线性
                     onUpdate: latest => {
                         const newPos = mapProgressToValues(latest)
-                        marker.setLngLat(map.toLngLat(newPos))
+                        if (cb) {
+                            cb(latest, newPos); // 如果有回调函数
+                        }
+                        else {
+                            marker.setLngLat(map.toLngLat(newPos));
+                        }
                     },
                     onComplete: (e) => {
                         resolve()
@@ -225,7 +230,14 @@ window.onload = async () => {
             while (!marker.isStopWalk) {
                 marker.isWalking = true
                 let nextPoint = getRandomPointOnPolygon(marker, step, walkRegions)
+        
                 await moveMarkerToPos(marker, nextPoint)
+                if (marker.personName == "男1号") {
+                    personOneWalkPaths.push({
+                        coordinate: nextPoint,
+                        time: new Date()
+                    })
+                }
             }
         }
         
@@ -323,6 +335,98 @@ window.onload = async () => {
             flashPos(marker)
         }
         
+        // 显示人员轨迹
+        let personRouteLine, realPersonRouteLine, personRouteMarker, isRoutePlaying;
+        const showPersonRoute = async () => {
+            hidePersonRoute();
+            // 关闭人员定位图层
+            showHidePersonLayer(true);
+            let routePath = personOneWalkPaths.map(p => p.coordinate);
+            map.fitMapBounds(vjmap.GeoBounds.fromDataExtent(routePath), {
+                padding: 100,
+        
+            }); // 定位到路径
+            // https://vjmap.com/demo/#/demo/map/overlay/polyline/polylineAnimate
+            // 路径线
+            personRouteLine = new vjmap.PolylineArrow({
+                path: map.toLngLat(routePath),
+                lineWidth: 10,
+                showDir: true,
+                lineColor: '#009EFF'
+            });
+            personRouteLine.addTo(map);
+        
+            // 实时动画轨迹线
+            let realPath = [routePath[0], routePath[0]]; // 一开始把起点加上
+            realPersonRouteLine = new vjmap.PolylineArrow({
+                path: map.toLngLat(realPath),
+                lineWidth: 10,
+                showDir: true,
+                showBorder: true,
+                borderColor: "#f00",
+                lineColor: '#FF9900'
+            });
+            realPersonRouteLine.addTo(map);
+        
+            const formatTime = (milliseconds) => {
+                let totalSeconds = Math.floor(milliseconds / 1000);
+                let minutes = Math.floor((totalSeconds % 3600) / 60);
+                let seconds = totalSeconds % 60;
+                let mseconds = milliseconds % 1000;
+                return  minutes + "分" + seconds + "秒" + mseconds.toFixed(0) + "毫秒";
+            }
+            personRouteMarker = createMarker(routePath[0], true, '');
+            personRouteMarker.getPopup().setText(formatTime(personOneWalkPaths[0].time.getTime()));
+            if (!personRouteMarker.getPopup().isOpen()) {
+                personRouteMarker.togglePopup();
+            }
+        
+        
+            isRoutePlaying = true;
+            for(let i = 1; i < routePath.length; i++) {
+                // 与前一个点的时间差
+                let tm = personOneWalkPaths[i].time.getTime() - personOneWalkPaths[i - 1].time.getTime();
+                // 对时间进行插值
+                const timeInterPolate = vjmap.interpolate(
+                    [0, 1],
+                    [personOneWalkPaths[i - 1].time.getTime(), personOneWalkPaths[i].time.getTime()]
+                )
+                await moveMarkerToPos(personRouteMarker, routePath[i], tm, (latest, newPos) => {
+                    if (!isRoutePlaying) return; //  如果结束轨迹动画了
+                    try {
+                        const curTime = timeInterPolate(latest);
+                        personRouteMarker.setLngLat(map.toLngLat(newPos));
+                        personRouteMarker.getPopup().setText(formatTime(curTime));
+                        realPath.push(newPos);
+                        realPersonRouteLine.setPath(map.toLngLat(realPath)); // 更新路线位置
+                    } catch (e) {
+        
+                    }
+                })
+                if (!isRoutePlaying) break; //  如果结束轨迹动画了
+            }
+        
+        }
+        
+        // 关闭人员轨迹
+        const hidePersonRoute = async () => {
+            isRoutePlaying = false;
+            if (personRouteLine) {
+                personRouteLine.remove();
+                personRouteLine = null;
+            }
+            if (realPersonRouteLine) {
+                realPersonRouteLine.remove();
+                realPersonRouteLine = null;
+            }
+            if (personRouteMarker) {
+                if (personRouteMarker.getPopup().isOpen()) {
+                    personRouteMarker.togglePopup(); // 关闭
+                }
+                personRouteMarker.remove();
+                personRouteMarker = null;
+            }
+        }
         // 闪烁一个位置
         const flashPos = (marker) => {
             return new Promise((resolve => {
@@ -398,12 +502,13 @@ window.onload = async () => {
         let fencePopup = null;
         setFenceAlarm(true)
         
-        let personMarker = []
-        // 绘制人的marker
-        for(let p = 0; p < personPostions.length; p++) {
+        let personOneWalkPaths = [];// 记录一号员工走过的路径，用于轨迹回放
+        let personMarker = [];
+        
+        const createMarker = (pos, isMan, personName)=> {
             let el = document.createElement('div');
             el.className = 'marker';
-            let isMan = vjmap.randInt(0, 1) === 0
+        
             el.style.backgroundImage =
                 isMan ? 'url("../../assets/images/man.png")' : 'url("../../assets/images/girl.png")';
             el.style.width = '40px';
@@ -415,13 +520,29 @@ window.onload = async () => {
                 element: el,
                 anchor: 'bottom'
             });
-            marker.personName = `${isMan ? '男' : '女'}${p + 1}号`
-            marker.setLngLat(map.toLngLat(personPostions[p]))
+        
+            marker.personName = personName;
+            marker.setLngLat(map.toLngLat(pos))
                 .addTo(map);
             const popup = new vjmap.Popup({offset: [0, -40], closeOnClick: false})
-                .setText(marker.personName);
+                .setText(personName);
             marker.setPopup(popup)
-            personMarker.push(marker)
+            return marker;
+        }
+        // 绘制人的marker
+        for(let p = 0; p < personPostions.length; p++) {
+            let isMan = vjmap.randInt(0, 1) === 0;
+            let personName = '';
+            if (p == 0) isMan = true; //第一个强制为男1号吧。记录他的位置用于轨迹回放
+            personName = `${isMan ? '男' : '女'}${p + 1}号`
+            let marker = createMarker(personPostions[p], isMan, personName)
+            personMarker.push(marker);
+            if (marker.personName == "男1号") {
+                personOneWalkPaths.push({
+                    coordinate: vjmap.geoPoint(personPostions[p]),
+                    time: new Date()
+                })
+            }
         }
         
         
@@ -599,7 +720,9 @@ window.onload = async () => {
                         <button className="btn" onClick={ () => switchView(true) }>3d视图</button>
                         <button className="btn" onClick={ () => showHidePersonLayer(true) }>关闭人员定位图层</button>
                         <button className="btn" onClick={ () => showHidePersonLayer(false) }>显示人员定位图层</button>
-                        <button className="btn" onClick={ () => postionToPerson(1) }>定位人员</button>
+                        <button className="btn" onClick={ () => postionToPerson(0) }>定位人员</button>
+                        <button className="btn" onClick={ () => showPersonRoute() }>人员轨迹回放</button>
+                        <button className="btn" onClick={ () => { hidePersonRoute(); showHidePersonLayer(false) }}>关闭人员轨迹回放</button>
                         <button className="btn" onClick={ () => showHideSensorLayer(true) }>关闭传感器图层</button>
                         <button className="btn" onClick={ () => showHideSensorLayer(false) }>显示传感器图层</button>
                     </div>
@@ -608,6 +731,7 @@ window.onload = async () => {
         }
         
         ReactDOM.render(<App/>, document.getElementById('ui'));
+        
         
     }
     catch (e) {

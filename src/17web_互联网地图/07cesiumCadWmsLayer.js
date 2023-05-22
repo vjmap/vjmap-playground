@@ -75,7 +75,8 @@ window.onload = async () => {
             layers: layer, // 图层名称
             bbox: '', // bbox这里不需要传，cesium会自动加上
             srs: "EPSG:4326", // cesium地图是wgs84
-            crs: cadEpsg
+            crs: cadEpsg,
+            // fourParameter: "-38000000,0,1,0" // 参数为(平移x,平移y,缩放k,旋转弧度r)  如果是有带号的坐标系并且x坐标只有6位，还需加个平移量x的8位的前两位如此38，根据实际情况改成实际的值
         })
         layers.addImageryProvider(
             new Cesium.WebMapServiceImageryProvider({

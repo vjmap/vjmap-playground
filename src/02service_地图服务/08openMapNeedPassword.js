@@ -14,7 +14,8 @@ window.onload = async () => {
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken);
         // 如果有此图的密码，可以在打开之前进行设置，这样就不会弹出密码输入框了
         // secretKey权限上图的最多权限，不要轻易把secretKey暴露
-        //svc.addSecretKey(svc.pwdToSecretKey("your password"));
+        // let secretKey = 'xxxxxxx'; // xxxxxxx的值可以通过在控制台输出 svc.pwdToSecretKey("your password"); 的值复制过来。这样就不会在代码中暴露密码明文了
+        //svc.addSecretKey(secretKey);
         
         // 或者如果有此图的accessKey，可以在打开之前进行设置，这样就不会弹出密码输入框了，
         // accessKey可以访问图形，但权限比较小，不能删除图形等。可以把accessKey发给需要访问此图的人

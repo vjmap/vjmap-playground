@@ -92,12 +92,51 @@ window.onload = async () => {
             dataset.features.push(feature);
         }
         
+        /* 如果是自定义数据，可参考下面的示例代码
+        let list = [
+            { name: '1', coordinateX:  4983.743653922847, coordinateY: 15416.30519881966, value: 671.139 },
+            { name: '2', coordinateX: 20940.3830161238, coordinateY: 15275.718067875001, value: 926.95 },
+            { name: '3', coordinateX: 8287.541231118597, coordinateY: 8597.829348010353, value: 760.66 },
+            { name: '4', coordinateX: 18550.40179006735, coordinateY: 3958.454026841191, value: 866.43 },
+            { name: '5', coordinateX:  24455.06128973639, coordinateY: 9019.590740843836, value: 723.51 }
+        ];
+        dataset.features = [];
+        for (let i = 0; i < list.length; i++) {
+            if (i == 0) {
+                dataMinValue = list[i].value;
+                dataMaxValue = list[i].value;
+            } else {
+                if (list[i].value < dataMinValue) dataMinValue = list[i].value;
+                if (list[i].value > dataMaxValue) dataMaxValue = list[i].value;
+            }
+            let feature={
+                "type" : "Feature",
+                "properties" : {
+                    "value" : list[i].value // 在最大值最小值范围内随机生成一个测试数据
+                },
+                "geometry" : {
+                    "type" : "Point",
+                    "coordinates" : map.toLngLat([list[i].coordinateX,list[i].coordinateY])
+                }
+            };
+            dataset.features.push(feature);
+        }
+        */
+        
         let contoursSize = 20; // 【值越大，等值线越密】等值面分级区间数，这里设置为20，可以自行设置
         let variog;
-        const createContour = async (dataset, contoursSize, propField, colors, dataMinValue, dataMaxValue, maxHeight, model) => {
+        let curModel = 'exponential'; // 当前模型方法名
+        let curAlpha = 100; // 当前alpha值
+        const createContour = async (dataset, contoursSize, propField, colors, dataMinValue, dataMaxValue, maxHeight, model, alpha) => {
             let contours = [];
             for(let i = 0; i < contoursSize; i++) {
                 contours.push(dataMinValue + (dataMaxValue - dataMinValue) * i /  (contoursSize - 1));
+            }
+            if (dataMinValue >= 10 && dataMaxValue > 100) {
+                // 等值线的值按10取整
+                for(let i = 0; i < contours.length; i++) {
+                    contours[i] = (parseInt(contours[i]/10) * 10);
+                }
             }
         
             let interpolateInput = [], interpolateOutput = [];
@@ -111,7 +150,7 @@ window.onload = async () => {
             let { grid, contour, variogram } = await createContourWorker(map.fromLngLat(dataset), propField, contours, {
                 model: model || 'exponential', // 'exponential','gaussian','spherical'，三选一，默认exponential
                 sigma2:0, // sigma2是σ²，对应高斯过程的方差参数，也就是这组数据z的距离，方差参数σ²的似然性反映了高斯过程中的误差，并应手动设置。一般设置为 0 ，其他数值设了可能会出空白图
-                alpha:100, // [如果绘制不出来，修改此值，可以把此值改小] Alpha α对应方差函数的先验值，此参数可能控制钻孔扩散范围,越小范围越大,少量点效果明显，但点多了且分布均匀以后改变该数字即基本无效果了，默认设置为100
+                alpha: alpha || 100, // [如果绘制不出来，修改此值，可以把此值改小] Alpha α对应方差函数的先验值，此参数可能控制钻孔扩散范围,越小范围越大,少量点效果明显，但点多了且分布均匀以后改变该数字即基本无效果了，默认设置为100
                 extent: map.fromLngLat(vjmap.GeoBounds.fromArray(extent)).toArray(), // 如果要根据数据范围自动生成此范围，则无需传此参数
                 width: 500 // 生成等值线宽度参数。像素长度。默认200。宽度值越大，绘制越精确，但也会导致速度变慢，内存占用越多
             }, []);
@@ -140,7 +179,7 @@ window.onload = async () => {
         
         
         let maxHeight = map.pixelToHeight(100, map.getZoom()); // 设置最大值要拉伸的高度
-        let contour = await createContour(dataset, contoursSize, "value" /*geojson的哪个属性值用于计算*/, colors, dataMinValue, dataMaxValue, maxHeight);
+        let contour = await createContour(dataset, contoursSize, "value" /*geojson的哪个属性值用于计算*/, colors, dataMinValue, dataMaxValue, maxHeight, curModel, curAlpha);
         contour.features.forEach(f => {
             f.properties.formatValue = Math.round(f.properties.value) // 多加一个用于格式化的注记的值
         })
@@ -232,6 +271,12 @@ window.onload = async () => {
             if (!polyline) return;
             polyline.remove();
             polyline = null;
+            removeSymbols();
+        }
+        const drawPolyline = () => {
+            addPolyline();
+            removeSymbols();
+            addSymbols();
         }
         
         let polygon = null;
@@ -253,6 +298,13 @@ window.onload = async () => {
             if (!polygon) return;
             polygon.remove();
             polygon = null;
+            removeSymbols();
+        }
+        
+        const drawPolygon = () => {
+            addPolygon();
+            removeSymbols();
+            addSymbols();
         }
         
         let fillExtrusions = null;
@@ -274,6 +326,13 @@ window.onload = async () => {
             if (!fillExtrusions) return;
             fillExtrusions.remove();
             fillExtrusions = null;
+            removeSymbols();
+        }
+        
+        const drawFillExtrusion = ()=> {
+            addFillExtrusion();
+            removeSymbols();
+            addSymbols();
         }
         
         let clipPolyline = null;
@@ -295,9 +354,9 @@ window.onload = async () => {
         }
         
         
-        const mockDataChange = async ()=> {
-            dataset.features.forEach(f => f.properties.value = vjmap.randInt(dataMinValue, dataMaxValue));
-            contour = await createContour(dataset, contoursSize, "value" /*geojson的哪个属性值用于计算*/, colors, dataMinValue, dataMaxValue, maxHeight);
+        
+        const refresh = async ()=> {
+            contour = await createContour(dataset, contoursSize, "value" /*geojson的哪个属性值用于计算*/, colors, dataMinValue, dataMaxValue, maxHeight, curModel, curAlpha);
             contour.features.forEach(f => {
                 f.properties.formatValue = Math.round(f.properties.value) // 多加一个用于格式化的注记的值
             })
@@ -318,6 +377,11 @@ window.onload = async () => {
             if (fillExtrusions) {
                 fillExtrusions.setData(contour)
             }
+        }
+        
+        const mockDataChange = async ()=> {
+            dataset.features.forEach(f => f.properties.value = vjmap.randInt(dataMinValue, dataMaxValue));
+            refresh();
         }
         
         // 要裁剪的多段线数组和要裁剪的范围
@@ -371,9 +435,9 @@ window.onload = async () => {
                 type: 'FeatureCollection',
                 features: []
             }
-            for(let k = 0; k < polygonData.features.length; k++) {
+            for (let k = 0; k < polygonData.features.length; k++) {
                 // 遍历每一个子多边形
-                for(let n = 0; n < polygonData.features[k].geometry.coordinates.length; n++) {
+                for (let n = 0; n < polygonData.features[k].geometry.coordinates.length; n++) {
                     let feature = vjmap.cloneDeep(polygonData.features[k]);
                     feature.geometry.coordinates = []
                     let coordinates = map.fromLngLat(polygonData.features[k].geometry.coordinates[n]);
@@ -381,10 +445,13 @@ window.onload = async () => {
                     if (clipCoordinates.length > 2) {
                         clipCoordinates.push(clipCoordinates[0]); //闭合
                         feature.geometry.coordinates.push(map.toLngLat(clipCoordinates));
+                        feature.properties.area = vjmap.calcPolygonArea(clipCoordinates)
                         data.features.push(feature)
                     }
                 }
             }
+            // 按面积大小排下序。有时候裁剪后会导致一些面积大的覆盖之前面积小的，导致小的看不见
+            data.features = data.features.sort((a, b) => b.properties.area - a.properties.area)
             return data
         }
         
@@ -478,7 +545,22 @@ window.onload = async () => {
         */
         
         // UI界面
+        const { useState } = React;
+        const { Slider, Select, InputNumber} = antd;
         const App = () => {
+            const [inputValue, setInputValue] = useState(100);
+            let timeId = 0;
+            const onChange = (value) => {
+                setInputValue(value);
+                if (timeId) {
+                    clearTimeout(timeId)
+                }
+                timeId = setTimeout(() => { curAlpha = value; refresh(); }, 2000)
+            };
+            const handleModelChange = (value) => {
+                curModel = value;
+                refresh();
+            }
             return (
                 <div>
                     <div className="info" style={{width: "90px", right: "10px"}}>
@@ -494,7 +576,7 @@ window.onload = async () => {
                         </div>
                         <div className="input-item">
                             <button id="clear-map-btn" className="btn btn-full mr0"
-                                    onClick={() => addPolyline()}>绘制等值线
+                                    onClick={() => drawPolyline()}>绘制等值线
                             </button>
                         </div>
                         <div className="input-item">
@@ -504,7 +586,7 @@ window.onload = async () => {
                         </div>
                         <div className="input-item">
                             <button id="clear-map-btn" className="btn btn-full mr0"
-                                    onClick={() => addPolygon()}>绘制等值面
+                                    onClick={() => drawPolygon()}>绘制等值面
                             </button>
                         </div>
                         <div className="input-item">
@@ -514,7 +596,7 @@ window.onload = async () => {
                         </div>
                         <div className="input-item">
                             <button id="clear-map-btn" className="btn btn-full mr0"
-                                    onClick={() => addFillExtrusion()}>绘制等值面拉伸
+                                    onClick={() => drawFillExtrusion()}>绘制等值面拉伸
                             </button>
                         </div>
                         <div className="input-item">
@@ -556,6 +638,31 @@ window.onload = async () => {
                             <button id="clear-map-btn" className="btn btn-full mr0"
                                     onClick={() => mockDataChange()}>模拟值变化
                             </button>
+                        </div>
+                        <div>
+                            模型方法:
+                            <Select
+                                defaultValue="exponential"
+                                style={{ width: 120 }}
+                                onChange={handleModelChange}
+                                options={[
+                                    { value: 'exponential', label: 'exponential' },
+                                    { value: 'spherical', label: 'spherical' },
+                                    //{ value: 'gaussian', label: 'gaussian' },
+                                ]}
+                            />
+                        </div>
+                        <div>
+                            Alpha值：<Slider step={0.01}  value={inputValue}
+                                           onChange={onChange} />
+                            <InputNumber
+                                min={0}
+                                max={100}
+                                style={{ margin: '0 16px' }}
+                                step={0.01}
+                                value={inputValue}
+                                onChange={onChange}
+                            />
                         </div>
                     </div>
                 </div>

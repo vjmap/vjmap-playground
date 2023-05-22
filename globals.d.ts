@@ -2173,7 +2173,8 @@ export  function entColorToHtmlColor(color: number | string, darkMode?: boolean,
     Xian80 = "Xian80",
     CGCS2000 = "CGCS2000",
     Wgs84 = "Wgs84",
-    Merc3857 = "Merc3857"
+    Merc3857 = "Merc3857",
+    NewBeijing54 = "NewBeijing54"
 }
 
 export  const EPSILON = 1e-8;
@@ -3213,7 +3214,21 @@ export  function getEllipsePolygonCoordinates(center: GeoPointLike, majorAxisRad
 export  function getEnvelopBounds(envelop: string, prj: any): GeoBounds;
 
 /**
- * 根据带系和坐标系来得到proj4的参数
+ * 根据坐标来获取epsg代号
+ * @param coordinate 坐标，如果有带号的坐标x，输入x的前两位，否则可输入投影坐标[x,y]或经纬度[lng,lat]
+ * @param crs 投影坐标类型 用来过滤结果， 不填默认全部
+ * @param is3DegreeBelt 是否是三度带，用来过滤结果， 不填默认全部
+ * @returns
+ */
+ function getEpsgCode(coordinate: number | [number, number], crs?: EpsgCrsTypes, is3DegreeBelt?: boolean): {
+    crs: string;
+    is3DegreeBelt: boolean;
+    epsg: string;
+    proj: string | undefined;
+}[];
+
+/**
+ * 根据带号和坐标系来得到proj4的参数
  * @param crs 投影坐标类型
  * @param lon 如果为北京54,西安80，2000坐标，需要传入8位的经度坐标，或者带系前两位。如果是wgs84或3857，则不需要传入
  * @returns {null | {epsg: string, proj: string}}
@@ -9909,6 +9924,7 @@ export  const transform: {
     convert: typeof convert;
     EpsgCrsTypes: typeof EpsgCrsTypes;
     getEpsgParam: typeof getEpsgParam;
+    getEpsgCode: typeof getEpsgCode;
 };
 
 export  type TransitionSpecification = {

@@ -73,6 +73,7 @@ window.onload = async () => {
             );
         }
         ReactDOM.render(<App />, document.getElementById('ui'));
+        
     }
     catch (e) {
         console.error(e);
