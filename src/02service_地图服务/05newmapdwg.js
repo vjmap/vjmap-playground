@@ -108,6 +108,17 @@ window.onload = async () => {
         })
         doc.appendTextStyle(textStyle);
          */
+        // 在cad图新增图层
+        let cadLayer1 = new vjmap.DbLayer();
+        cadLayer1.name = "文字图层";
+        cadLayer1.color = 1;
+        doc.layers = doc.layers || [];
+        doc.layers.push(cadLayer1);
+        // 可以给一个实体设置扩展数据
+        let extData = {
+            a: 1,
+            b: "text"
+        }
         let otherEnts = [
             new vjmap.DbLine({
                 start: [0, 15],
@@ -130,9 +141,12 @@ window.onload = async () => {
             new vjmap.DbText({
                 position: [14, 16],
                 contents: "篮球场示意图",
-                colorIndex: 1,
                 horizontalMode: 4,
                 height: 1,
+                layer: "文字图层", // 设置图层
+                colorIndex: 256, // 随层
+                xdata: { key: JSON.stringify(extData, null, 0)} // 创建扩展数据后，查询时返回 {"1000":"{\"a\":1,\"b\":\"text\"}","1001":"key"} "1000"是固定的。表示是值; "1001"是固定的。表示是键
+                //  xdata: { 1000: JSON.stringify(extData, null, 0), 1071: 3, 1001: "JS_XDATA"}
                 // textStyle: "mytext", // 如果设置了自定义的文字样式
             })
         ]

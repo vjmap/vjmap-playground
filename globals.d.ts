@@ -4642,7 +4642,7 @@ export  interface IMatchObject {
     tolerance1?: number;
     /** 角度区间1结束角度. 方法为matchPattern有效*/
     tolerance2?: number;
-    /** 角度区间1开始角度. 方法为matchPattern有效*/
+    /** 角度区间2开始角度. 方法为matchPattern有效*/
     tolerance3?: number;
     /** 角度区间2结束角度. 方法为matchPattern有效*/
     tolerance4?: number;
@@ -4748,10 +4748,14 @@ export  interface IOpenMapBaseParam {
     renderAccuracy?: number;
     /** 样式. */
     style?: IMapStyleParam;
+    /** 不使用缺省的字体文件，将使用缺省的型文件来代替字体文件. */
+    notUseDefaultTtfFont?: boolean;
     /** 不使用缺省的型文字文件，将使用缺省的字体来代替型文件. */
     notUseDefaultShxFont?: boolean;
+    /** 不自动替换线型. */
+    notReplaceLineType?: boolean;
     /** 字符替换规则. openMap返回的字段findFonts为系统查找的字体替换规则。如需修改默认的话，请传入替换的字体规则，如fontReplaceRule: {"tssdeng.shx_1": "_default_.ttc"}*/
-    fontReplaceRule?: Record<string, string>;
+    fontReplaceRule?: Record<string, string> | string;
     /** 图像左上角坐标x 第一次打开图像类型时有效*/
     imageLeft?: number;
     /** 图像左上角坐标y 第一次打开图像类型时有效*/
@@ -8771,8 +8775,9 @@ export  class Service {
      * @param customColorCaseExpr 自定义颜色表达式，必须为数组[条件1，值，条件2，值,...]，如[['==', ['feature-state', 'status'], 'alarm'], '#ff0000', ['==', ['feature-state', 'status'], 'normal'], '#00ff00'],缺省默认
      * @param customOpacityCaseExpr 自定义透明度表达式，必须为数组,缺省默认
      * @param customLineWidthCaseExpr 自定义线宽表达式，必须为数组,缺省默认
+     * @param disableHover 禁止hover
      */
-    vectorStyle(tileUrl?: string | Record<string, any>, minzoom?: number, maxzoom?: number, prefix?: string, hoverColor?: string, hoverOpacity?: number, hoverLineWidth?: number, customColorCaseExpr?: any[], customOpacityCaseExpr?: any[], customLineWidthCaseExpr?: any[]): Style;
+    vectorStyle(tileUrl?: string | Record<string, any>, minzoom?: number, maxzoom?: number, prefix?: string, hoverColor?: string, hoverOpacity?: number, hoverLineWidth?: number, customColorCaseExpr?: any[], customOpacityCaseExpr?: any[], customLineWidthCaseExpr?: any[], disableHover?: boolean): Style;
     /**
      * 得到所有矢量字体名称
      * @return {Promise<any>}
@@ -15532,7 +15537,7 @@ export  const createLineTypePolyline: (map: vjmap.Map, draw: vjmap.IDrawTool, op
 
 export  const createMapStyleLayerName: (svc: vjmap.Service, overMapType: WmsOverlayMapType, overMapParam: WmsMapParam | WmsMapParam[], backcolor?: number) => Promise<WmsMapParam | WmsMapParam[]>;
 
-export  const createOutSymbol: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<void>;
+export  const createOutSymbol: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<any>;
 
 export  const createUpdateMapStyleObj: (map: vjmap.Map, option?: Record<string, any>) => {
     addHideObjectIds: (objectIds: string[], noUpdate?: boolean, isClear?: boolean) => Promise<void>;
@@ -15649,6 +15654,7 @@ export  const getQueryGeomData: (map: vjmap.Map, queryParam: any, propData?: Rec
             objectid: string;
             color: string;
             alpha: number;
+            opacity: number;
             lineWidth: number;
             name: any;
             isline: any;
@@ -15700,6 +15706,9 @@ export  const interactiveCreateGeom: (data: any, map: vjmap.Map, options?: Recor
     baseAlign?: "leftBottom" | "center" | "leftTop";
     keepGeoSize?: boolean;
     position?: vjmap.GeoPoint;
+    scaleValue?: number;
+    angleValue?: number;
+    unCombineFeature?: boolean;
 }) => Promise<{
     feature: any;
     rotation: number;

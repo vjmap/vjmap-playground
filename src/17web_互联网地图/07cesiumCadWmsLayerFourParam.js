@@ -8,10 +8,11 @@ window.onload = async () => {
         ...__env__ // 如果您已私有化部署，需要连接已部署的服务器地址和token，请打开js/env.js,修改里面的参数
     };
     try {
-        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/web/07cesiumCadWmsLayer
-        // --Cesium中加载CAD图(WMS图层自动叠加)--
+        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/web/07cesiumCadWmsLayerFourParam
+        // --Cesium中加载CAD图(WMS图层四参数叠加)--
         // 地图服务对象
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
+        window.svc = svc
         // 打开地图
         let mapId = "sys_cadcesium";
         let res = await svc.openMap({
@@ -24,6 +25,7 @@ window.onload = async () => {
             message.error(res.error)
         }
         let layer = res.layer;//图层样式名
+        
         
         
         if (typeof Cesium !== "object") {
@@ -68,15 +70,35 @@ window.onload = async () => {
             })
         );
         
-        let cadEpsg = "EPSG:4544" ;// cad图的espg代号
+        
+        // cad上面的点坐标
+        let cadPoints = [
+            vjmap.geoPoint([595544.328982, 3252528.216226]),
+            vjmap.geoPoint([627928.010946,3263082.764822]),
+            vjmap.geoPoint([625319.1513109521,3246689.371984474]),
+        ];
+        
+        // 在wgs84坐标系上面拾取的点（如天地图上面）与上面的点一一对应的坐标
+        let webPoints = [
+            vjmap.geoPoint([105.9842161763667,29.38665272938248]),
+            vjmap.geoPoint([106.31897105133609, 29.478968581719126]),
+            vjmap.geoPoint([106.29021011814865, 29.331372065225345])
+        ]
+        
+        // wgs84转3857
+        webPoints = webPoints.map(e => vjmap.geoPoint(vjmap.transform.convert([e.x, e.y],vjmap.transform.CRSTypes.WGS84, vjmap.transform.CRSTypes.EPSG3857)));
+        
+        // 通过坐标参数求出四参数 (由3857到cad的坐标转换参数)
+        let fourparam = vjmap.coordTransfromGetFourParamter(webPoints, cadPoints, true); // 这里不需要考虑旋转
+        
         // 增加cad的wms图层
         let wmsUrl = svc.wmsTileUrl({
             mapid: mapId, // 地图id
             layers: layer, // 图层名称
             bbox: '', // bbox这里不需要传，cesium会自动加上
             srs: "EPSG:4326", // cesium地图是wgs84
-            crs: cadEpsg,
-            // fourParameter: "-38000000,0,1,0" // 参数为(平移x,平移y,缩放k,旋转弧度r)  如果是有带号的坐标系并且x坐标只有6位，还需加个平移量x的8位的前两位如此38，根据实际情况改成实际的值
+            crs: "EPSG:3857",
+            fourParameter: [fourparam.dx, fourparam.dy, fourparam.scale, fourparam.rotate] // 参数为(平移x,平移y,缩放k,旋转弧度r)  如果是有带号的坐标系并且x坐标只有6位，还需加个平移量x的8位的前两位如此38，根据实际情况改成实际的值
         })
         layers.addImageryProvider(
             new Cesium.WebMapServiceImageryProvider({
@@ -86,18 +108,22 @@ window.onload = async () => {
         
         
         // cad图坐标转web wgs84坐标
-        const cadToWebCoordinate = async point => {
-            return await svc.cmdTransform(cadEpsg, "EPSG:4326", point);
+        const cadToWebCoordinate =  point => {
+            // 先四参数反算得到3857的点，再转到4326
+            let p = vjmap.coordTransfromByInvFourParamter(point, fourparam);
+            return vjmap.Projection.mercator2LngLat(p);
         }
         // 转web wgs84坐标转cad图坐标
-        const webTocadCoordinate = async point => {
-            return await svc.cmdTransform("EPSG:4326", cadEpsg, point);
+        const webTocadCoordinate =  point => {
+            // 先4326转3857，再用四参数转cad
+            let p = vjmap.Projection.lngLat2Mercator(point);
+            return vjmap.coordTransfromByFourParamter(vjmap.geoPoint(p), fourparam);
         }
         // 根据cad图的中心点，计算wgs84的中心点坐标
         let mapBounds = vjmap.GeoBounds.fromString(res.bounds);
         let cadCenter = mapBounds.center();
-        let webCenter = await cadToWebCoordinate(cadCenter);
-        webCenter = webCenter[0]; // 取第一个
+        let webCenter = cadToWebCoordinate(cadCenter);
+        
         //设置初始位置
         viewer.camera.flyTo({
             destination: Cesium.Cartesian3.fromDegrees(webCenter[0], webCenter[1], 30000)
@@ -105,6 +131,7 @@ window.onload = async () => {
         
         // 如果需要在地图上查询cad的实体坐标，可通过svc.rectQueryFeature来实现，需要传入两个cad的点坐标范围
         // 可以通过 webTocadCoordinate 接口把wgs84的坐标转成 cad 的坐标去查询.
+        
         
     }
     catch (e) {

@@ -51,10 +51,14 @@ window.onload = async () => {
             bSearchableTTF: false, // 可搜索ttf文字
             pageWidth: 210, // 宽，单位mm
             pageHeight: 297, // 高，单位mm
+            pageLeftMargin: 0, // 左页边距 （pageWidth, pageHeight有值时有效）
+            pageRightMargin: 0, // 右页边距 （pageWidth, pageHeight有值时有效）
+            pageTopMargin: 0, // 上页边距 （pageWidth, pageHeight有值时有效）
+            pageBottomMargin: 0, // 下页边距 （pageWidth, pageHeight有值时有效）
             geomDPI: 600, // 矢量dpi
             colorImagesDPI: 400, //图像dpi
             isBlackWhiteMode: false, // 是否导出为黑白模式
-            isUseGrayPolicy: false, // 黑白模式下使用灰度策略
+            isGrayMode: false, // 是否导出为灰色模式
         }*/
         
         

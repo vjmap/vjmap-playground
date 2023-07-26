@@ -108,6 +108,13 @@ window.onload = async () => {
             })
             doc.appendTextStyle(textStyle);
              */
+            // 在cad图新增图层
+            let cadLayer1 = new vjmap.DbLayer();
+            cadLayer1.name = "文字图层";
+            cadLayer1.color = 1;
+            doc.layers = doc.layers || [];
+            doc.layers.push(cadLayer1);
+        
             let otherEnts = [
                 new vjmap.DbLine({
                     start: [0, 15],
@@ -130,9 +137,10 @@ window.onload = async () => {
                 new vjmap.DbText({
                     position: [14, 16],
                     contents: "篮球场示意图",
-                    colorIndex: 1,
                     horizontalMode: 4,
                     height: 1,
+                    layer: "文字图层", // 设置图层
+                    colorIndex: 256, // 随层
                     // textStyle: "mytext", // 如果设置了自定义的文字样式
                 })
             ]
@@ -262,7 +270,6 @@ window.onload = async () => {
             );
         }
         ReactDOM.render(<App />, document.getElementById('ui'));
-        
         
     }
     catch (e) {

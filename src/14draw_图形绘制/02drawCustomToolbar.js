@@ -145,6 +145,12 @@ window.onload = async () => {
                     if (sels.length <= 0) return;
                     for (let featureId of sels) {
                         draw.setFeatureProperty(featureId, "color", vjmap.randomColor()); // 随机生成一个颜色
+                        // 如果要修改坐标，如只保留线的前两个坐标，可用如下代码
+                        /*
+                        let feature = draw.get(featureId)
+                        if (feature.geometry.type == "LineString") {
+                            draw.setFeatureProperty(featureId, "coordinates", feature.geometry.coordinates.splice(0, 2));
+                        }*/
                     }
                     map.triggerRepaint(); // 刷新
                 }

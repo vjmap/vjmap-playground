@@ -469,6 +469,9 @@ window.onload = async () => {
         }
         
         const setNoClipContour = () => {
+            if (!isClipContour) {
+                return
+            }
             isClipContour = false;
             removeMarkers();
             addMarkers();
@@ -509,10 +512,10 @@ window.onload = async () => {
         
         // 鼠标双击时，预测当前双击点的值
         map.on("dblclick", e => {
-            let pt = e.lngLat;
+            let pt = map.fromLngLat(e.lngLat);
             let { alg } = vjmap.vectorContour();
             if (typeof variog.model != 'function')  variog.model = alg[`model_${variog.model}`]
-            let result = alg.core.predict(pt.lng, pt.lat, variog);
+            let result = alg.core.predict(pt.x, pt.y, variog);
             message.info('当前点击的值为：' + result);
         })
         
@@ -654,7 +657,7 @@ window.onload = async () => {
                         </div>
                         <div>
                             Alpha值：<Slider step={0.01}  value={inputValue}
-                                           onChange={onChange} />
+                                            onChange={onChange} />
                             <InputNumber
                                 min={0}
                                 max={100}

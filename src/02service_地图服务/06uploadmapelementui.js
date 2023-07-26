@@ -63,7 +63,9 @@ window.onload = async () => {
                     password2: '',
                     openway: '存储后渲染栅格',
                     uploadname: '',
+                    notUseDefaultTtfFont: false,
                     notUseDefaultShxFont: false,
+                    notReplaceLineType: false,
                     fontReplaceRule: ''
                 },
                 uploadMapResult: {
@@ -135,8 +137,12 @@ window.onload = async () => {
                             // 如果要密码访问的话，设置秘钥值
                             secretKey: this.form.isPasswordProtection ? svc.pwdToSecretKey(this.form.password) : undefined,
                             style: vjmap.openMapDarkStyle(),// div为深色背景颜色时，这里也传深色背景样式
+                            /** 不使用缺省的字体文件，将使用缺省的型文件来代替字体文件.. */
+                            notUseDefaultTtfFont: this.form.notUseDefaultTtfFont,
                             /** 不使用缺省的型文字文件，将使用缺省的字体来代替型文件. */
                             notUseDefaultShxFont: this.form.notUseDefaultShxFont,
+                            /** 不自动替换线型. */
+                            notReplaceLineType: this.form.notReplaceLineType,
                             /* 字符替换规则. openMap返回的字段findFonts为系统查找的字体替换规则。如需修改默认的话，请传入替换的字体规则，如fontReplaceRule: {"tssdeng.shx_1": "_default_.ttc"} */
                             fontReplaceRule: fontReplaceRule,
                             // 图像类型设置地图左上角坐标和分辨率
@@ -191,8 +197,8 @@ window.onload = async () => {
                     title="设置"
                     :visible.sync="dialogVisible"
                     :modal="false"
-                    width="350px">
-                    <el-form ref="form" :model="form" label-width="120px" size="mini">
+                    width="400px">
+                    <el-form ref="form" :model="form" label-width="150px" size="mini">
                       <el-form-item label="图名称id">
                         <el-input v-model="form.mapid"></el-input>
                       </el-form-item>
@@ -239,9 +245,25 @@ window.onload = async () => {
                         <el-input v-model="form.uploadname"></el-input>
                       </el-form-item>
         
-                      <el-form-item label="不使用缺省字体型文件" >
+                      <el-form-item label="不使用缺省字体文件" >
+                        <el-switch
+                          v-model="form.notUseDefaultTtfFont"
+                          inline-prompt
+                          active-text="是"
+                          inactive-text="否"
+                        />
+                      </el-form-item>
+                      <el-form-item label="不使用缺省型文件" >
                         <el-switch
                           v-model="form.notUseDefaultShxFont"
+                          inline-prompt
+                          active-text="是"
+                          inactive-text="否"
+                        />
+                      </el-form-item>
+                      <el-form-item label="不自动替换线型" >
+                        <el-switch
+                          v-model="form.notReplaceLineType"
                           inline-prompt
                           active-text="是"
                           inactive-text="否"

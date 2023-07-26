@@ -359,7 +359,8 @@ window.onload = async () => {
             let tiles = svc.rasterTileUrl(res);
             map.addRasterSource("imageSource", {
                 type: "raster",
-                tiles: [tiles]
+                tiles: [tiles],
+                tileSize: 256
             });
             map.addRasterLayer("imageLayer", "imageSource");
             vjcommon.setLayerToLowest(map, "imageLayer"); // 把影像图层置为最下面

@@ -75,11 +75,33 @@ window.onload = async () => {
             anchor: 'center'
         }
         
+        // 文档 https://vjmap.com/guide/threejs.html
         threeContext.loadObj(options, function (model) {
             let soldier = model.setCoords([center.lng, center.lat, 0]);
             threeContext.add(soldier);
+        
+            soldier.addEventListener('SelectedChange', e => console.log(e), false);
+            soldier.addEventListener('Wireframed', e => console.log(e), false);
+            soldier.addEventListener('IsPlayingChanged', e => console.log(e), false);
+            soldier.addEventListener('ObjectDragged', e => console.log(e), false);
+            soldier.addEventListener('ObjectMouseOver', e => console.log(e), false);
+            soldier.addEventListener('ObjectMouseOut', e => console.log(e), false);
+        
+        
+            // 后面修改大小角度
+            setTimeout(() => {
+                let scale = soldier.scale.x * 2
+                soldier.set({ scale: [scale, scale, scale] , rotation: [10, 10, 10] });
+        
+                // 修改坐标
+                let lnglat = map.toLngLat([587727221.6345291,3103853143.0935783]) // cad坐标
+                //soldier.set({ position: [lnglat[0], lnglat[1], 0] });
+                 //soldier.setCoords([lnglat[0], lnglat[1], 0] )
+            }, 3000)
         })
         map.addLayer(new vjmap.ThreeLayer({context: threeContext}));
+        
+        
         
     }
     catch (e) {

@@ -46,6 +46,26 @@ window.onload = async () => {
         	map.setRasterOpacity(svc.rasterLayerId(), val);
         }
         
+        const hideMapLayer = () => {
+        	if (map.hasVectorLayer()) {
+        		// 如果是矢量瓦片
+        		map.getStyle().layers.filter(layer => layer.id.indexOf("vector-layer-") == 0).map(layer => map.setLayoutProperty(layer.id, "visibility", "none"));
+        	} else {
+        		// 如果是栅格瓦片
+        		map.setLayoutProperty(svc.rasterLayerId(), "visibility", "none");
+        	}
+        }
+        
+        const showMapLayer = () => {
+        	if (map.hasVectorLayer()) {
+        		// 如果是矢量瓦片
+        		map.getStyle().layers.filter(layer => layer.id.indexOf("vector-layer-") == 0).map(layer => map.setLayoutProperty(layer.id, "visibility", "visible"));
+        	} else {
+        		// 如果是栅格瓦片
+        		map.setLayoutProperty(svc.rasterLayerId(), "visibility", "visible");
+        	}
+        }
+        
         const { Slider } = antd;
         // UI界面
         const App = () => {
@@ -58,10 +78,23 @@ window.onload = async () => {
         	return (
         		<div className="input-card w200" style={{minHeight: "3px"}}>
         			透明度：<Slider defaultValue={100} onChange={onChange}/>
+        			<div className="info" style={{width: "185px", right: "10px"}}>
+        				<div className="input-item">
+        					<button id="clear-map-btn" className="btn btn-full mr0"
+        							onClick={() => hideMapLayer()}>隐藏图层
+        					</button>
+        				</div>
+        				<div className="input-item">
+        					<button id="clear-map-btn" className="btn btn-full mr0"
+        							onClick={() => showMapLayer()}>显示图层
+        					</button>
+        				</div>
+        			</div>
         		</div>
         	);
         }
         ReactDOM.render(<App />, document.getElementById('ui'));
+        
     }
     catch (e) {
         console.error(e);

@@ -130,7 +130,7 @@ window.onload = async () => {
                                 options={[
                                     { value: '', label: '不限' },
                                     { value: vjmap.transform.EpsgCrsTypes.CGCS2000, label: '2000坐标系' },
-                                    { value: vjmap.transform.EpsgCrsTypes.Xian80, label: '西80坐标系' },
+                                    { value: vjmap.transform.EpsgCrsTypes.Xian80, label: '西安80坐标系' },
                                     { value: vjmap.transform.EpsgCrsTypes.Beijing54, label: '北京54坐标系' },
                                     { value: vjmap.transform.EpsgCrsTypes.NewBeijing54, label: '新北京54坐标系' },
                                 ]}

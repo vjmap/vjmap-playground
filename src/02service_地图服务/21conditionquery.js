@@ -120,7 +120,10 @@ window.onload = async () => {
         
                 /*
                     // 查找图中所有的块
-                    // 块objectid命名规则:  块id#实体id_实体内元素索引
+                    // 实体id
+                // 块objectid命名规则:块id_引用的块定义id1_引用的块定义id2(可能有多个)_实体id_#;
+                // 表格命名规则:objectid命名规则:块id_引用的块定义id1_引用的块定义id2(可能有多个)_实体id_@;
+                // 组objectid命名规则:组id$实体id_实体内元素索引;
                     let query = await svc.conditionQueryFeature({
                         condition: `objectid like '%#%'`,
                         fields: ""

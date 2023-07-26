@@ -75,7 +75,7 @@ export declare const createLineTypePolyline: (map: Map_2, draw: IDrawTool, optio
 
 export declare const createMapStyleLayerName: (svc: Service, overMapType: WmsOverlayMapType, overMapParam: WmsMapParam | WmsMapParam[], backcolor?: number) => Promise<WmsMapParam | WmsMapParam[]>;
 
-export declare const createOutSymbol: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<void>;
+export declare const createOutSymbol: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<any>;
 
 export declare const createUpdateMapStyleObj: (map: Map_2, option?: Record<string, any>) => {
     addHideObjectIds: (objectIds: string[], noUpdate?: boolean, isClear?: boolean) => Promise<void>;
@@ -192,6 +192,7 @@ export declare const getQueryGeomData: (map: Map_2, queryParam: any, propData?: 
             objectid: string;
             color: string;
             alpha: number;
+            opacity: number;
             lineWidth: number;
             name: any;
             isline: any;
@@ -243,6 +244,9 @@ export declare const interactiveCreateGeom: (data: any, map: Map_2, options?: Re
     baseAlign?: "leftBottom" | "center" | "leftTop";
     keepGeoSize?: boolean;
     position?: GeoPoint;
+    scaleValue?: number;
+    angleValue?: number;
+    unCombineFeature?: boolean;
 }) => Promise<{
     feature: any;
     rotation: number;
