@@ -88,6 +88,95 @@ window.onload = async () => {
             }),
         }))
         
+        
+        // 如果是自定义坐标系，可以用以下的示例
+        /*
+        if (typeof ol !== "object") {
+            // 如果没有openlayer环境
+            await vjmap.addScript([{
+                src: "../../js/ol7.1.0/ol.js"
+            },{
+                src: "../../js/ol7.1.0/ol.css"
+            }]);
+        }
+        // 加载proj4库，用于坐标转换
+        if (typeof proj4 !== "object") {
+            // 如果没有环境
+            await vjmap.addScript([{
+                src: "../../js/proj4.min.js"
+            }])
+        }
+        const layers = [
+            new ol.layer.Tile({
+                source: new ol.source.OSM(),
+            })
+        ];
+        const map = new ol.Map({
+            layers: layers,
+            target: 'map',
+            view: new ol.View({
+                center: vjmap.Projection.lngLat2Mercator([113.26797190135004, 23.306017680608843]),
+                zoom: 15,
+            }),
+        });
+        
+        // 地图服务对象
+        let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
+        // 打开地图
+        let mapId = "c84193cc2603";
+        let res = await svc.openMap({
+            mapid: mapId, // 地图ID
+            mapopenway: vjmap.MapOpenWay.GeomRender, // 以几何数据渲染方式打开
+            style: vjmap.openMapDarkStyle() // div为深色背景颜色时，这里也传深色背景样式
+        })
+        if (res.error) {
+            // 如果打开出错
+            message.error(res.error)
+        }
+        let layer = res.layer;//图层样式名
+        
+        let epsgCode = "+proj=tmerc +lat_0=0 +lon_0=113.283333 +k=1 +x_0=39980 +y_0=-2329620 +ellps=GRS80 +units=m +no_defs"
+        
+        // 自定义一个epsg坐标系
+        proj4.defs("EPSG:900888", epsgCode);
+        proj4.defs("EPSG:4326", "+proj=longlat +datum=WGS84 +no_defs +type=crs");
+        
+        let cadEpsg = encodeURIComponent(epsgCode);// cad图的espg代号
+        // 增加cad的wms图层
+        let wmsUrl = svc.wmsTileUrl({
+            mapid: mapId, // 地图id
+            layers: layer, // 图层名称
+            bbox: '', // bbox这里不需要
+            srs: "EPSG:3857", //
+            crs: cadEpsg
+        })
+        
+        
+        let mapBounds = vjmap.GeoBounds.fromString(res.bounds);
+        // cad图坐标转web wgs84坐标
+        const cadToWebCoordinate = async point => {
+            let co = proj4("EPSG:900888", "EPSG:4326", point);
+            console.log(co)
+            return co
+        }
+        // cad转wgs84经纬度
+        let boundsMin = await cadToWebCoordinate(mapBounds.min);
+        let boundsMax = await cadToWebCoordinate(mapBounds.max);
+        // wgs84经纬度转墨卡托
+        boundsMin = vjmap.Projection.lngLat2Mercator(boundsMin);
+        boundsMax = vjmap.Projection.lngLat2Mercator(boundsMax);
+        
+        // 在openlayer中增加wms图层
+        map.addLayer(new ol.layer.Tile({
+            // 范围
+            extent: [boundsMin[0], boundsMin[1], boundsMax[0], boundsMax[1]],
+            source: new ol.source.TileWMS({
+                url: wmsUrl,
+                params: {'TILED': true}
+            }),
+        }))
+         */
+        
     }
     catch (e) {
         console.error(e);

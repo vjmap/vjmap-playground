@@ -1411,7 +1411,7 @@ export  abstract class DbEntity implements IDbEntity {
     typename?: string;
     /** 颜色. */
     color?: number;
-    /** 颜色索引. */
+    /** 颜色索引. 0 随块. 1 Red.  2 Yellow. 3   Green.  4 Cyan.  5  Blue. 6   Magenta. 256 表示随层*/
     colorIndex?: number;
     /** 图层. */
     layer?: string;
@@ -3577,7 +3577,7 @@ export  interface IComposeNewMap {
     isInverseFourParamter?: boolean;
     /** 要显示的图层名称，为空的时候，表示全部图层 */
     layers?: string[];
-    /** 生新成图的图层名称前缀 */
+    /** 生新成图的图层名称前缀，如果设置为null将不会有默认的图层前缀。如果没有前缀，不同的图有图层重名时，如果设置了随层属性有可能会导致绘制的不一样 */
     layerPrefix?: string;
     /** 生新成图的图层名称后缀 */
     layerSuffix?: string;
@@ -4580,6 +4580,8 @@ export  interface IMapLayer {
     isOff: boolean;
     /** 线宽. */
     lineWeight: number;
+    /** 线型. */
+    linetype: number;
 }
 
 /**

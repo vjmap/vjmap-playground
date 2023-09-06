@@ -62,6 +62,8 @@ window.onload = async () => {
             layers: style.stylename,
             srs: "EPSG:3857", // 底图是天地图坐标系
             crs: "EPSG:4527", // cad图是2000坐标  可通过前两位获取 vjmap.transform.getEpsgParam(vjmap.transform.EpsgCrsTypes.CGCS2000, 39).epsg
+            // 如果是自定义的投影，也可以直接写proj表达式，如 （中央经线113.296666-东偏39978-北偏-2329826）
+            // crs: encodeURIComponent("+proj=tmerc +lat_0=0 +lon_0=113.296666 +k=1 +x_0=39978 +y_0=-2329826 +ellps=GRS80 +units=m +no_defs")
             fourParameter: "-39000000,0,1,0"// 此图坐标前面没有加带系，需要加上带系的偏移量，用四参数调节位置
         })
         

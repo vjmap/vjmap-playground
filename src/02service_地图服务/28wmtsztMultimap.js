@@ -8,33 +8,38 @@ window.onload = async () => {
         ...__env__ // 如果您已私有化部署，需要连接已部署的服务器地址和token，请打开js/env.js,修改里面的参数
     };
     try {
-        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/service/28wmsZMultimap
-        // --WMS叠加多个图形(坐标系自动变化)--通过wms服务，把多个图形通过栅格瓦片叠加到一起
+        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/service/28wmtsztMultimap
+        // --WMTS叠加多个图形(先有底图坐标系不变)--通过wmts服务，把多个图形通过栅格瓦片叠加到一起
         /*
-        WMS叠加后，自动计算叠加后的地图范围，重校建立坐标系
-        优点：事先不要给定范围。坐标范围会根据叠加的图自动去计算
-        缺点：因为叠加后，图形范围变了，导致坐标系变化。之前绘制的图元需要清空，重新绘制才可以
+        优点：代码简单，叠加图层后之前绘制的图元无需清空重校绘制
+        缺点：一开始要确定好初始范围
         */
+        // 新建地图服务对象，传入服务地址和token
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
-        svc.setCurrentMapParam({
-            darkMode: true // 由于没有打开过图，所以主动设置黑色模式
+        // 打开地图
+        let baseMapId =  "sys_world";
+        let res = await svc.openMap({
+            mapid: baseMapId, // 地图ID,(请确保此ID已存在，可上传新图形新建ID)
+            mapopenway: vjmap.MapOpenWay.GeomRender, // 以几何数据渲染方式打开
+            style: {
+                backcolor: 0, // div为深色背景颜色时，这里也传深色背景样式
+                // 这个方案这个范围很关键，可以根据情况修改，范围并保证包括以下叠加的图的所有范围才可以
+                clipbounds: Math.pow(2, 3) // 只传值，不传范围，表示之前的范围放大多少倍
+            }
         })
-        // 先随便设置一个范围吧。后面再更改
-        let mapBounds = '[-10000,-10000,10000,10000]'
-        let mapExtent = vjmap.GeoBounds.fromString(mapBounds);
+        if (res.error) {
+            message.error(res.error)
+        }
+        // 获取地图的范围(这个方案的话，这个范围是整个图的最终范围了，不能再变了）
+        let mapExtent = vjmap.GeoBounds.fromString(res.bounds);
         // 建立坐标系
         let prj = new vjmap.GeoProjection(mapExtent);
         
         // 新建地图对象
         let map = new vjmap.Map({
             container: 'map', // container ID
-            style: {
-                version: svc.styleVersion(),
-                glyphs: svc.glyphsUrl(),
-                sources: {},
-                layers: []
-            },// 矢量瓦片样式
-            center: [0,0], // 中心点
+            style: svc.rasterStyle(), // 栅格瓦片样式
+            center: prj.toLngLat(mapExtent.center()), // 中心点
             zoom: 2,
             renderWorldCopies: false
         });
@@ -48,23 +53,18 @@ window.onload = async () => {
         let mousePosCtrl = new vjmap.MousePositionControl({showZoom: true});
         map.addControl(mousePosCtrl);
         
-        const addWmsLayer = async (maps) => {
+        const addWmtsLayer = async (maps) => {
             let mapIds = [];
-            let layers = [];
             let versions = [];
             let metas = []
-            let bounds = new vjmap.GeoBounds()
             for(let m of maps) {
                 let mid = m.mapid;
                 mapIds.push(mid);
                 versions.push(m.version);
                 let meta = await svc.metadata(mid);
-                // 更新范围，求出最大的图形范围
-                bounds.updateByBounds(vjmap.GeoBounds.fromString(meta.bounds));
                 metas.push(meta);
             }
-            // 把最大的图形范围做为地图的范围
-            map.updateMapExtent(bounds);
+        
         
             for(let k = 0; k < maps.length; k++) {
                 let m = maps[k];
@@ -80,46 +80,33 @@ window.onload = async () => {
                     }
                 }
                 let style = await svc.createStyle({
+                    name: "customStyle",
                     backcolor: svc.currentMapParam().darkMode ? 0 : 0xFFFFFF,
                     layeron: layerIndexs ? `{"*": "(${layerIndexs.join(",")})"}` : undefined,
-                    clipbounds: bounds.toArray().toString() // 用新的全图的范围
-                }, mid);
-                layers.push(style.stylename)
+                    clipbounds: mapExtent.toArray().toString() // 用全图的范围
+                }, mid, m.version);
+        
+        
+                let tiles = svc.rasterTileUrl({
+                    mapid: mid,
+                    version: (m.version == "_" || !m.version) ? undefined : m.version,
+                    layer: style.stylename
+                });
+                map.addRasterSource("mapTileSource" + mid, {
+                    type: "raster",
+                    tiles: [tiles],
+                    tileSize: 256
+                });
+                map.addRasterLayer("mapTileLayer" + mid, "mapTileSource" + mid);
             }
         
-            let wmsurl = svc.wmsTileUrl({
-                mapid: mapIds,
-                layers: layers,
-                version: versions, // 都用最新版本
-                mapbounds: bounds.toString() // 全图的范围
-            })
-        
-            map.addSource('wms-maps-source', {
-                'type': 'raster',
-                'tiles': [
-                    wmsurl
-                ],
-                'tileSize': 256
-            });
-            map.addLayer({
-                    'id': 'wms-maps-layer',
-                    'type': 'raster',
-                    'source': 'wms-maps-source',
-                    'paint': { "raster-opacity": 1 }
-                }
-            );
         }
         
         
-        await addWmsLayer([
+        await addWmtsLayer([
             {
                 mapid: "sys_hello",
                 version: "_" //表示使用最新版本
-            },
-            {
-                mapid: "sys_world",
-                version: "_", //表示使用最新版本
-                layernames: ["COUNTRY", "经纬度标注"] // 要显示的图层名称列表，如果为空，表示默认所有的
             },
             {
                 mapid: "sys_topo",
@@ -134,43 +121,58 @@ window.onload = async () => {
             mousePosCtrl = new vjmap.MousePositionControl({showZoom: true});
             map.addControl(mousePosCtrl);
         }
+        // 这个方案的话，覆盖物不要删除再增加了，因为地图范围没变
         const addMarker = ()=> {
-            clear();
             new vjmap.Marker().setLngLat(map.toLngLat([725.3178740000039,18969.19101399999])).addTo(map)
         }
         addMarker();
         
+        const removeMapSource = () => {
+            let sources = map.getStyle().sources;
+            for(let source in sources) {
+                if (source.indexOf("mapTileSource") != 0) continue;
+                map.removeSourceEx(source);
+            }
+        }
         
-        const switchWmsMap1 = async ()=> {
-            map.removeSourceEx('wms-maps-source'); // 把之前增加的wms数据源和相关的图层都先删除了。
-            // 增加新的wms图层
-            await addWmsLayer([
+        const switchWmtsMap1 = async ()=> {
+            removeMapSource(); // 把之前增加的wmts数据源和相关的图层都先删除了。
+            // 增加新的wmts图层
+            await addWmtsLayer([
                 {
                     mapid: "sys_hello",
                     version: "_", //表示使用最新版本
+                }
+            ]);
+        
+        }
+        
+        const switchWmtsMap2 = async ()=> {
+            removeMapSource();
+            // 增加新的wmts图层
+            await addWmtsLayer([
+                {
+                    mapid: "sys_topo",
+                    version: "_" //表示使用最新版本
+                }
+            ]);
+        
+        }
+        
+        const switchWmtsMap3 = async ()=> {
+            removeMapSource();
+            // 增加新的wmts图层
+            await addWmtsLayer([
+                {
+                    mapid: "sys_world",
+                    version: "_" //表示使用最新版本
                 },
                 {
                     mapid: "sys_topo",
                     version: "_" //表示使用最新版本
                 }
             ]);
-            addMarker();
-        }
         
-        const switchWmsMap2 = async ()=> {
-            map.removeSourceEx('wms-maps-source'); // 把之前增加的wms数据源和相关的图层都先删除了。
-            // 增加新的wms图层
-            await addWmsLayer([
-                {
-                    mapid: "sys_hello",
-                    version: "_" //表示使用最新版本
-                },
-                {
-                    mapid: "sys_world",
-                    version: "_" //表示使用最新版本
-                }
-            ]);
-            addMarker();
         }
         // UI界面
         const App = () => {
@@ -179,10 +181,13 @@ window.onload = async () => {
                     <div className="info w260">
                         <h4>切换叠加的图：</h4>
                         <div className="input-item">
-                            <button id="clear-map-btn" className="btn btn-full mr0" onClick={switchWmsMap1}>切换图1</button>
+                            <button id="clear-map-btn" className="btn btn-full mr0" onClick={switchWmtsMap1}>切换图1</button>
                         </div>
                         <div className="input-item">
-                            <button id="clear-map-btn" className="btn btn-full mr0" onClick={switchWmsMap2}>切换图2</button>
+                            <button id="clear-map-btn" className="btn btn-full mr0" onClick={switchWmtsMap2}>切换图2</button>
+                        </div>
+                        <div className="input-item">
+                            <button id="clear-map-btn" className="btn btn-full mr0" onClick={switchWmtsMap3}>全部显示</button>
                         </div>
         
                     </div>
