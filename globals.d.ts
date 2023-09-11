@@ -8852,6 +8852,13 @@ export  class Service {
      */
     cmdTransform(srs: string, crs: string, points: GeoPoint | GeoPoint[], fourParameter?: string | string[], isInverseFourParamter?: boolean): Promise<any>;
     /**
+     * 投影prj文件WKT字符转proj4字符串
+     * @return {Promise<any>}
+     * @param srs 投影prj文件WKT字符
+     * @param from 字符串来源，为空为话为WKT
+     */
+    cmdPrjWktToPrj4(wkt: string, from?: undefined | "" | "wmsauto" | "xml" | "urn" | "crsurl" | "url" | "micoordsys" | "pci"): Promise<any>;
+    /**
      * 保存用户自定义数据
      * @param key 键名(必须唯一，否则会覆盖之前的数据，同类型的key前缀尽量一样)，如果是数组的话，可以批量
      * @param value 键值
@@ -15615,7 +15622,7 @@ export  const drawRectangle: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: R
 
 export  const drawSlantRectangle: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, isFill?: boolean) => Promise<void>;
 
-export  const drawText: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => Promise<void>;
+export  const drawText: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, disableInteractive?: boolean) => Promise<any>;
 
 export  const editCadEntity: (map: vjmap.Map, draw: vjmap.IDrawTool, updateMapStyleObj: any, editOp: "delete" | "modify" | "copy", showInfoFunc?: Function, dlgConfirmInfo?: Function, isRectSel?: boolean, promptFunc?: Function) => Promise<void>;
 
@@ -15667,6 +15674,11 @@ export  const getQueryGeomData: (map: vjmap.Map, queryParam: any, propData?: Rec
 }>;
 
 export  const getShardsTileUrl: (tileUrl: string, map?: vjmap.Map) => string[];
+
+export  const getTextRefCo: (feature: any) => {
+    refCo1: any;
+    refCo2: any;
+};
 
 export  const getTileShards: (tileUrl: string) => {
     tileUrl: string;
@@ -15935,6 +15947,8 @@ export  class MapApp {
 
 export  const modifyCadEntity: (map: vjmap.Map, draw: vjmap.IDrawTool, updateMapStyleObj: any, showInfoFunc?: Function, dlgConfirmInfo?: Function, isRectSel?: boolean, promptFunc?: Function) => Promise<void>;
 
+export  const modifyDrawText: (map: vjmap.Map, draw: vjmap.IDrawTool, promptFunc?: Function, message?: Function) => Promise<void>;
+
 export  const osmProviderTiles: () => string[];
 
 export  const overlay2BaseCoordinate: (pt: vjmap.GeoPoint, coordinates: {
@@ -16006,7 +16020,9 @@ export  function toMapLayer(layer: MapLayer, props: Record<string, any>): MapLay
 
 export  const toProperties: (param: Record<string, any>) => Record<string, any>;
 
-export  const transformGeoJsonData: (map: vjmap.Map, data: any, basePt: any, destPt: any, scale?: number, angle?: number) => any;
+export  const transformFourParam: (map: vjmap.Map, data: any, fourParam: any, isGeoCoord?: boolean) => any;
+
+export  const transformGeoJsonData: (map: vjmap.Map, data: any, basePt: any, destPt: any, scale?: number, angle?: number, isGeoCoord?: boolean) => any;
 
 export  class TsIndexDb {
     private dbName;
@@ -16165,6 +16181,8 @@ export  class TsIndexDb {
         drawText,
         addFeaturesToDraw,
         getPointOnePixelDrawStyleOption,
+        getTextRefCo,
+        modifyDrawText,
         isTrackFeature,
         setTrackFeatureProperty,
         getTrackFeatureProperty,
@@ -16234,6 +16252,7 @@ export  class TsIndexDb {
         isAlphanumeric,
         isWebBaseMap,
         getEntityObjectId,
+        transformGeoJsonData,
     }
 
 

@@ -52,6 +52,7 @@ window.onload = async () => {
                 height: 30, // 文字初始像素高
                 disableScale: true, // 不指定缩放
                 disableRotate: true, // 不指定旋转
+                scaleValue: 1.0,
                 position: mapBounds.randomPoint()
             }
             vjcommon.drawText(map, draw, {}, {

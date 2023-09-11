@@ -8852,6 +8852,13 @@ export  class Service {
      */
     cmdTransform(srs: string, crs: string, points: GeoPoint | GeoPoint[], fourParameter?: string | string[], isInverseFourParamter?: boolean): Promise<any>;
     /**
+     * 投影prj文件WKT字符转proj4字符串
+     * @return {Promise<any>}
+     * @param srs 投影prj文件WKT字符
+     * @param from 字符串来源，为空为话为WKT
+     */
+    cmdPrjWktToPrj4(wkt: string, from?: undefined | "" | "wmsauto" | "xml" | "urn" | "crsurl" | "url" | "micoordsys" | "pci"): Promise<any>;
+    /**
      * 保存用户自定义数据
      * @param key 键名(必须唯一，否则会覆盖之前的数据，同类型的key前缀尽量一样)，如果是数组的话，可以批量
      * @param value 键值
