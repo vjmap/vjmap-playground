@@ -225,6 +225,22 @@ window.onload = async () => {
                     draw.changeMode('simple_select')
                 }
                     break;
+                case "lockedEdit": {
+                    let sels = draw.getSelectedIds();
+                    if (sels.length == 0) return;
+                    for (let featureId of sels) {
+                        let feature = draw.get(featureId);
+                        if (feature.properties.disable_edit === true) {
+        // 之前是禁止编辑，现设置成允许编辑
+                            draw.setFeatureProperty(featureId, "disable_edit", undefined);
+                        } else {
+        // 之前是允许编辑，现设置成禁止编辑
+                            draw.setFeatureProperty(featureId, "disable_edit", true);
+                        }
+                    }
+                    draw.changeMode('simple_select')
+                }
+                break;
                 case 'selectRotate': {
                     selectRotate();
                     break;
@@ -716,6 +732,11 @@ window.onload = async () => {
                         <div className="input-item">
                             <button id="clear-map-btn" className="btn btn-full mr0"
                                     onClick={() => doAction("unLockedAllFeatures")}>解锁全部实体
+                            </button>
+                        </div>
+                        <div className="input-item">
+                            <button id="clear-map-btn" className="btn btn-full mr0"
+                                    onClick={() => doAction("lockedEdit")}>禁止编辑实体
                             </button>
                         </div>
                         <h4>捕捉设置：</h4>

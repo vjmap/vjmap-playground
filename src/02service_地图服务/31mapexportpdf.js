@@ -74,6 +74,36 @@ window.onload = async () => {
             }
         }
         
+        // 也可以对图纸进行处理后，再导出如旋转90度后再导出
+        /*
+        
+        // 导出pdf
+        const exportPdf = async () => {
+            message.info("正在导出pdf,请稍等...")
+            let composeRes = await svc.composeNewMap({
+                mapid: 'cbf527ed3ad1',
+                version: 'v1',
+                fourParameter: [0, 0, 1, -Math.PI / 2]
+            })
+            let res = await svc.updateMap({
+                // 获取一个临时的图id(临时图形只会用临时查看，过期会自动删除)
+                mapid: vjmap.getTempMapId(1), // 临时图形不浏览情况下过期自动删除时间，单位分钟。默认30
+                fileid: composeRes.fileid, // 生成的fileid
+                mapopenway: vjmap.MapOpenWay.Memory,
+                style: {
+                    backcolor: 0 // 如果div背景色是浅色，则设置为oxFFFFFF
+                }
+            })
+            const result = await svc.execCommand("exportPdf", param, res.mapid, res.version, true);
+            if (result.error) {
+                message.error(result.error)
+            } else {
+                let pdfUrl = svc.baseUrl() + result.path + "?token=" + svc.accessToken;
+                window.open(pdfUrl, )
+            }
+        }
+         */
+        
         // UI界面
         const App = () => {
             return (

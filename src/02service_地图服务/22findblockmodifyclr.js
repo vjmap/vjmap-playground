@@ -56,7 +56,7 @@ window.onload = async () => {
                 // 实体id
                 // 块objectid命名规则:块id_引用的块定义id1_引用的块定义id2(可能有多个)_实体id_#;
                 // 表格命名规则:objectid命名规则:块id_引用的块定义id1_引用的块定义id2(可能有多个)_实体id_@;
-                // 组objectid命名规则:组id$实体id_实体内元素索引;
+                // 组objectid命名规则:$实体id_实体内元素索引$组id;
                 condition: `objectid like '%#%' or objectid like '%$%' `,
                 // 只获取id,objectid,和外包矩形
                 fields: "id,objectid,envelop",

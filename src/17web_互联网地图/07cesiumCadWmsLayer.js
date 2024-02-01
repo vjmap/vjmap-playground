@@ -34,6 +34,17 @@ window.onload = async () => {
                 src: "../../js/Cesium/Widgets/widgets.css"
             }])
         }
+        // 加载proj4库，用于坐标转换
+        if (typeof proj4 !== "object") {
+            // 如果没有环境
+            await vjmap.addScript([{
+                src: "../../js/proj4.min.js"
+            }])
+        }
+        
+        // 下面的参数内容请去 https://epsg.io/ 上面查询
+        proj4.defs("EPSG:4326", "+proj=longlat +datum=WGS84 +no_defs +type=crs");
+        proj4.defs("EPSG:4544", "+proj=tmerc +lat_0=0 +lon_0=105 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +units=m +no_defs +type=crs");
         
         let imageryProvider= new Cesium.UrlTemplateImageryProvider({
             url: "https://t1.tianditu.gov.cn/DataServer?T=img_w&X={x}&Y={y}&L={z}&tk=3346bb6ad29b5013c5952cf1117b80e9",
@@ -84,25 +95,83 @@ window.onload = async () => {
             })
         );
         
-        
         // cad图坐标转web wgs84坐标
-        const cadToWebCoordinate = async point => {
-            return await svc.cmdTransform(cadEpsg, "EPSG:4326", point);
+        const cadToWebCoordinate =  point => {
+            let co = proj4(cadEpsg, "EPSG:4326", point);
+            return [co.x, co.y]
         }
         // 转web wgs84坐标转cad图坐标
-        const webTocadCoordinate = async point => {
-            return await svc.cmdTransform("EPSG:4326", cadEpsg, point);
+        const webTocadCoordinate =  point => {
+            let co = proj4("EPSG:4326", cadEpsg, point);
+            return [co.x, co.y]
         }
         // 根据cad图的中心点，计算wgs84的中心点坐标
         let mapBounds = vjmap.GeoBounds.fromString(res.bounds);
         let cadCenter = mapBounds.center();
-        let webCenter = await cadToWebCoordinate(cadCenter);
-        webCenter = webCenter[0]; // 取第一个
+        let webCenter =  cadToWebCoordinate(cadCenter);
+        
         //设置初始位置
         viewer.camera.flyTo({
             destination: Cesium.Cartesian3.fromDegrees(webCenter[0], webCenter[1], 30000)
         });
         
+        // 点击拾取CAD图
+        let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(async (movement) => {
+            console.log(movement.position);
+            var ray = viewer.scene.camera.getPickRay(movement.position);
+            var cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+            // let cartesian = viewer.scene.pickPosition(movement.position);
+            let cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+            let longitude = Cesium.Math.toDegrees(cartographic.longitude);
+            let latitude = Cesium.Math.toDegrees(cartographic.latitude);
+        
+            let cadpoint = proj4("EPSG:4326", cadEpsg, [longitude, latitude]);
+            console.log(cadpoint);
+            let pixelToGeoLength = getPixelGeoLength();
+            console.log(pixelToGeoLength, mapId, layer);
+            const res = await svc.pointQueryFeature({
+                pixelToGeoLength: pixelToGeoLength,
+                x: cadpoint[0],
+                y: cadpoint[1],
+                geom: true,
+                mapid: mapId, // 这里需要传要查询的地图id
+                layer: layer
+            });
+            console.log(res);
+            if (res && res.recordCount
+                > 0 && res.result.length > 0) {
+                message.info(res.result[0].name + "," + res.result[0].objectid)
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        
+        function getPixelGeoLength() {
+            let scene = viewer.scene;
+            // 获取画布的大小
+            var width = scene.canvas.clientWidth;
+            var height = scene.canvas.clientHeight;
+            //获取画布中心两个像素的坐标（默认地图渲染在画布中心位置）
+            var left = scene.camera.getPickRay(new Cesium.Cartesian2((width / 2) | 0, (height - 1) / 2));
+            var right = scene.camera.getPickRay(new Cesium.Cartesian2(1 + (width / 2) | 0, (height - 1) / 2));
+        
+            var globe = scene.globe;
+            var leftPosition = globe.pick(left, scene);
+            var rightPosition = globe.pick(right, scene);
+            let leftCartographic = Cesium.Cartographic.fromCartesian(leftPosition);
+            let leftLng = Cesium.Math.toDegrees(leftCartographic.longitude);
+            let leftLat = Cesium.Math.toDegrees(leftCartographic.latitude);
+            let rightCartographic = Cesium.Cartographic.fromCartesian(rightPosition);
+            let rightLng = Cesium.Math.toDegrees(rightCartographic.longitude);
+            let rightLat = Cesium.Math.toDegrees(rightCartographic.latitude);
+            console.log(leftLng, leftLat);
+            if (!Cesium.defined(leftPosition) || !Cesium.defined(rightPosition)) {
+                return;
+            }
+        
+            let leftPoint = proj4("EPSG:4326", cadEpsg, [leftLng, leftLat]);
+            let rightPoint = proj4("EPSG:4326", cadEpsg, [rightLng, rightLat]);
+            return Math.sqrt(Math.pow(leftPoint[0] - rightPoint[0], 2) + Math.pow(leftPoint[1] - rightPoint[1], 2));
+        }
         // 如果需要在地图上查询cad的实体坐标，可通过svc.rectQueryFeature来实现，需要传入两个cad的点坐标范围
         // 可以通过 webTocadCoordinate 接口把wgs84的坐标转成 cad 的坐标去查询.
         

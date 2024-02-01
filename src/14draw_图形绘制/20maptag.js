@@ -54,7 +54,7 @@ window.onload = async () => {
         
         const createDivSvg = (pt1, pt2, width, height, svg) => {
             svg = svg.substr(svg.indexOf("<desc>"));
-            const div = document.createElement( "div" );
+            const div = document.createElement("div");
             div.innerHTML = `
                         <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMinYMin meet" version="1.1" xmlns="http://www.w3.org/2000/svg">
                             ${svg}
@@ -77,7 +77,7 @@ window.onload = async () => {
         }
         
         
-        const createDivCanvas =  (pt1, pt2,canvas) => {
+        const createDivCanvas = (pt1, pt2, canvas) => {
             let id = "canvasid_" + vjmap.randInt(1000, 10000);
             let lngLat1 = map.toLngLat(pt1);
             let lngLat2 = map.toLngLat(pt2);
@@ -90,7 +90,7 @@ window.onload = async () => {
                 canvas: canvas,
                 coordinates: [[pt1.x, pt1.y], [pt2.x, pt1.y], [pt2.x, pt2.y], [pt1.x, pt2.y]]
             });
-            map.addRasterLayer(id + + "_layer", id + "_source",{
+            map.addRasterLayer(id + +"_layer", id + "_source", {
                 visibility: "visible"
             })
         }
@@ -109,7 +109,7 @@ window.onload = async () => {
             map.setBearing(0);
         
             let mapCanvas = map.getCanvas();
-            drawCanvas =  document.createElement( "canvas" );
+            drawCanvas = document.createElement("canvas");
             drawCanvas.style.position = "fixed";
             let rect = mapCanvas.getBoundingClientRect();
             drawCanvas.style.left = rect.left + "px";
@@ -124,7 +124,7 @@ window.onload = async () => {
             canvasCoord2 = map.fromLngLat(map.unproject(new vjmap.Point(canvasWidth, canvasHeight)));
         }
         
-        const initFabric = (drawCanvas, width, height)=> {
+        const initFabric = (drawCanvas, width, height) => {
             let canvas = new fabric.Canvas(drawCanvas, {
                 isDrawingMode: false,
                 selectable: true,
@@ -298,6 +298,77 @@ window.onload = async () => {
                         });
                         //也可以使用fabric.Rect
                         break;
+                    case "cloud": // 云线
+                        let strokeWidth = 20
+                        let x1 =  mouseFrom.x, y1 =  mouseFrom.y, x2 = mouseTo.x, y2 = mouseTo.y;
+        
+                        // 计算半圆的半径
+                        var radius = strokeWidth / 2;
+        
+                        let rectWidth = Math.abs(x2 - x1)
+                        let rectHeight = Math.abs(y2 - y1)
+                        let rectLeft = Math.min(x1, x2);
+                        let rectTop = Math.min(y1, y2);
+        // 创建半圆的路径数据
+                        let pathData = '';
+        
+        // 顶边上的半圆
+                        let firstPoint;
+                        for (let i = 0; i < rectWidth / (2 * radius) - 1; i++) {
+                            let centerX = rectLeft + i * 2 * radius + radius;
+                            let centerY = rectTop;
+                            if (i == 0) {
+                                firstPoint = ` ${centerX - radius} ${centerY} `
+                            }
+                            let arcPathTop = `M ${centerX - radius} ${centerY} A ${radius} ${radius} 0 0 1 ${centerX + radius} ${centerY}`;
+                            pathData += arcPathTop;
+                        }
+        
+        // 右边上的半圆
+                        for (let i = 0; i < rectHeight / (2 * radius) - 1; i++) {
+                            let centerX = rectLeft + rectWidth;
+                            let centerY = rectTop + i * 2 * radius + radius;
+                            if (i == 0) {
+                                pathData += `L ${centerX} ${centerY - radius}`
+                            }
+                            let arcPathRight = `M ${centerX} ${centerY - radius} A ${radius} ${radius} 0 0 1 ${centerX} ${centerY + radius}`;
+                            pathData += arcPathRight;
+                        }
+        
+        
+        // 底边上的半圆
+                        for (let i = 0; i < rectWidth / (2 * radius) - 1; i++) {
+                            let centerX = rectLeft + rectWidth - i * 2 * radius - radius;
+                            let centerY = rectTop + rectHeight;
+                            if (i == 0) {
+                                pathData += `L ${centerX + radius} ${centerY}`
+                            }
+                            let arcPathBottom = `M ${centerX + radius} ${centerY} A ${radius} ${radius} 0 0 1 ${centerX - radius} ${centerY}`;
+                            pathData += arcPathBottom;
+                        }
+        
+        // 左边上的半圆
+                        for (let i = 0; i < rectHeight / (2 * radius) - 1; i++) {
+                            let centerX = rectLeft;
+                            let centerY = rectTop + rectHeight - i * 2 * radius - radius;
+                            if (i == 0) {
+                                pathData += `L ${centerX} ${centerY + radius}`
+                            }
+                            let arcPathLeft = `M ${centerX} ${centerY + radius} A ${radius} ${radius} 0 0 1 ${centerX} ${centerY - radius}`;
+                            pathData += arcPathLeft;
+                        }
+                        pathData += "L " + firstPoint
+        
+                        // canvas.freeDrawingBrush = patternBrush;
+                        // canvas.freeDrawingBrush.source = canvas.freeDrawingBrush.getPatternSrc.call(this);
+                        canvasObject = new fabric.Path(pathData, {
+                            left: left,
+                            top: top,
+                            stroke: color,
+                            strokeWidth: drawWidth,
+                            fill: "rgba(255, 255, 255, 0)"
+                        });
+                        break;
                     case "rightangle": //直角三角形
                         var path = "M " + mouseFrom.x + " " + mouseFrom.y + " L " + mouseFrom.x + " " + mouseTo.y + " L " + mouseTo.x + " " + mouseTo.y + " z";
                         canvasObject = new fabric.Path(path, {
@@ -390,7 +461,7 @@ window.onload = async () => {
                 });
             if (!selGroup) return;
         
-            selGroup.forEachObject(function(obj) {
+            selGroup.forEachObject(function (obj) {
                 fabricCanvas.remove(obj);
             });
             fabricCanvas.discardActiveObject().renderAll();
@@ -427,6 +498,7 @@ window.onload = async () => {
                             <button className="btn" onClick={() => draw("circle")}>圆</button>
                             <button className="btn" onClick={() => draw("ellipse")}>椭圆</button>
                             <button className="btn" onClick={() => draw("rectangle")}>矩形</button>
+                            <button className="btn" onClick={() => draw("cloud")}>云线</button>
                             <button className="btn" onClick={() => draw("rightangle")}>直角三角形</button>
                             <button className="btn" onClick={() => draw("equilateral")}>等边三角形</button>
                             <button className="btn" onClick={() => draw("text")}>文本</button>
@@ -437,7 +509,7 @@ window.onload = async () => {
                 </div>
             );
         }
-        ReactDOM.render(<App />, document.getElementById('ui'));
+        ReactDOM.render(<App/>, document.getElementById('ui'));
         
     }
     catch (e) {

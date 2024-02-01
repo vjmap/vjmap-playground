@@ -707,6 +707,44 @@ window.onload = async () => {
                             const url = host + `/#/map/${res.mapid}?mapopenway=Memory&version=${res.version}`;
                             window.open(url);
                         }
+                    },
+                    {
+                        id: "exportPdf",
+                        name: "导出为PDF",
+                        divided: true,
+                        cb: async ()=>{
+                            message.info("正在导出Pdf并打开，请稍候...")
+                            const res = await vjcommon.exportDwg(map, draw);
+                            if (res.error) {
+                                window.$message.error(res.error);
+                                return;
+                            }
+        
+                            let param; // 不填的话，用默认的
+                            /*
+                            param = {
+                                bIncludeOffLayers: false, // 是否包含关闭的图层
+                                bSearchableSHX: false, // 可搜索型文字
+                                bSearchableTTF: false, // 可搜索ttf文字
+                                pageWidth: 210, // 宽，单位mm
+                                pageHeight: 297, // 高，单位mm
+                                pageLeftMargin: 0, // 左页边距 （pageWidth, pageHeight有值时有效）
+                                pageRightMargin: 0, // 右页边距 （pageWidth, pageHeight有值时有效）
+                                pageTopMargin: 0, // 上页边距 （pageWidth, pageHeight有值时有效）
+                                pageBottomMargin: 0, // 下页边距 （pageWidth, pageHeight有值时有效）
+                                geomDPI: 600, // 矢量dpi
+                                colorImagesDPI: 400, //图像dpi
+                                isBlackWhiteMode: false, // 是否导出为黑白模式
+                                isGrayMode: false, // 是否导出为灰色模式
+                            }*/
+                            const result = await svc.execCommand("exportPdf", param, res.mapid, res.version, true);
+                            if (result.error) {
+                                message.error(result.error)
+                            } else {
+                                let pdfUrl = svc.baseUrl() + result.path + "?token=" + svc.accessToken;
+                                window.open(pdfUrl, )
+                            }
+                        }
                     }
                 ]
             },{

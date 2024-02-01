@@ -92,8 +92,12 @@ window.onload = async () => {
         let snapObj = {}; // 设置的捕捉的实体
         
         // 测量面积
+        const sleep = (tm) => {
+            return new Promise(resolve => setTimeout(resolve, tm))
+        }
         const measureArea = async ()=> {
             let isDrawing = false;
+            await sleep(500) // 防止双击结束时误多点了几个点被当前下一次的起点了
             let poly = await vjmap.Draw.actionDrawPolygon(map, {
                 api: {
                     getSnapFeatures: snapObj //要捕捉的数据项在后面，通过属性features赋值

@@ -1523,6 +1523,49 @@ export  class DbLineType {
 }
 
 /**
+ * `DbMLeader` 多重引线.
+ *
+ */
+export  class DbMLeader extends DbEntity {
+    /** 文本宽. */
+    textWidth?: number;
+    /** 文本高. */
+    height?: number;
+    /** 文本旋转角度. */
+    textRotation?: number;
+    /** 文本高. */
+    textHeight?: number;
+    /** 文本内容. */
+    contents?: string;
+    /** 文本位置. */
+    textLocation?: [number, number, number?];
+    /** 文本对齐方式. */
+    textAttachment?: MTextAttachmentPoint;
+    /** 文本样式. */
+    textStyle?: string;
+    /** 文本对齐方向. 0 水平 1 垂直*/
+    textAttachmentDirection?: 0 | 1;
+    /** 文本对齐类型. type(0-10) value(0-4) [type1, value1, type2, value2....]*/
+    textAttachmentType?: number[];
+    /** 引线位置. */
+    leaderLinePoint?: [number, number, number?];
+    /** 引线顶点位置数组. */
+    leaderVertexPoints?: [number, number, number?][];
+    enableDogleg?: boolean;
+    landingGap?: number;
+    doglegLength?: number;
+    blockScale?: [number, number, number];
+    blockPosition?: [number, number, number?];
+    arrowSize?: number;
+    blockRotation?: number;
+    blockConnectionType?: 0 | 1;
+    /**
+     * 构造函数
+     */
+    constructor(prop?: IDbMText);
+}
+
+/**
  * `DbMText` 多行文本实体.
  *
  */
@@ -4433,7 +4476,8 @@ export  interface IDrawOptions {
     controls?: Record<string, boolean>;
     guides?: boolean;
     modes?: Record<string, any>;
-    snap?: true;
+    snap?: boolean;
+    midpoints?: boolean;
     api: {
         getSnapFeatures: any;
         [key: string]: any;
