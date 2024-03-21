@@ -28,7 +28,7 @@ window.onload = async () => {
             center: [39.960672361810566, 116.4849310885225],
             zoom: 16
         });
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', {foo: 'bar'}).addTo(map);
+        L.tileLayer('https://t3.tianditu.gov.cn/DataServer?T=vec_w&X={x}&Y={y}&L={z}&tk=7baeffb96bf61861b302d0f963cfda66').addTo(map);
         
         // 地图服务对象
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)

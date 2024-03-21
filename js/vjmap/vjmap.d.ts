@@ -12405,6 +12405,12 @@ export  const wrap: (min: number, max: number, v: number) => number;
         /** 为一层或多层设置`raster-hue-rotate` 绘制属性。 */
         setRasterHueRotate(layer: LayerRef, value: any): void;
 
+        /** 为一层或多层设置`raster-monochrome` 绘制属性。 */
+        setRasterMonochrome(layer: LayerRef, value: any): void;
+
+        /** 为一层或多层设置`raster-inverse` 绘制属性。 */
+        setRasterInverse(layer: LayerRef, value: any): void;
+
         /** 为一层或多层设置 `raster-brightness-min` 绘制属性。 */
         setRasterBrightnessMin(layer: LayerRef, value: any): void;
 
