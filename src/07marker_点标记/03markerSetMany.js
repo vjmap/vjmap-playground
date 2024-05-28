@@ -214,7 +214,7 @@ window.onload = async () => {
             let res = await svc.updateMap({
                 // 获取一个临时的图id(临时图形只会用临时查看，过期会自动删除)
                 mapid: vjmap.getTempMapId(1), // 临时图形不浏览情况下过期自动删除时间，单位分钟。默认30
-                filedoc: doc.toDoc(),
+                filedoc: JSON.stringify(doc),
                 mapopenway: vjmap.MapOpenWay.Memory,
                 style: {
                     backcolor: 0 // 如果div背景色是浅色，则设置为oxFFFFFF

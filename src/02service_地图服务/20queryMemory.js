@@ -13,7 +13,7 @@ window.onload = async () => {
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         let res = await svc.openMap({
             mapid: env.exampleMapId,
-            mapopenway: vjmap.MapOpenWay.Memory, // 以几何数据渲染方式打开
+            mapopenway: vjmap.MapOpenWay.Memory, // 以内存渲染方式打开
             style: vjmap.openMapDarkStyle()
         })
         if (res.error) {

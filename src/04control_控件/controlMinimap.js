@@ -58,6 +58,43 @@ window.onload = async () => {
             }
         }), 'top-right');
         
+        
+        /* 如果需要设置地图旋转角度，可用如下代码 */
+        /*
+        // 首先获取地图初始化的角度 ，也可以自定义
+        let bearing = svc.currentMapParam().view.bearing
+        // 地图对象
+        let map = new vjmap.Map({
+            container: 'map', // DIV容器ID
+            style: svc.rasterStyle(), //svc.rasterBlankStyle(0, 24), // 样式，这里是栅格样式
+            center: prj.toLngLat(prj.getMapExtent().center()), // 设置地图中心点
+            zoom: 2, // 设置地图缩放级别
+            bearing: bearing, // 设置方位角
+            renderWorldCopies: false // 不显示多屏地图
+        });
+        
+        // 关联服务对象和投影对象
+        map.attach(svc, prj);
+        
+        await map.onLoad();
+        
+        let ctrl = new vjmap.MiniMapControl({
+            containerStyle: {
+                background: "#31346a85",
+                transform: "scale(0.6)",
+                transformOrigin: "100% 0%"
+            }
+        })
+        
+        map.addControl(ctrl, 'top-right');
+        // 给鹰眼控件设置角度
+        ctrl.getMap().setBearing(bearing)
+        // 给地图设置角度
+        map.setBearing(bearing)
+        // 在鹰眼控件中移动后，强制把旋转角度设置回来
+        ctrl.getMap().on("mouseup", () => map.setBearing(bearing));
+        */
+        
     }
     catch (e) {
         console.error(e);

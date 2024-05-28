@@ -107,12 +107,12 @@ window.onload = async () => {
             // 先获取模型默认的参数
             let param = vjgeo.models[modelName].metaParameters;
             if (context) {
-                let value = JSON.stringify(param.map(p => {return {title: p.title, value: (p.type == 'select') ? p.value[0] : p.value}}), null, 0)
+                let value = JSON.stringify(param.map(p => {return {title: p.title, value: (p.type == 'select') ? p[0] : p}}), null, 0)
                 let content = await context.prompt("请输入绘制的参数", value);
                 if (!content) return;
                 param = JSON.parse(content)
             }
-            let args = param.map(p => p.value); // 获取参数值
+            let args = param.map(p => p); // 获取参数值
             let model = new vjgeo.models[modelName](...args);
             model.data = {
                 ...model.data,
@@ -193,11 +193,11 @@ window.onload = async () => {
                         name: "圆",
                         cb: () => {
                             vjcommon.drawCircle(map, draw, getDrawOptions(), {
-                                "color": fillColor.value,// 颜色
-                                "opacity": fillOpacity.value, // 透明度
-                                "outlineColor": strokeColor.value,// 颜色
-                                "line_width": lineWidth.value, // 线宽
-                                "line_opacity": fillOpacity.value, // 透明度
+                                "color": fillColor,// 颜色
+                                "opacity": fillOpacity, // 透明度
+                                "outlineColor": strokeColor,// 颜色
+                                "line_width": lineWidth, // 线宽
+                                "line_opacity": fillOpacity, // 透明度
                             }, false);
                         }
                     },
@@ -206,11 +206,11 @@ window.onload = async () => {
                         name: "填充圆",
                         cb: () => {
                             vjcommon.drawCircle(map, draw, getDrawOptions(), {
-                                "color": fillColor.value,// 颜色
-                                "opacity": fillOpacity.value, // 透明度
-                                "outlineColor": strokeColor.value,// 颜色
-                                "line_width": lineWidth.value, // 线宽
-                                "line_opacity": fillOpacity.value, // 透明度
+                                "color": fillColor,// 颜色
+                                "opacity": fillOpacity, // 透明度
+                                "outlineColor": strokeColor,// 颜色
+                                "line_width": lineWidth, // 线宽
+                                "line_opacity": fillOpacity, // 透明度
                             }, true);
                         }
                     },
@@ -219,11 +219,11 @@ window.onload = async () => {
                         name: "矩形",
                         cb: () => {
                             vjcommon.drawRectangle(map, draw, getDrawOptions(), {
-                                "color": fillColor.value,// 颜色
-                                "opacity": fillOpacity.value, // 透明度
-                                "outlineColor": strokeColor.value,// 颜色
-                                "line_width": lineWidth.value, // 线宽
-                                "line_opacity": fillOpacity.value, // 透明度
+                                "color": fillColor,// 颜色
+                                "opacity": fillOpacity, // 透明度
+                                "outlineColor": strokeColor,// 颜色
+                                "line_width": lineWidth, // 线宽
+                                "line_opacity": fillOpacity, // 透明度
                             }, false);
                         }
                     },
@@ -232,11 +232,11 @@ window.onload = async () => {
                         name: "填充矩形",
                         cb: () => {
                             vjcommon.drawRectangle(map, draw, getDrawOptions(), {
-                                "color": fillColor.value,// 颜色
-                                "opacity": fillOpacity.value, // 透明度
-                                "outlineColor": strokeColor.value,// 颜色
-                                "line_width": lineWidth.value, // 线宽
-                                "line_opacity": fillOpacity.value, // 透明度
+                                "color": fillColor,// 颜色
+                                "opacity": fillOpacity, // 透明度
+                                "outlineColor": strokeColor,// 颜色
+                                "line_width": lineWidth, // 线宽
+                                "line_opacity": fillOpacity, // 透明度
                             }, true);
                         }
                     },
@@ -245,11 +245,11 @@ window.onload = async () => {
                         name: "斜矩形",
                         cb: () => {
                             vjcommon.drawSlantRectangle(map, draw, getDrawOptions(), {
-                                "color": fillColor.value,// 颜色
-                                "opacity": fillOpacity.value, // 透明度
-                                "outlineColor": strokeColor.value,// 颜色
-                                "line_width": lineWidth.value, // 线宽
-                                "line_opacity": fillOpacity.value, // 透明度
+                                "color": fillColor,// 颜色
+                                "opacity": fillOpacity, // 透明度
+                                "outlineColor": strokeColor,// 颜色
+                                "line_width": lineWidth, // 线宽
+                                "line_opacity": fillOpacity, // 透明度
                             }, false);
                         }
                     },
@@ -258,11 +258,11 @@ window.onload = async () => {
                         name: "填充斜矩形",
                         cb: () => {
                             vjcommon.drawSlantRectangle(map, draw, getDrawOptions(), {
-                                "color": fillColor.value,// 颜色
-                                "opacity": fillOpacity.value, // 透明度
-                                "outlineColor": strokeColor.value,// 颜色
-                                "line_width": lineWidth.value, // 线宽
-                                "line_opacity": fillOpacity.value, // 透明度
+                                "color": fillColor,// 颜色
+                                "opacity": fillOpacity, // 透明度
+                                "outlineColor": strokeColor,// 颜色
+                                "line_width": lineWidth, // 线宽
+                                "line_opacity": fillOpacity, // 透明度
                             }, true);
                         }
                     },
@@ -899,7 +899,7 @@ window.onload = async () => {
             let content = await context.prompt("请输入布局克隆的参数", param);
             if (!content) return;
             param = JSON.parse(content)
-            let args = param.map(p => p.value); // 获取参数值
+            let args = param.map(p => p); // 获取参数值
             model = vjgeo.layout[methodName](symbol, ...args);
             if (!model) return;
             // 直接转成geojson

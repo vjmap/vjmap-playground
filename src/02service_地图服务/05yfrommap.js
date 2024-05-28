@@ -17,6 +17,8 @@ window.onload = async () => {
         	doc.from = "symbolsbase/v1";
         	// 把来源图的数据最后都清空，都用于模板
         	doc.isClearFromDb = true;
+        	// 可通过表达式要过滤要显示的实体
+        	doc.pickExpr = "gOutReturn := if((gInFeatureType == 'AcDbPolyline'), 1, 0);"
         	let entitys = [];
         
         	// 克隆一个填充，修改下颜色
@@ -106,7 +108,7 @@ window.onload = async () => {
         const createGeomData = async (map, doc) => {
         	let svc = map.getService();
         	let res = await svc.cmdCreateEntitiesGeomData({
-        		filedoc: doc.toDoc()
+        		filedoc: JSON.stringify(doc)
         	});
         	if (res.metadata && res.metadata.mapBounds) {
         		// 如果返回的元数据里面有当前地图的范围，则更新当前地图的坐标范围
@@ -168,7 +170,7 @@ window.onload = async () => {
         	const mapid = 'exportdwgmap';
         	let res = await svc.updateMap({
         		mapid: mapid,
-        		filedoc: doc.toDoc(),
+        		filedoc: JSON.stringify(doc),
         		mapopenway: vjmap.MapOpenWay.Memory,
         		style: {
         			backcolor: 0 // 如果div背景色是浅色，则设置为oxFFFFFF

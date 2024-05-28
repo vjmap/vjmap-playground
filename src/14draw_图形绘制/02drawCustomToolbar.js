@@ -587,6 +587,20 @@ window.onload = async () => {
             // 然后组合成一个
             draw.combineFeatures();
         }
+        
+        // 显示隐藏图层代码
+        const showHideLayer = (isHide) => {
+            let drawStyleId = draw.options.styleId;
+            let sourceIds = [`vjmap-map-draw-cold${drawStyleId}`, `vjmap-map-draw-hot${drawStyleId}`];
+            sourceIds.forEach(sId => {
+                if (isHide) {
+                    map.hideSource(sId)
+                } else {
+                    map.showSource(sId)
+                }
+            });
+        }
+        
         // UI界面
         const App = () => {
             return (

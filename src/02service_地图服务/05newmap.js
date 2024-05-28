@@ -186,7 +186,7 @@ window.onload = async () => {
         const createGeomData = async (map, doc) => {
             let svc = map.getService();
             let res = await svc.cmdCreateEntitiesGeomData({
-                filedoc: doc.toDoc()
+                filedoc: JSON.stringify(doc)
             });
             const features = [];
             if (res && res.result && res.result.length > 0) {
@@ -244,7 +244,7 @@ window.onload = async () => {
             const mapid = 'exportdwgmap';
             let res = await svc.updateMap({
                 mapid: mapid,
-                filedoc: doc.toDoc(),
+                filedoc: JSON.stringify(doc),
                 mapopenway: vjmap.MapOpenWay.Memory,
                 style: {
                     backcolor: 0 // 如果div背景色是浅色，则设置为oxFFFFFF

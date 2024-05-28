@@ -73,7 +73,7 @@ export declare const createLineTypeCurve: (map: Map_2, draw: IDrawTool, options?
 
 export declare const createLineTypePolyline: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<void>;
 
-export declare const createMapStyleLayerName: (svc: Service, overMapType: WmsOverlayMapType, overMapParam: WmsMapParam | WmsMapParam[], backcolor?: number) => Promise<WmsMapParam | WmsMapParam[]>;
+export declare const createMapStyleLayerName: (svc: Service, overMapType: WmsOverlayMapType, overMapParam: WmsMapParam | WmsMapParam[], backcolor?: number) => Promise<WmsMapParam | WmsMapParam[] | undefined>;
 
 export declare const createOutSymbol: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<any>;
 
@@ -151,7 +151,7 @@ export declare const drawRectangle: (map: Map_2, draw: IDrawTool, options?: Reco
 
 export declare const drawSlantRectangle: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, isFill?: boolean) => Promise<void>;
 
-export declare const drawText: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => Promise<void>;
+export declare const drawText: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, disableInteractive?: boolean, docBounds?: [number, number, number, number]) => Promise<any>;
 
 export declare const editCadEntity: (map: Map_2, draw: IDrawTool, updateMapStyleObj: any, editOp: "delete" | "modify" | "copy", showInfoFunc?: Function, dlgConfirmInfo?: Function, isRectSel?: boolean, promptFunc?: Function) => Promise<void>;
 
@@ -203,6 +203,11 @@ export declare const getQueryGeomData: (map: Map_2, queryParam: any, propData?: 
 }>;
 
 export declare const getShardsTileUrl: (tileUrl: string, map?: Map_2) => string[];
+
+export declare const getTextRefCo: (feature: any) => {
+    refCo1: any;
+    refCo2: any;
+};
 
 export declare const getTileShards: (tileUrl: string) => {
     tileUrl: string;
@@ -471,6 +476,8 @@ declare interface MapSource {
 
 export declare const modifyCadEntity: (map: Map_2, draw: IDrawTool, updateMapStyleObj: any, showInfoFunc?: Function, dlgConfirmInfo?: Function, isRectSel?: boolean, promptFunc?: Function) => Promise<void>;
 
+export declare const modifyDrawText: (map: Map_2, draw: IDrawTool, promptFunc?: Function, message?: Function) => Promise<void>;
+
 export declare const osmProviderTiles: () => string[];
 
 export declare const overlay2BaseCoordinate: (pt: vjmap_2.GeoPoint, coordinates: {
@@ -542,7 +549,9 @@ export declare function toMapLayer(layer: MapLayer, props: Record<string, any>):
 
 export declare const toProperties: (param: Record<string, any>) => Record<string, any>;
 
-export declare const transformGeoJsonData: (map: Map_2, data: any, basePt: any, destPt: any, scale?: number, angle?: number) => any;
+export declare const transformFourParam: (map: Map_2, data: any, fourParam: any, isGeoCoord?: boolean) => any;
+
+export declare const transformGeoJsonData: (map: Map_2, data: any, basePt: any, destPt: any, scale?: number, angle?: number, isGeoCoord?: boolean) => any;
 
 export declare class TsIndexDb {
     private dbName;
@@ -701,6 +710,8 @@ declare namespace vjcommon {
         drawText,
         addFeaturesToDraw,
         getPointOnePixelDrawStyleOption,
+        getTextRefCo,
+        modifyDrawText,
         isTrackFeature,
         setTrackFeatureProperty,
         getTrackFeatureProperty,
@@ -770,7 +781,8 @@ declare namespace vjcommon {
         isAlphanumeric,
         isWebBaseMap,
         getEntityObjectId,
-        transformGeoJsonData
+        transformGeoJsonData,
+        transformFourParam
     }
 }
 export default vjcommon;

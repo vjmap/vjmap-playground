@@ -156,7 +156,7 @@ window.onload = async () => {
         // js代码
         let res = await svc.updateMap({
             mapid: "basketballCourt",
-            filedoc: doc.toDoc(),
+            filedoc: JSON.stringify(doc),
             mapopenway: vjmap.MapOpenWay.Memory,
             style: {
                 backcolor: 0 // 如果div背景色是浅色，则设置为oxFFFFFF

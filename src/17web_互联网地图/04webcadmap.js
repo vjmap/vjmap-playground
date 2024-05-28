@@ -40,6 +40,9 @@ window.onload = async () => {
         map.addControl(new vjmap.NavigationControl());
         map.addControl(new vjmap.MousePositionControl({showZoom: true}));
         
+        // 如果x是8位，可通过前两位获取 如 vjmap.transform.getEpsgParam(vjmap.transform.EpsgCrsTypes.CGCS2000, 39).epsg
+        // 如果x是6位，是通过下面此工具 https://vjmap.com/demo/#/demo/map/web/03webzgetepsg，把地图移动至cad图位置的省市，点击获取当前地图中心经纬度， 计算EPSG，找一个与 CAD图距离相近的EPSG
+        let epsg = "EPSG:4509" // cad图的epsg
         // 增加高德地图底图
         const addGaodeMap = async (isRoadway) => {
             const tileUrl = svc.webMapUrl({
@@ -59,9 +62,7 @@ window.onload = async () => {
                 tileToken: "",
                 tileFlipY: false,
                 mapbounds: res.bounds,
-                srs: "EPSG:4527",// 可通过前两位获取 vjmap.transform.getEpsgParam(vjmap.transform.EpsgCrsTypes.CGCS2000, 39).epsg
-                // 因为sys_cad2000这个图只有6位，没有带系。需要在坐标转换前平移下带系  https://blog.csdn.net/thinkpang/article/details/124172626
-                fourParameterBefore: "39000000,0,1,0"
+                srs: epsg
             })
         
             map.addSource('web-gaode-source', {
@@ -107,9 +108,7 @@ window.onload = async () => {
                 ],
                 tileFlipY: false,
                 mapbounds: res.bounds,
-                srs: "EPSG:4527", // 可通过前两位获取 vjmap.transform.getEpsgParam(vjmap.transform.EpsgCrsTypes.CGCS2000, 39).epsg
-                // 因为sys_cad2000这个图只有6位，没有带系。需要在坐标转换前平移下带系  https://blog.csdn.net/thinkpang/article/details/124172626
-                fourParameterBefore: "39000000,0,1,0"
+                srs: epsg
             })
         
             map.addSource('web-tdt-source', {
@@ -145,20 +144,8 @@ window.onload = async () => {
         
         // cad转web坐标，isWgs84是否为wgs84 4326坐标，如天地图；否的话为gcj02火星坐标,如高德地图
         const cad2webCoordinate = async (pt, isWgs84) => {
-            let srs = "EPSG:4527"; // 可通过前两位获取 vjmap.transform.getEpsgParam(vjmap.transform.EpsgCrsTypes.CGCS2000, 39).epsg
-            // 因为sys_cad2000这个图只有6位，没有带系。需要在坐标转换前平移下带系  https://blog.csdn.net/thinkpang/article/details/124172626
-            let fourParameter = "39000000,0,1,0".split(",");
-            // 思路为先通过四参数，把cad还原成4527坐标，再通过坐标转换把4527转成wgs84 4326坐标，如果为火星坐标，还需要从4326转火星
-            // 把cad还原成4527坐标 这里就只要把x平移39000000就可以了
-            //pt.x += 39000000;
-            pt = vjmap.coordTransfromByFourParamter(pt, {
-                dx: +fourParameter[0],
-                dy: +fourParameter[1],
-                scale: +fourParameter[2],
-                rotate: +fourParameter[3]
-            })
-            // 通过坐标转换把4527转成wgs84 4326坐标
-            let res = await svc.cmdTransform("EPSG:4527","EPSG:4326",pt); // 如果不想调服务转，也可以在前端用proj4库
+            // 通过坐标转换把转成wgs84 4326坐标
+            let res = await svc.cmdTransform(epsg,"EPSG:4326",pt); // 如果不想调服务转，也可以在前端用proj4库
             // 如果为火星坐标，还需要从4326转火星
             let webPt = res[0];// 返回的第1条结果
             if (isWgs84 === false) {
@@ -169,32 +156,20 @@ window.onload = async () => {
         
         // web转cad坐标，isWgs84是否为wgs84 4326坐标，如天地图；否的话为gcj02火星坐标,如高德地图
         const web2cadCoordinate = async (pt, isWgs84) => {
-            let srs = "EPSG:4527"; // 可通过前两位获取 vjmap.transform.getEpsgParam(vjmap.transform.EpsgCrsTypes.CGCS2000, 39).epsg
-            // 因为sys_cad2000这个图只有6位，没有带系。需要在坐标转换前平移下带系  https://blog.csdn.net/thinkpang/article/details/124172626
-            let fourParameter = "39000000,0,1,0".split(",");
-            // (上面计算过程的逆过程), 如果为火星坐标，还需要从火星转4326，再通过坐标转换把wgs84 4326转成4527坐标, 4527坐标先通过四参数，得到cad坐标
+            // (上面计算过程的逆过程), 如果为火星坐标，还需要从火星转4326，再通过坐标转换把wgs84 4326转成cad图坐标
             if (isWgs84 === false) {
                 pt = vjmap.transform.convert(pt, vjmap.transform.CRSTypes.AMap, vjmap.transform.CRSTypes.EPSG4326);
             }
-            // 通过坐标转换把4527转成wgs84 4326坐标
-            let res = await svc.cmdTransform("EPSG:4326","EPSG:4527",vjmap.geoPoint(pt)); // 如果不想调服务转，也可以在前端用proj4库
+            // 通过坐标转换把cad epsg转成wgs84 4326坐标
+            let res = await svc.cmdTransform("EPSG:4326",epsg,vjmap.geoPoint(pt)); // 如果不想调服务转，也可以在前端用proj4库
             let cadPt = res[0];// 返回的第1条结果
-            // 把4527坐标还原成cad 这里就只要把x减去39000000就可以了
-            //pt.x -= 39000000;
-            // 四参数反算
-            cadPt = vjmap.coordTransfromByInvFourParamter(vjmap.geoPoint(cadPt), {
-                dx: +fourParameter[0],
-                dy: +fourParameter[1],
-                scale: +fourParameter[2],
-                rotate: +fourParameter[3]
-            })
             return cadPt
         }
         
         map.on("zoomend", async ()=> {
             let center = map.fromLngLat(map.getCenter());// 得到cad地图地理中心坐标点
             let gcj02Web = await cad2webCoordinate(center, false);// 转高德坐标
-            let wgs84Web = await cad2webCoordinate(center, true);// 转高德坐标
+            let wgs84Web = await cad2webCoordinate(center, true);// 转天地图坐标
             let content = `当前地图中心点坐标： CAD坐标:${center.x.toFixed(4)},${center.y.toFixed(4)}; 高德坐标:${gcj02Web[0].toFixed(4)},${gcj02Web[1].toFixed(4)}; 天地图坐标:${wgs84Web[0].toFixed(4)},${wgs84Web[1].toFixed(4)}`;
             message.info({ content, key: "info", duration: 3});
         })

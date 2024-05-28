@@ -14,6 +14,7 @@ window.onload = async () => {
         // 根据地图范围建立经纬度投影坐标系
         let prj = new vjmap.LnglatProjection();
         
+        
         // 地图对象
         let map = new vjmap.Map({
             container: 'map', // DIV容器ID
@@ -21,15 +22,44 @@ window.onload = async () => {
                 version: svc.styleVersion(),
                 glyphs: svc.glyphsUrl(),
                 sources: {
-                    gaode: {
+                    // 道路
+                    gaodeRoadSource: {
                         type: 'raster',
                         tiles: ["https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"],
+                    },
+                    // 影像无文字注记
+                    gaodeImgSource: {
+                        type: 'raster',
+                        tiles:  [
+                            "https://webst02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=6&x={x}&y={y}&z={z}",
+                        ],
+                    },
+                    // 影像文字注记
+                    gaodeImgSourceLabel: {
+                        type: 'raster',
+                        tiles:  [
+                            "https://webst02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
+                        ],
                     }
                 },
                 layers: [{
-                    id: 'gaode',
+                    id: 'gaodeRoad',
                     type: 'raster',
-                    source: 'gaode',
+                    source: 'gaodeRoadSource',
+                },{
+                    id: 'gaodeImg',
+                    type: 'raster',
+                    source: 'gaodeImgSource',
+                    layout: {
+                        visibility: "none"
+                    }
+                },{
+                    id: 'gaodeImgLabel',
+                    type: 'raster',
+                    source: 'gaodeImgSourceLabel',
+                    layout: {
+                        visibility: "none"
+                    }
                 }]
             },
             center: [0, 0],
@@ -297,6 +327,20 @@ window.onload = async () => {
             clear();
             map.triggerRepaint();
         }
+        
+        
+        
+        const roadMap = () => {
+            map.showSource("gaodeRoadSource")
+            map.hideSource("gaodeImgSource")
+            map.hideSource("gaodeImgSourceLabel")
+        }
+        
+        const imageMap = () => {
+            map.showSource("gaodeImgSource")
+            map.showSource("gaodeImgSourceLabel")
+            map.hideSource("gaodeRoadSource")
+        }
         // UI界面
         const App = () => {
             return (
@@ -310,6 +354,16 @@ window.onload = async () => {
                         <div className="input-item">
                             <button id="clear-map-btn" className="btn btn-full mr0"
                                     onClick={() => unHightlightCadLayer()}>取消高亮CAD图层数据
+                            </button>
+                        </div>
+                        <div className="input-item">
+                            <button id="clear-map-btn" className="btn btn-full mr0"
+                                    onClick={() => roadMap()}>切换至道路地图
+                            </button>
+                        </div>
+                        <div className="input-item">
+                            <button id="clear-map-btn" className="btn btn-full mr0"
+                                    onClick={() => imageMap()}>切换至影像地图
                             </button>
                         </div>
                     </div>

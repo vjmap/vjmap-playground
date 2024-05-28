@@ -9,7 +9,6 @@ window.onload = async () => {
     };
     try {
         // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/web/05fourparam
-        
         // --通过对应点叠加互联网图形--
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         // 根据地图范围建立经纬度投影坐标系

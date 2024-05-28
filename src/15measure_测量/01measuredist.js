@@ -101,6 +101,18 @@ window.onload = async () => {
                 },
                 updatecoordinate: (e) => {
                     if (!e.lnglat) return;
+        
+                    /*
+                    // 如果需要指定事先指定起点，可用如下代码
+                    if (e.state.line.coordinates.length == 1) {
+                        // 第一个点时自动加最开始的点做为起点
+                        e.state.line.coordinates.unshift(map.toLngLat([
+                            587662045.9814225, // cad坐标x
+                            3103973655.658176 // cad坐标y
+                        ]))
+                        e.state.currentVertexPosition = 1;
+                    }*/
+        
                     isDrawing = true;
                     const co = map.fromLngLat(e.feature.coordinates[e.feature.coordinates.length - 1]);
                     let html = `当前坐标:<span style="color: #ff0000"> ${co.x.toFixed(2)}, ${co.y.toFixed(2)}</span>`;

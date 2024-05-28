@@ -1324,6 +1324,8 @@ export  class DbDocument {
     pickLayers?: string[];
     /** 来源于哪个图时有效，表示从此图中选择指定的实体ID，不在指定的实体ID将不会显示 */
     pickEntitys?: string[];
+    /** 来源于哪个图时有效，使用表达式，表示从此图中选择指定的实体ID，不在指定的实体ID将不会显示 结果与pickEntitys的取并 */
+    pickExpr?: string;
     isClearFromDb?: boolean;
     /** 文档环境，用于设置是否显示线宽等设置, 设置线宽为 LWDISPLAY ,true显示或 false不显示线宽*/
     environment?: Record<string, any>;
@@ -1339,6 +1341,8 @@ export  class DbDocument {
     linetypes?: IDbLinetype[];
     /** 块定义. */
     blocks?: IDbBlock[];
+    /** 来源于其他图的实体时，如果块定义重复，则自动重命名 ，默认true */
+    isRenameBlockNameIfExist?: boolean;
     /**
      * 构造函数
      */
@@ -1476,12 +1480,18 @@ export  class DbHatch extends DbEntity {
  *
  */
 export  class DbLayer {
-    /** 图层名称. */
+    /** 图层名称. 如果要对所有图层进行修改时，请使用 \*all_layers\* */
     name?: string;
     /** 图层颜色索引. */
     color?: number;
     /** 图层线型，缺省 CONTINUOUS . */
     linetype?: string;
+    /** 图层开关. */
+    isOff?: boolean;
+    /** 图层锁定. */
+    isLocked?: boolean;
+    /** 图层冻结. */
+    isFrozen?: boolean;
     /**
      * 构造函数
      */
@@ -3628,6 +3638,8 @@ export  interface IComposeNewMap {
     savefilename?: string;
     /** 生成后清理图形数据以减少dwg文件大小 */
     purge?: boolean;
+    /** 来源于其他图的实体时，如果块定义重复，则自动重命名 ，默认true */
+    isRenameBlockNameIfExist?: boolean;
     /** 导出的CAD版本号。如果为*表示为当前CAD图的版本 */
     cadVersion?: string | "*" | "cad2000" | "cad2004" | "cad2007" | "cad2010" | "cad2013" | "cad2018";
 }
@@ -4802,6 +4814,8 @@ export  interface IOpenMapBaseParam {
     notReplaceLineType?: boolean;
     /** 字符替换规则. openMap返回的字段findFonts为系统查找的字体替换规则。如需修改默认的话，请传入替换的字体规则，如fontReplaceRule: {"tssdeng.shx_1": "_default_.ttc"}*/
     fontReplaceRule?: Record<string, string> | string;
+    /** 地图初始化时显示小点时范围需自动处理比例大小，默认16 如不想自动处理，可以把值设置很大。**/
+    mapInitViewErrMaxRatio?: number;
     /** 图像左上角坐标x 第一次打开图像类型时有效*/
     imageLeft?: number;
     /** 图像左上角坐标y 第一次打开图像类型时有效*/
@@ -15594,7 +15608,7 @@ export  const createLineTypeCurve: (map: vjmap.Map, draw: vjmap.IDrawTool, optio
 
 export  const createLineTypePolyline: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<void>;
 
-export  const createMapStyleLayerName: (svc: vjmap.Service, overMapType: WmsOverlayMapType, overMapParam: WmsMapParam | WmsMapParam[], backcolor?: number) => Promise<WmsMapParam | WmsMapParam[]>;
+export  const createMapStyleLayerName: (svc: vjmap.Service, overMapType: WmsOverlayMapType, overMapParam: WmsMapParam | WmsMapParam[], backcolor?: number) => Promise<WmsMapParam | WmsMapParam[] | undefined>;
 
 export  const createOutSymbol: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<any>;
 
@@ -15672,7 +15686,7 @@ export  const drawRectangle: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: R
 
 export  const drawSlantRectangle: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, isFill?: boolean) => Promise<void>;
 
-export  const drawText: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, disableInteractive?: boolean) => Promise<any>;
+export  const drawText: (map: vjmap.Map, draw: vjmap.IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, disableInteractive?: boolean, docBounds?: [number, number, number, number]) => Promise<any>;
 
 export  const editCadEntity: (map: vjmap.Map, draw: vjmap.IDrawTool, updateMapStyleObj: any, editOp: "delete" | "modify" | "copy", showInfoFunc?: Function, dlgConfirmInfo?: Function, isRectSel?: boolean, promptFunc?: Function) => Promise<void>;
 

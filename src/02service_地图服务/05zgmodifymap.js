@@ -151,7 +151,7 @@ window.onload = async () => {
         	doc.appendEntity(entities);
         
         	let res = await svc.cmdCreateEntitiesGeomData({
-        		filedoc: doc.toDoc(),
+        		filedoc: JSON.stringify(doc),
         		mapBounds: docMapBounds ? docMapBounds : param.bounds.toArray() // 如果没有输入文档范围，则使用当前地图的范围
         	})
         	const features = []

@@ -91,7 +91,7 @@ window.onload = async () => {
         
         let resNew = await svcNew.updateMap({
             mapid: vjmap.getTempMapId(), // 临时图形不浏览情况下过期自动删除时间，单位分钟。默认30
-            filedoc: doc.toDoc(),
+            filedoc: JSON.stringify(doc),
             mapopenway: vjmap.MapOpenWay.Memory, //  vjmap.MapOpenWay.GeomRender 效果好些，但是会慢些
             deleteOldVersion: true, // 把之前的版本都删除了
             style: {
@@ -162,10 +162,10 @@ window.onload = async () => {
         
         // js代码
         
-        let mapid = `ns_temp_30_` + svc.strMd5(doc.toDoc()) // 根据文件内容生成一个文件名
+        let mapid = `ns_temp_30_` + svc.strMd5(JSON.stringify(doc)) // 根据文件内容生成一个文件名
         let res = await svc.updateMap({
             mapid: mapid, // 临时图形不浏览情况下过期自动删除时间，单位分钟。默认30
-            filedoc: doc.toDoc(),
+            filedoc: JSON.stringify(doc),
             mapopenway: vjmap.MapOpenWay.Memory, //  vjmap.MapOpenWay.GeomRender 效果好些，但是会慢些
             style: {
                 backcolor: 0, // 如果div背景色是浅色，则设置为oxFFFFFF

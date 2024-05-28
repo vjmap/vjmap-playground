@@ -131,6 +131,43 @@ window.onload = async () => {
             });
         }, "overlay")
         
+        
+        
+        // 绘图控件右键菜单
+        const draw = new vjmap.Draw.Tool();
+        map.addControl(draw, 'top-right');
+        
+        map.on("draw.simpleselect.contextmenu", function (e) {
+            // 如果不是此draw对象的事件，则不用管
+            if (e.styleId != draw.options.styleId) return;
+            let feature = e.event.featureTarget
+            if (!feature) return
+            //if (draw.getMode() != "simple_select") return
+            let selectFeatureId = feature.properties.id
+            // 需要选中的才能右键
+            let selectIds = draw.getSelectedIds() || []
+            if (selectIds.indexOf(selectFeatureId)== -1) return
+            let event = e.event.originalEvent
+            // 阻止地图默认右键菜单触发
+            event.preventDefault();
+            event.stopPropagation();
+        
+            return new vjmap.ContextMenu({
+                event: event,
+                theme: "dark", //light
+                width: "250px",
+                items: [
+                    {
+                        label: "删除",
+                        onClick: () => {
+                            draw.delete(selectFeatureId)
+                        }
+                    }
+                ]
+            });
+        });
+        
+        
     }
     catch (e) {
         console.error(e);

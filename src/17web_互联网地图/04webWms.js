@@ -61,12 +61,12 @@ window.onload = async () => {
             version:"v1",
             layers: style.stylename,
             srs: "EPSG:3857", // 底图是天地图坐标系
-            crs: "EPSG:4527", // cad图是2000坐标  可通过前两位获取 vjmap.transform.getEpsgParam(vjmap.transform.EpsgCrsTypes.CGCS2000, 39).epsg
+            crs: "EPSG:4548", // cad图是2000坐标  可通过前两位获取 vjmap.transform.getEpsgParam(vjmap.transform.EpsgCrsTypes.CGCS2000, 39).epsg
             // 如果是自定义的投影，也可以直接写proj表达式，如 （中央经线100-东偏10000-北偏-2000000）
             // crs: encodeURIComponent("+proj=tmerc +lat_0=0 +lon_0=100 +k=1 +x_0=10000 +y_0=-2000000 +ellps=GRS80 +units=m +no_defs")
             // crs也可以一个prj投影文件WKT的内容, 如 crs: encodeURIComponent(`PROJCS["CGCS2000 / 3-degree Gauss-Kruger CM 111E",GEOGCS["China Geodetic Coordinate System 2000",DATUM["China_2000",SPHEROID["CGCS2000",6378300,300,AUTHORITY["EPSG","1024"]],AUTHORITY["EPSG","1043"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.018,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4490"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",112.1],PARAMETER["scale_factor",1],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AUTHORITY["EPSG","4546"]]`)
             // 如果是投影prj文件WKT字符串，在前端也需要转换坐标，可以把投影prj文件WKT字符转为proj4字符，再用prj4进行坐标转换。方法为 await svc.cmdPrjWktToPrj4(`PROJCS["CGCS2000 / 3-degree Gauss-Kruger CM 111E",GEOGCS["China Geodetic Coordinate System 2000",DATUM["China_2000",SPHEROID["CGCS2000",6378300,300,AUTHORITY["EPSG","1024"]],AUTHORITY["EPSG","1043"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.018,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4490"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",112.1],PARAMETER["scale_factor",1],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AUTHORITY["EPSG","4546"]]`);
-            fourParameter: "-39000000,0,1,0"// 此图坐标前面没有加带系，需要加上带系的偏移量，用四参数调节位置
+            // fourParameter: "-39000000,0,1,0"// 此图坐标前面没有加带系，需要加上带系的偏移量，用四参数调节位置
         })
         
         map.addSource('wms-test-source', {

@@ -22,7 +22,10 @@ window.onload = async () => {
                 sources: {
                     tdt1: {
                         type: 'raster',
-                        tiles: ["https://t3.tianditu.gov.cn/DataServer?T=vec_w&X={x}&Y={y}&L={z}&tk=7baeffb96bf61861b302d0f963cfda66"],
+                        // 影像
+                        tiles: ["https://t3.tianditu.gov.cn/DataServer?T=img_w&X={x}&Y={y}&L={z}&tk=7baeffb96bf61861b302d0f963cfda66"],
+                        // 道路
+                        //tiles: ["https://t3.tianditu.gov.cn/DataServer?T=vec_w&X={x}&Y={y}&L={z}&tk=7baeffb96bf61861b302d0f963cfda66"],
                     },
                     tdt2: {
                         type: 'raster',
@@ -54,6 +57,13 @@ window.onload = async () => {
         const co = prj.toLngLat([116.3912, 39.9073])
         const marker = new vjmap.Marker({color: "red"})
         marker.setLngLat(co).addTo(map)
+        
+        // 地形
+        // map.addSource('dem', {
+        //     type: 'raster-dem',
+        //     tiles: ["https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1IjoiZnJhemllcm1hcmsiLCJhIjoiY2wzOTBhZzJiMDFwejNqbzJyMGs0YmZ5NCJ9.2VB9C63HoxzjCpCmbhga9A"],
+        // })
+        // map.setTerrain({ source: 'dem', exaggeration: 1})
         
     }
     catch (e) {

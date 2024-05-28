@@ -46,6 +46,7 @@ window.onload = async () => {
         //map.flyTo({center: [0, 0], zoom: 9});
         // using flyTo options
         map.flyTo({
+            essential: true, // 动画被认为是必不可少的，并且不会受到其他性能的影响。
             center: [0, 0],
             zoom: 9,
             pitch: 60,
