@@ -57,6 +57,17 @@ window.onload = async () => {
                     }
                 }
         
+        
+                // 如果要相机跟随,请用这个代码
+                const followCamera = (m) => {
+                    let lnglat = marker.getLngLat();
+                    map.easeTo({
+                        center: lnglat, // 更新地图中心到对象的最新位置
+                        duration: 2000, // 动画持续时间（毫秒）
+                        easing: t => t // 使用默认的线性缓动
+                    });
+                }
+        
                 // 走路的动画
                 vjmap.createAnimation({
                     from: 0,
@@ -66,7 +77,12 @@ window.onload = async () => {
                     onUpdate: latest => {
                         const newPos = mapProgressToValues(latest)
                         marker.setLngLat(map.toLngLat(newPos));
-                        enableMarkerInScreen(marker);
+                        let isFollowCamera = false;  // 如果要相机跟随,请改成true
+                        if (!isFollowCamera) {
+                            enableMarkerInScreen(marker);
+                        } else {
+                            followCamera(marker)
+                        }
                     },
                     onComplete: (e) => {
                         resolve()

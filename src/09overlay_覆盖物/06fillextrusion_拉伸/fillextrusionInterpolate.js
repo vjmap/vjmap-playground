@@ -34,6 +34,7 @@ window.onload = async () => {
             center: prj.toLngLat(mapExtent.center()), // 设置地图中心点
             zoom: 2, // 设置地图缩放级别,
             pitch: 60, // 倾斜角度
+            antialias: true, // 反锯齿
             renderWorldCopies: false // 不显示多屏地图
         });
         
@@ -97,6 +98,7 @@ window.onload = async () => {
         fillExtrusions.clickLayer(e => message.info(`您点击了第 ${e.features[0].id} 个，名称为 ${e.features[0].properties.name}，颜色为 ${e.features[0].properties.color} 的 ${e.features[0].properties.type}`))
         fillExtrusions.hoverPopup(f => `<h3>ID: ${f.properties.name}</h3>Color: ${f.properties.color}`, { anchor: 'bottom' });
         map.flyTo({center: [0, 0], zoom: 4, speed: 0.2});
+        
     }
     catch (e) {
         console.error(e);

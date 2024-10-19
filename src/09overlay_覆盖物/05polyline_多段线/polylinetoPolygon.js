@@ -8,8 +8,8 @@ window.onload = async () => {
         ...__env__ // 如果您已私有化部署，需要连接已部署的服务器地址和token，请打开js/env.js,修改里面的参数
     };
     try {
-        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/overlay/fillextrusion/fillExtrusionsPolyline
-        // --拉伸多段线--
+        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/overlay/polyline/polylinetoPolygon
+        // --多段线转多边形--
         // 地图服务对象
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         // 打开地图
@@ -34,7 +34,6 @@ window.onload = async () => {
             center: prj.toLngLat(mapExtent.center()), // 设置地图中心点
             zoom: 2, // 设置地图缩放级别
             pitch: 60, // 倾斜角度
-            antialias: true, // 反锯齿
             renderWorldCopies: false // 不显示多屏地图
         });
         
@@ -46,40 +45,51 @@ window.onload = async () => {
         map.setRasterOpacity(svc.rasterLayerId(), 0.3);
         
         const mapBounds = map.getGeoBounds(0.6);
-        let len = mapBounds.width() / 200;
-        let geoDatas = [];
+        let len = mapBounds.width() / 100;
         
         // 由多段线转成多边形
         const polylineToPolygon = (path, len) => {
             return vjmap.polylineMarginToPolygon(path, {offset: len});
         }
-        
-        for(let i = 0; i < 5; i++) {
-            let path = mapBounds.randomPoints(3, 4);
-            path = polylineToPolygon(path, len)
-            geoDatas.push({
+        let polylineDatas = [];
+        let polygonDatas = [];
+        for(let i = 0; i < 3; i++) {
+            let path = mapBounds.randomPoints(3, 5);
+            polylineDatas.push({
                 points: map.toLngLat(path),
                 properties: {
-                    name: "line" + (i + 1),
                     color: vjmap.randomColor(),
-                    type: "line",
-                    baseHeight: 0,
-                    height: vjmap.randInt(1000000, 2000000)
+                    type: "line"
+                }
+            })
+            // 多段线转多边形
+            path = polylineToPolygon(path, len)
+            polygonDatas.push({
+                points: map.toLngLat(path),
+                properties: {
+                    color: vjmap.randomColor(),
+                    type: "polygon"
                 }
             })
         }
-        
-        let fillExtrusions = new vjmap.FillExtrusion({
-            data: geoDatas,
+        // 绘制多边形
+        let fillExtrusions = new vjmap.Polygon({
+            data: polygonDatas,
             // 如果是hover状态时，用红色，非hover状态时，取属性中的'color'做为颜色值
-            fillExtrusionColor: ['case', ['to-boolean', ['feature-state', 'hover']], 'red', ['get', 'color']],
-            fillExtrusionOpacity: 0.8,
-            fillExtrusionHeight:['get', 'height'],
-            fillExtrusionBase: ['get', 'baseHeight'],
+            fillColor: ['case', ['to-boolean', ['feature-state', 'hover']], 'red', ['get', 'color']],
+            fillOpacity: 0.5,
             isHoverPointer: true,
             isHoverFeatureState: true
         });
         fillExtrusions.addTo(map);
+        
+        // 绘制多段线
+        let polylines = new vjmap.Polyline({
+            data: polylineDatas,
+            lineColor: ['get', 'color'],
+            lineWidth: 3
+        });
+        polylines.addTo(map);
         
     }
     catch (e) {

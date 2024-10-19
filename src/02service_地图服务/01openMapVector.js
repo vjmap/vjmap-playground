@@ -33,7 +33,8 @@ window.onload = async () => {
             style: svc.vectorStyle(), // 矢量瓦片样式
             center: prj.toLngLat(mapExtent.center()), // 中心点
             zoom: 2,
-            renderWorldCopies: false
+            renderWorldCopies: false,
+            antialias: true
         });
         // 地图关联服务对象和坐标系
         map.attach(svc, prj);

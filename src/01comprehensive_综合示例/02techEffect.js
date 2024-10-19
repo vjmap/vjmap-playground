@@ -11,6 +11,8 @@ window.onload = async () => {
         // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/comprehensive/02techEffect
         // --高科技效果展示--
         // 地图服务对象
+        // 注意：此示例是基于旧的vjthree的三维库，目前唯杰地图3D库已升级，可参考最新的示例效果 
+        // https://vjmap.com/map3d/demo/#/demo/map/entity/custom/05entitycustommap2d
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         // 打开地图
         let res = await svc.openMap({

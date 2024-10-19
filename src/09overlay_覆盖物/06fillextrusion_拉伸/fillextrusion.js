@@ -34,6 +34,7 @@ window.onload = async () => {
             center: prj.toLngLat(mapExtent.center()), // 设置地图中心点
             zoom: 2, // 设置地图缩放级别,
             pitch: 60, // 倾斜角度
+            antialias: true, // 反锯齿
             renderWorldCopies: false // 不显示多屏地图
         });
         

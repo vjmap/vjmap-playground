@@ -8,9 +8,8 @@ window.onload = async () => {
         ...__env__ // 如果您已私有化部署，需要连接已部署的服务器地址和token，请打开js/env.js,修改里面的参数
     };
     try {
-        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/threelayer/threeLayerSphere
-        // --threejs球体--
-        // !!! 下面中的`vjthree`库已弃用，请用最新的[唯杰地图3D库] https://vjmap.com/map3d/
+        // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/marker/01marker
+        // --点标记--
         // 地图服务对象
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         // 打开地图
@@ -23,56 +22,38 @@ window.onload = async () => {
             // 如果打开出错
             message.error(res.error)
         }
-        // 获取地图范围
-        let mapExtent = vjmap.GeoBounds.fromString(res.bounds);
         // 根据地图范围建立几何投影坐标系
-        let prj = new vjmap.GeoProjection(mapExtent);
+        let prj = new vjmap.GeoProjection(res.bounds);
         
         // 地图对象
         let map = new vjmap.Map({
             container: 'map', // DIV容器ID
             style: svc.rasterStyle(), // 样式，这里是栅格样式
-            center: prj.toLngLat(mapExtent.center()),
-            zoom: 2,
-            pitch: 60,
-            antialias:true,
+            center: prj.toLngLat(prj.getMapExtent().center()), // 设置地图中心点
+            zoom: 3, // 设置地图缩放级别
             renderWorldCopies: false // 不显示多屏地图
         });
         
         // 关联服务对象和投影对象
         map.attach(svc, prj);
-        // 根据地图本身范围缩放地图至全图显示
-        //map.fitMapBounds();
-        await map.onLoad();
-        
+        // 适应至地图范围大小
+        map.fitMapBounds();
         const mapBounds = map.getGeoBounds(0.6);
-        let len = mapBounds.width() / 20;
-        const center = map.getCenter();
-        
-        if (typeof vjThree !== "object") {
-            // 如果没有环境
-            await vjmap.addScript([{
-                src: "../../js/plugins/vjthree.min.js"
-            },{
-                src: "../../js/plugins/vjthree.min.css"
-            }])
-        }
-        
-        const threeContext = map.createThreeJsContext({
-            defaultLights: true,
-            enableSelectingObjects: true
-        });
-        const sphere = threeContext.sphere({
-            color: 'red',
-            radius: prj.toMeter(len),
-            units: "meters",
-            material: 'MeshToonMaterial'
-        }).setCoords([center.lng, center.lat, len]);
-        sphere.addEventListener('ObjectMouseOver', e => console.log("ObjectMouseOver: " + e.detail.name), false);
-        sphere.addEventListener('ObjectMouseOut', e => console.log("ObjectMouseOut: " + e.detail.name), false);
-        // add sphere to the scene
-        threeContext.add(sphere);
-        map.addLayer(new vjmap.ThreeLayer({context: threeContext}));
+        // marker
+        // 图上随机生成一个点
+        let position = mapBounds.randomPoint();
+        let latLng = map.toLngLat(position); // 地理坐标转经纬度
+        let marker = new vjmap.Marker({
+            color: vjmap.randomColor(),
+            // 设置可拖动
+            draggable: true,
+            // 禁止拖动的键: 左键left 右键right 中键middle 触摸touch  多个组合中间用,如 禁止左键和中键拖动 "left,middle"
+            // @ts-ignore
+            disableDragButton: "middle,right", // 禁止中键和右键拖动。只允许左键和触摸拖动
+        }).setLngLat([0,0])
+        marker.addTo(map);
+        // 事件
+        marker.on("click", () => message.info("you click a marker"))
         
     }
     catch (e) {

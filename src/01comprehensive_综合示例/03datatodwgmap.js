@@ -326,6 +326,8 @@ window.onload = async () => {
                 delete: true
             }))
             doc.entitys = entitys;
+            // 创建完缩放至全图
+            doc.isZoomExtents = true;
             return doc;
         }
         

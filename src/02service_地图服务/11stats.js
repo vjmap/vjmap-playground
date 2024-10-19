@@ -20,7 +20,7 @@ window.onload = async () => {
             style: {
                 backcolor: 0,
                 // 根据表达式，把变量的字隐藏掉，这图里变量的字都用黄色来表示了，所以过滤颜色为黄色的字即可
-                expression: "gOutVisible := (gInColorRed == 255 and gInColorGreen == 255 and gInColorBlue == 0) ? true : false;"
+                expression: "gOutVisible := (gInColorRed == 255 and gInColorGreen == 255 and gInColorBlue == 0) ? 0 : 1;"
             }
         })
         if (res.error) {

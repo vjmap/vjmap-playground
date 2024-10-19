@@ -78,7 +78,7 @@ window.onload = async () => {
             backcolor: 0, // 后台打开地图的背景色
             layeroff: [3,10,24] // 把3,10,24图层关闭了
         })
-        vjmap.syncMaps(map1, map2);
+        let cancelCB = vjmap.syncMaps(map1, map2); // 返回取消同步的回调函数
         
         // 地图比较不同
         let diff = await service.cmdMapDiff({
@@ -97,6 +97,7 @@ window.onload = async () => {
         })
         
         if (diff.error) {
+            cancelCB();
             message.error(diff.error);
             return;
         }

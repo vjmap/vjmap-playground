@@ -10,6 +10,7 @@ window.onload = async () => {
     try {
         // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/threelayer/01threeLayerConeMesh
         // --四棱锥标注动画--
+        // !!! 下面中的`vjthree`库已弃用，请用最新的[唯杰地图3D库] https://vjmap.com/map3d/
         // 地图服务对象
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         // 打开地图

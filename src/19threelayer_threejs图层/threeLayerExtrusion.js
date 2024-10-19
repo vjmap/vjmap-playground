@@ -10,6 +10,7 @@ window.onload = async () => {
     try {
         // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/threelayer/threeLayerExtrusion
         // --threejs拉伸模型--
+        // !!! 下面中的`vjthree`库已弃用，请用最新的[唯杰地图3D库] https://vjmap.com/map3d/
         // 地图服务对象
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         // 打开地图
@@ -93,6 +94,7 @@ window.onload = async () => {
         threeContext.add(star);
         
         map.addLayer(new vjmap.ThreeLayer({context: threeContext}));
+        
     }
     catch (e) {
         console.error(e);

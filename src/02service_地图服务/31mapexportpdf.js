@@ -46,6 +46,7 @@ window.onload = async () => {
         let param; // 不填的话，用默认的
         /*
         param = {
+            lineWeight: false, // 导出时是否包含线宽
             bIncludeOffLayers: false, // 是否包含关闭的图层
             bSearchableSHX: false, // 可搜索型文字
             bSearchableTTF: false, // 可搜索ttf文字

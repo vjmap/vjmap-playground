@@ -52,7 +52,9 @@ window.onload = async () => {
                     draw.changeMode("draw_point")
                     break;
                 case "line":
-                    draw.changeMode("draw_line_string")
+                    draw.changeMode("draw_line_string"/*, {
+                        isClosed: true // 是否自动闭合
+                    }*/)
                     break;
                 case "polygon":
                     draw.changeMode("draw_polygon")

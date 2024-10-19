@@ -1042,6 +1042,8 @@ export  class Db2dPolyline extends DbCurve {
     polyType?: Poly2dType;
     /** 坐标. */
     points?: Array<[number, number, number?]>;
+    /** 是否对坐标进行平滑处理，默认false. */
+    smooth?: boolean;
     /**
      * 构造函数
      */
@@ -1080,6 +1082,8 @@ export  class Db3dPolyline extends DbCurve {
     polyType?: Poly3dType;
     /** 坐标. */
     points?: Array<[number, number, number?]>;
+    /** 是否对坐标进行平滑处理，默认false. */
+    smooth?: boolean;
     /**
      * 构造函数
      */
@@ -1307,6 +1311,8 @@ export  class DbDimension extends DbEntity {
     arrowColor?: number;
     /** 引线颜色. */
     lineColor?: number;
+    /** 要替换的注记内容. */
+    dimensionText?: string;
     /**
      * 构造函数
      */
@@ -1325,7 +1331,17 @@ export  class DbDocument {
     /** 来源于哪个图时有效，表示从此图中选择指定的实体ID，不在指定的实体ID将不会显示 */
     pickEntitys?: string[];
     /** 来源于哪个图时有效，使用表达式，表示从此图中选择指定的实体ID，不在指定的实体ID将不会显示 结果与pickEntitys的取并 */
+    /**
+     * Example:
+     * 利用表达式把sys_zp图中所有的块实体重新生成一个新图
+     * ```typescript
+     * let doc = new vjmap.DbDocument();
+     * doc.from = "sys_zp/v1";
+     * doc.pickExpr = "gOutReturn := if((gInFeatureType == 'AcDbBlockReference'), 1, 0);"
+     * ```
+     */
     pickExpr?: string;
+    /** 是否把来源图里面的数据都清空 */
     isClearFromDb?: boolean;
     /** 文档环境，用于设置是否显示线宽等设置, 设置线宽为 LWDISPLAY ,true显示或 false不显示线宽*/
     environment?: Record<string, any>;
@@ -1343,6 +1359,8 @@ export  class DbDocument {
     blocks?: IDbBlock[];
     /** 来源于其他图的实体时，如果块定义重复，则自动重命名 ，默认true */
     isRenameBlockNameIfExist?: boolean;
+    /** 是不是创建完缩放至全图 默认false */
+    isZoomExtents?: boolean;
     /**
      * 构造函数
      */
@@ -1638,6 +1656,8 @@ export  class DbPolyline extends DbCurve {
     startWidth?: number[];
     /** 终点宽. */
     endWidth?: number[];
+    /** 是否对坐标进行平滑处理，默认false. */
+    smooth?: boolean;
     /**
      * 构造函数
      */
@@ -1785,14 +1805,20 @@ export  class DbSpline extends DbCurve {
 export  class DbTable extends DbBlockReference {
     /** 表样式名称. */
     tableStyleName?: string;
+    /** 文本样式. */
+    textStyle?: string;
     /** 表格列数. */
     numColumns?: number;
     /** 表格行数. */
     numRows?: number;
     /** 列宽. */
     columnWidth?: number;
+    /** 各行高. */
+    rowHeight?: number[];
+    /** 各列宽. */
+    columnWidths?: number[];
     /** 行高. */
-    rowHeight?: number;
+    rowHeights?: number;
     /** 是否禁用标题. */
     disableTitle?: boolean;
     /** 表格方向是否从上至上. */
@@ -1819,6 +1845,8 @@ export  class DbTable extends DbBlockReference {
     data?: Array<Array<string | {
         /** 单元格文本内容. */
         text: string;
+        /** 单元格文本样式. */
+        textStyle?: string;
         /** 单元格对齐方式. */
         alignment: TableCellAlignment;
         /** 单元格背景色. */
@@ -3640,6 +3668,8 @@ export  interface IComposeNewMap {
     purge?: boolean;
     /** 来源于其他图的实体时，如果块定义重复，则自动重命名 ，默认true */
     isRenameBlockNameIfExist?: boolean;
+    /** 是不是创建完缩放至全图 默认false (如果有多个图合并，只需设置第一个图的) */
+    isZoomExtents?: boolean;
     /** 导出的CAD版本号。如果为*表示为当前CAD图的版本 */
     cadVersion?: string | "*" | "cad2000" | "cad2004" | "cad2007" | "cad2010" | "cad2013" | "cad2018";
 }
@@ -3650,8 +3680,10 @@ export  interface IComposeNewMap {
 export  interface IConditionQueryFeatures extends IQueryBaseFeatures {
     /** 条件. */
     condition: string;
-    /** 范围. */
-    bounds?: [number, number, number, number];
+    /** 范围.或者点坐标数组 */
+    bounds?: [number, number, number, number] | [number, number][];
+    /** 是否获取交点 bounds 为点坐标数组时有效，默认false */
+    isGetIntersections?: boolean;
     /** 记录开始位置. */
     beginpos?: number;
     /** 是否返回几何数据,为了性能问题，realgeom为false时，如果返回条数大于1.只会返回每个实体的外包矩形，如果条数为1的话，会返回此实体的真实geojson；realgeom为true时每条都会返回实体的geojson */
@@ -4580,6 +4612,42 @@ export  interface IExprQueryFeatures extends IQueryBaseFeatures {
     beginpos?: number;
 }
 
+/**
+ * 自动提取图中表格参数
+ */
+export  interface IExtractTale {
+    /** 地图ID. */
+    mapid?: string;
+    /** 地图版本(为空时采用当前打开的地图版本). */
+    version?: string;
+    /** 图层样式名.为空时，将由选择的实体的图层来决定 */
+    layer?: string;
+    /** 范围 [x1,y1,x2,y1] 为空表示此个图，否则为指定区域查询提取. */
+    bounds?: string;
+    /** 查询条件(默认为所有线). */
+    condition?: string;
+    /** 是否输出调试数据. */
+    debug?: boolean;
+    /** 小数点计算精度. 正数表示精度为小数点后几位，负数表示精度为小数点前几位 默认为4 */
+    digit?: number;
+    /** 误差值. 正数表示距离小于这个误差值就以为是直线（为零的话表示自动求误差值)，负数表示自动获取的误差值比例倍数大小 默认为0自动*/
+    tol?: number;
+    /** 表格边框最少点. 如果表格边框点数小于这个数将排查此表格. 默认 12*/
+    tableEdgeMinPoint?: number;
+    /** 表格文本最少数. 如果表格中所有文本个数小于这个数将排查此表格. 默认 4*/
+    tableTextMinCount?: number;
+    /** 单元格最大面积比.单元格面积占整体表格面积的比例不能超过这值，超过了此值，将不获取内容 . 默认 90*/
+    cellMaxArea?: number;
+    /** 空值所占最小比例. 空值占所有表格的比例超过此值将排查此表格. 默认 90*/
+    cellEmptyRatio?: number;
+    /** 单元格最大个数 允许的单元格最大个数,超过这值将排查此表格 . 默认 100000 */
+    tableMaxCellCount?: number;
+    /** 表格数据允许重复. 表格数据允许重复会尽可能搜索多的表格，但同一份数据可能在不同的表格中 默认false */
+    seachTableMost?: boolean;
+    /** 查找子图范围 默认false */
+    findChildMapRects?: boolean;
+}
+
 export  type ImageSourceSpecification = {
     type: "image";
     url: string;
@@ -4606,15 +4674,15 @@ export  interface IMapDiff {
     noCompareNew?: boolean;
     /** 不比较删除部分. */
     noCompareDelete?: boolean;
-    /** 比较大小. */
+    /** 比较大小. 默认 4096 */
     size?: number;
-    /** 比较单元大小. */
+    /** 比较单元大小. 默认 10 */
     cellsize?: number;
-    /** 不同的像素最小值. */
+    /** 不同的像素最小值. 默认  0 */
     diffMinPixel?: number;
-    /** 不同的透明最小值. */
+    /** 不同的透明最小值.  默认 25 */
     diffMinAlpha?: number;
-    /** 不同的颜色最小值. */
+    /** 不同的颜色最小值. 默认 6 */
     diffMinColor?: number;
 }
 
@@ -4828,6 +4896,12 @@ export  interface IOpenMapBaseParam {
     openFinishMaxTryCount?: number;
     /** 新建地图有fileDoc时有效 */
     cadVersion?: string;
+    /** 使用post方式打开 (默认使用get)*/
+    httpUsePost?: boolean;
+    /** 使用3d视图打开 (默认自动)*/
+    open3dview?: boolean;
+    /** 自定义扩展参数 */
+    extData?: Record<string, any>;
 }
 
 /**
@@ -4923,6 +4997,12 @@ export  interface IOpenMapResponse {
     imageTop?: number;
     /** 图像分辨率  一个像素单位代表多少地理长度，计算公式为 真实坐标长度 / 图像像素宽 */
     imageResolution?: number;
+    /** 是否是3d地图 */
+    isMap3d?: boolean;
+    /** 创建时间 */
+    createTime?: string;
+    /** 空间数据记录条数 */
+    geomRecordCount?: string;
 }
 
 /**
@@ -5062,6 +5142,26 @@ export  interface ISliceLayer {
     idleBatchSleepMs?: number;
     /** 繁忙时一次批处理等待时间（默认10000ms）. */
     busyBatchSleepMs?: number;
+}
+
+/**
+ * 拆分子图参数
+ */
+export  interface ISplitChildMaps {
+    /** 地图ID. */
+    mapid?: string;
+    /** 文件ID. (有mapid，优先使用mapid,没有mapid，使用fileid) */
+    fileid?: string;
+    /** 地图版本(为空时采用当前打开的地图版本). */
+    version?: string;
+    /** 每个子图拆分后是否全图. 默认false */
+    isFullExtent?: boolean;
+    /** 子图范围数组. ["x1,y1,x2,y2",  "x1,y1,x2,y2", ...] */
+    clipBounds: string[];
+    /** 方法 cloneObjects 通过深度克隆实体,效率最快(默认),  cloneDb 通过克隆文档数据库，效率较快；cloneMap 通过克隆图，效率较慢，但最能保持原样*/
+    method?: "cloneObjects" | "cloneDb" | "cloneMap";
+    /** 是否启动新进程处理（不影响主进程，看初始速度慢些） 默认true */
+    startNewProcess?: boolean;
 }
 
 export  const isPoint: (point: Object) => point is Point23D;
@@ -8647,9 +8747,10 @@ export  class Service {
     /**
      * 切换图层
      * @param visibleLayers 让可见的图层列表数组
+     * @param expression 样式表达式
      * @return {Promise<void>}
      */
-    cmdSwitchLayers(visibleLayers: string[]): Promise<any>;
+    cmdSwitchLayers(visibleLayers: string[], expression?: string): Promise<any>;
     /**
      * 更新样式
      * @param param 样式参数
@@ -8781,6 +8882,12 @@ export  class Service {
      */
     cmdDeleteCache(param: IDeleteCache): Promise<any>;
     /**
+     * 删除后台的一个地图相关的地图源文件
+     * @param mapfileNames 要删除的源文件名
+     * @return {Promise<any>}
+     */
+    cmdDeleteMapFile(mapfileNames: string | string[]): Promise<any>;
+    /**
      * 获取当前运行状态
      * @return {Promise<any>}
      * @param bDetail 是否需要细节 (默认false)
@@ -8892,6 +8999,18 @@ export  class Service {
      * @return {Promise<any>}
      */
     cmdMatchObject(param: IMatchObject): Promise<any>;
+    /**
+     * 自动提交图中的表格
+     * @param param 参数
+     * @return {Promise<any>}
+     */
+    cmdExtractTale(param: IExtractTale): Promise<any>;
+    /**
+     * 拆分子图
+     * @param param 参数
+     * @return {Promise<any>}
+     */
+    cmdSplitChildMaps(param: ISplitChildMaps): Promise<any>;
     /**
      * 获取创建实体的几何数据
      * @param param 参数
@@ -11813,6 +11932,15 @@ export  const wrap: (min: number, max: number, v: number) => number;
          * @return {number}
          */
         createDbGeomData(doc: DbDocument, isAutoUpdateMapExtent?: boolean, isDarkMode?: boolean, options?: ICreateEntitiesGeomData, includeAttrSet?: string[]): Promise<any>
+
+        /**
+         * 信息弹窗提示
+         * - text（必填）：需要输出的文本
+         * - type（可选）：输出类型 默认是 "log"
+         * - time（可选）：停留时间 默认是 2500
+         */
+        logInfo(text: string, type?: "log" | "warn" | "error" | "info" | "success" | number, time?: number): void
+
 
         
 

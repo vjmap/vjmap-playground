@@ -23,6 +23,7 @@ window.onload = async () => {
             // (第一次打开此地图ID时，会根据fileid去获取dwg路径打开，之后会读取缓存打开)
             mapid: mapid, // 地图ID
             fileid: httpDwgUrl,
+            // httpUsePost: true, // 如果是复杂的url地址，建议用post请求，请把httpUsePost设置为true, 默认false
             mapopenway: vjmap.MapOpenWay.GeomRender, // 以几何数据渲染方式打开
             style: vjmap.openMapDarkStyle() // div为深色背景颜色时，这里也传深色背景样式
         })

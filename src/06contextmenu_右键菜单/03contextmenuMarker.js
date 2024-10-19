@@ -79,7 +79,7 @@ window.onload = async () => {
         
             // marker与多边形等覆盖物图层不同的时，marker是div，而覆盖物图层是canvas渲染与map属于同一个div
             // 所以marker的右键，得由自己的div的上下文菜单来触发
-            marker.getElement().addEventListener("mouseup", event => {
+            marker.getElement().addEventListener("mousedown", event => {
                 if (event.button != 2) return;//不是右键
                 // 阻止地图默认右键菜单触发
                 event.preventDefault();

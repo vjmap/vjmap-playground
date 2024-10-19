@@ -10,7 +10,10 @@ window.onload = async () => {
     try {
         // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/service/22findzexporttable
         // --定位图中表格并提取表格数据--
-        // 地图服务对象
+        // !!! 注： 自动提取图中所有表格，在后台已有更好的实现方法。
+        // 可打开图 https://vjmap.com/app/cloud/#/map/sys_table?version=v1&mapopenway=GeomRender&vector=false
+        // 在“更多功能” 里面 点击 "自动提取图中所有表格"
+        // 下面示例实现了如果自己写算法提取表格数据的一个简单的思路
             let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         // 打开地图
             let res = await svc.openMap({

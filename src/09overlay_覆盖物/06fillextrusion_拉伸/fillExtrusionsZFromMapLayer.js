@@ -28,6 +28,7 @@ window.onload = async () => {
             center: prj.toLngLat(center),
             zoom: 2,
             pitch: 60,
+            antialias: true, // 反锯齿
             renderWorldCopies: false
         });
         map.attach(svc, prj);
