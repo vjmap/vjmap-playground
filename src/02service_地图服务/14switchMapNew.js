@@ -9,7 +9,7 @@ window.onload = async () => {
     };
     try {
         // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/service/14switchMapNew
-        // --切换图形[地图对象改变]--通过图形id切换不同的图形，切换后地图对象map和所关联的容器将重新创建，发生变化
+        // --切换图形[地图对象改变，不同div]--通过图形id切换不同的图形，切换后地图对象map和所关联的容器将重新创建，发生变化
         // 新建地图服务对象，传入服务地址和token
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken);
         

@@ -187,6 +187,12 @@ window.onload = async () => {
             let svc = map.getService();
             let res = await svc.cmdCreateEntitiesGeomData({
                 filedoc: JSON.stringify(doc)
+                /* 也可以直接通过一个svg创建cad图
+                filedoc: JSON.stringify({
+                    isSvgData: true,
+                    svg: `<svg t="11714542106558400" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4485" width="200" height="200"><path d="M796.444444 568.888889V227.555556H227.555556v341.333333h568.888888z m0 56.888889H227.555556v56.888889h568.888888v-56.888889z m-398.222222 170.666666v-56.888888H170.666667V170.666667h682.666666v568.888889h-227.555555v56.888888h56.888889v56.888889H341.333333v-56.888889h56.888889z m170.666667 0v-56.888888h-113.777778v56.888888h113.777778z" fill="#00ffff" p-id="4486"></path><path d="M256 256h512v284.444444H256z" fill="#FF4A60" p-id="4487"></path></svg>`
+                })
+                */
             });
             const features = [];
             if (res && res.result && res.result.length > 0) {

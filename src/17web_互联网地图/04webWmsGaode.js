@@ -26,6 +26,7 @@ window.onload = async () => {
                     gaodeRoadSource: {
                         type: 'raster',
                         tiles: ["https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"],
+                        maxzoom: 18,// 数据的最大级别为18，超过后会放大处理
                     },
                     // 影像无文字注记
                     gaodeImgSource: {
@@ -33,6 +34,7 @@ window.onload = async () => {
                         tiles:  [
                             "https://webst02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=6&x={x}&y={y}&z={z}",
                         ],
+                        maxzoom: 18,// 数据的最大级别为18，超过后会放大处理
                     },
                     // 影像文字注记
                     gaodeImgSourceLabel: {
@@ -40,6 +42,7 @@ window.onload = async () => {
                         tiles:  [
                             "https://webst02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
                         ],
+                        maxzoom: 18,// 数据的最大级别为18，超过后会放大处理
                     }
                 },
                 layers: [{
@@ -65,6 +68,7 @@ window.onload = async () => {
             center: [0, 0],
             zoom: 12,
             pitch: 0,
+            maxZoom: 24, // 整个地图放大级别最大为24
             renderWorldCopies: false // 不显示多屏地图
         });
         
@@ -84,9 +88,12 @@ window.onload = async () => {
             // 如果打开出错
             message.error(res.error)
         }
+        let layers = JSON.parse(res.layers); //所有图层数据
         let layer = res.layer;//图层样式名
         
         let cadEpsg = "EPSG:4544";// cad图的espg代号
+        
+        let wmsSourceId = 'wms-test-source';
         // 增加cad的wms图层
         let wmsUrl = svc.wmsTileUrl({
             mapid: mapId, // 地图id
@@ -95,7 +102,7 @@ window.onload = async () => {
             crs: cadEpsg,
             webMapType: "GCJ02" // 底图是高德地图，所以要选GCJ02,如果是天地图，可以不用填此项
         })
-        map.addSource('wms-test-source', {
+        map.addSource(wmsSourceId, {
             'type': 'raster',
             'tiles': [
                 wmsUrl
@@ -105,7 +112,7 @@ window.onload = async () => {
         map.addLayer({
                 'id': 'wms-test-layer',
                 'type': 'raster',
-                'source': 'wms-test-source',
+                'source': wmsSourceId,
                 'paint': { "raster-opacity": 1 }
             }
         );
@@ -341,6 +348,49 @@ window.onload = async () => {
             map.showSource("gaodeImgSourceLabel")
             map.hideSource("gaodeRoadSource")
         }
+        
+        const showHideCadLayer = async (isHidden) => {
+            // 显示隐藏CAD的某图层
+            let layerNames = ['zhix'];
+            // 把图层名称变成图层索引
+            let layerIndexs = layerNames.map(name => layers.find(layer => layer.name == name).index)
+            // 根据图层显隐创建新的样式
+            let style = await svc.createStyle({
+                layeron: isHidden ? undefined: layerIndexs, // 要显示的图层
+                layeroff: isHidden ? layerIndexs: undefined, // 要隐藏的图层
+                backcolor: 0xFFFFFF // 浅色主题, 深色主题用0
+            }, mapId)
+        
+            let layer = style.stylename; // 新的样式名称
+        
+        
+            // 移除之前的wms数据源
+            map.removeSourceEx(wmsSourceId)
+        
+            // 根据上面的图层开头生成的新的样式，创建新的wms地址加进地图中
+        
+            let wmsUrl = svc.wmsTileUrl({
+                mapid: mapId, // 地图id
+                layers: layer, // 图层名称
+                srs: "EPSG:3857",
+                crs: cadEpsg,
+                webMapType: "GCJ02" // 底图是高德地图，所以要选GCJ02,如果是天地图，可以不用填此项
+            })
+            map.addSource(wmsSourceId, {
+                'type': 'raster',
+                'tiles': [
+                    wmsUrl
+                ],
+                'tileSize': 256
+            });
+            map.addLayer({
+                    'id': 'wms-test-layer',
+                    'type': 'raster',
+                    'source': wmsSourceId,
+                    'paint': { "raster-opacity": 1 }
+                }
+            );
+        }
         // UI界面
         const App = () => {
             return (
@@ -366,11 +416,22 @@ window.onload = async () => {
                                     onClick={() => imageMap()}>切换至影像地图
                             </button>
                         </div>
+                        <div className="input-item">
+                            <button id="clear-map-btn" className="btn btn-full mr0"
+                                    onClick={() => showHideCadLayer(true)}>隐藏CAD的某图层
+                            </button>
+                        </div>
+                        <div className="input-item">
+                            <button id="clear-map-btn" className="btn btn-full mr0"
+                                    onClick={() => showHideCadLayer(false)}>显示CAD的某图层
+                            </button>
+                        </div>
                     </div>
                 </div>
             );
         }
         ReactDOM.render(<App />, document.getElementById('ui'));
+        
         
     }
     catch (e) {

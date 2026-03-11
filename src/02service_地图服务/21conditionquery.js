@@ -105,10 +105,24 @@ window.onload = async () => {
                         // 演示两种不同的定位实体的方式
                         let n = vjmap.randInt(0, 1)
                         if (n == 0) {
-                            let center = bounds.center();
+        					let center = bounds.center();
+                            // 获取当前屏幕地理坐标范围
+                            let lnglatBounds = map.getBounds();
+                            let nePoint = map.fromLngLat(lnglatBounds.getNorthEast());
+                            let swPoint = map.fromLngLat(lnglatBounds.getSouthWest());
+                            // 当前屏幕地理宽
+                            let screenGeoWidth = nePoint.x - swPoint.x;
+                            // 要缩放的范围宽
+                            let zoomGeoWidth = bounds.width()
+                            // 当前级别
+                            let curZoom = map.getZoom()
+                            // 要放大多少倍(根据长度比计算要放大多少倍)
+                            let addZoom = Math.log2(screenGeoWidth / zoomGeoWidth)
+                            // 新的缩放级别
+                            let newzoom = curZoom + addZoom
                             map.flyTo({
                                 center: map.toLngLat(center),
-                                zoom: 4
+                                zoom: newzoom - 0.2
                             });
                         } else {
                             let lnglatBouds = map.toLngLat(bounds);

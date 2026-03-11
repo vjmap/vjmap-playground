@@ -11,6 +11,10 @@ window.onload = async () => {
         // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/service/17zmapDiff
         // --比较地图不同处--查找出不同图或不同版本之间地图的修改新增删除部分
         
+        // 注：此示例是基于图形像素比较的方法实现， 如需要对实体进行比较，获取实体的修改新增删除部分，请参考示例
+        // https://vjmap.com/app/cloud/#/map/sys_zp?version=v1&mapopenway=GeomRender&vector=false
+        // 进入后点击上面工具栏上面的 智能识别 -> 地图对比异同
+        
         // 在id为"map”的div下面创建一个一样大的不同的div，用于新的对图对象的容器id
         const createNewMapDivIds = ()=> {
             // 先清空之前的

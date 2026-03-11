@@ -288,6 +288,50 @@ window.onload = async () => {
         
          */
         
+        
+        
+        
+        // 如果是mapboxgl加载cad图(cad图有地理坐标系)，可以用如下代码
+        /*
+        let mapId = "sys_cadcesium";
+        map.once('style.load', async () => {
+            let res = await svc.openMap({
+                mapid: mapId, // 地图ID
+                mapopenway: vjmap.MapOpenWay.GeomRender, // 以几何数据渲染方式打开
+                style: vjmap.openMapDarkStyle() // div为深色背景颜色时，这里也传深色背景样式
+            })
+            if (res.error) {
+                // 如果打开出错
+                message.error(res.error)
+            }
+            let layer = res.layer;//图层样式名
+        
+            let cadEpsg = "EPSG:4544" ;// cad图的espg代号
+            // 增加cad的wms图层
+            let wmsUrl = svc.wmsTileUrl({
+                mapid: mapId, // 地图id
+                layers: layer, // 图层名称
+                bbox: '', // bbox这里不需要传，cesium会自动加上
+                srs: "EPSG:3857", // mapboxgl地图是wgs84
+                crs: cadEpsg
+            })
+        
+            wmsUrl += '&bbox={bbox-epsg-3857}'
+            map.addLayer({
+                'id': 'wms-layer', // 图层的唯一 ID
+                'type': 'raster', // 图层类型为栅格
+                'source': {
+                    'type': 'raster',
+                    'tiles': [wmsUrl],
+                    'tileSize': 256
+                },
+                'paint': {
+                    'raster-opacity': 1.0 // 设置图层的不透明度
+                }
+            });
+        })
+         */
+        
     }
     catch (e) {
         console.error(e);

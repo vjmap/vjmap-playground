@@ -173,6 +173,7 @@ window.onload = async () => {
         
         markerCluster.addTo(map)
         
+        // 通过 markerCluster.updateData 进行修改数据
         
         const setOverlap = (isOverlap) => {
             markerCluster.allowOverlap(isOverlap);

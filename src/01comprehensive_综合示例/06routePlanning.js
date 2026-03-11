@@ -94,7 +94,6 @@ window.onload = async () => {
                     "tag": "query",
                     "query": {
                         "condition": "  layerindex = 0 and name = \"2\" ",
-                        "bounds": "",
                         "isContains": false,
                         "coordType": 1,
                         "clearPropData": true

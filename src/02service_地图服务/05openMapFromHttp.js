@@ -14,11 +14,13 @@ window.onload = async () => {
         // 新建地图服务对象，传入服务地址和token
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         // 打开地图
-        // 地图ID (如果换成了您自定义的url地址，记得修改此名称id，改成您想要的唯一的名称即可)
-        const mapid = "gym";
-        // 地图url地址，注意：url地址后四个字母必须为.dwg。如果实际中的地址四4位不是.dwg可以随便加个参数如 url?param=xxx&filetype=.dwg
-        const httpDwgUrl = "https://vjmap.com/../../assets/data/gym.dwg" ;
         
+        // 地图url地址，注意：url地址后四个字母必须为.dwg。如果实际中的地址四4位不是.dwg可以随便加个参数如 url?param=xxx&filetype=.dwg
+        // 有时候url需要在header中进行鉴权。这时候需要把header鉴权的key和value通过查询的参数传过来。同时key前面加一个关键词__header__
+        // 比如 "https://vjmap.com/../../assets/data/gym.dwg" 鉴权的key和value分别为 user=123 和 pwd=abc， 最后传的url为 https://vjmap.com/../../assets/data/gym.dwg?__header__user=123&__header__pwd=abc&filetype=.dwg  (为保证后面是.dwg, filetype这个是随意加的)
+        const httpDwgUrl = "https://vjmap.com/../../assets/data/gym.dwg" ;
+        // 地图ID (如果换成了您自定义的url地址，记得修改此名称id，改成您想要的唯一的名称即可)， 这里通过文件地址的md5值做为mapid
+        const mapid = svc.strMd5(httpDwgUrl).substring(0, 16);
         let res = await svc.openMap({
             // (第一次打开此地图ID时，会根据fileid去获取dwg路径打开，之后会读取缓存打开)
             mapid: mapid, // 地图ID

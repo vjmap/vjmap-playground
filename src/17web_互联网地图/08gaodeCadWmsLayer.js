@@ -15,11 +15,16 @@ window.onload = async () => {
             // 如果没有amap环境
             await vjmap.addScript({
                 // 注意,请次下面的key替换为自己在高德sdk中申请的key，否则会导致报错
-                src: "https://webapi.amap.com/maps?v=1.4.15&key=5ef803514b9a411419dc3c82d6643e12"
+                src: "https://webapi.amap.com/maps?v=2.0&key=5ef803514b9a411419dc3c82d6643e12"
             });
         
         }
         let map = new AMap.Map('map', {
+            layers: [
+                new AMap.TileLayer.Satellite()  // 添加卫星图层
+            ],
+            expandZoomRange: true,  // 启用扩展缩放范围
+            zooms: [3, 20],        // 设置缩放范围
             zoom: 15,
             center: [106.166187, 29.44102]
         });
@@ -67,6 +72,7 @@ window.onload = async () => {
             url: wmsUrl.substr(0, wmsUrl.indexOf("?")),
             blend: true,
             tileSize: 256,
+            dataZooms: [2, 24],
             params: getQueryStringArgs(wmsUrl)
         });
         

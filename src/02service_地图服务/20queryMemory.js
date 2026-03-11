@@ -40,9 +40,18 @@ window.onload = async () => {
         let blockNames = ["M_F13", "_AXISO"]; // 要查找的块名称列表 块名称可通过在云端管理平台中点击块实体，右侧属性中的blockname
         const handleQuery= async () => {
             let query = await svc.exprQueryFeature({
+                // 表达式写法
                 // expr: `gOutReturn := if((gInFeatureType == 'AcDbPolyline' and  gInLayerName == '网格线' and gInExtendMinX >= ${center.x} ), 1, 0);`,
-                // 过滤出所有块对象实体
-                expr: `gOutReturn := if((gInFeatureType == 'AcDbBlockReference'), 1, 0);`,
+                // 现在也支持js语法
+                // expr: `if (gInFeatureType == 'AcDbPolyline' &&  gInLayerName == '网格线' && gInExtendMinX >= ${center.x} ) {
+                //         return true;
+                //     } else {
+                //         return false;
+                //     }`,
+                // 过滤出所有块对象实体(表达式写法)
+                // expr: `gOutReturn := if((gInFeatureType == 'AcDbBlockReference'), 1, 0);`,
+                // 过滤出所有块对象实体(js写法)
+                expr: `return gInFeatureType == 'AcDbBlockReference'`,
                 fields: "objectid,blockname,envelop",
                 useCache: true,
                 limit: 1000000 // 数量大些，相当于查找所有的

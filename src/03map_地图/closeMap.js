@@ -111,7 +111,7 @@ window.onload = async () => {
         	* 销毁新地图对象
         	*/
         	const closeMap = () => {
-        		map && map.remove();
+        		map && map.destory();
         		message.info("地图已销毁");
         		map = null;
         		setIsCreate(false);

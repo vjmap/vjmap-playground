@@ -25,10 +25,12 @@ window.onload = async () => {
                         tiles: ["https://t3.tianditu.gov.cn/DataServer?T=vec_w&X={x}&Y={y}&L={z}&tk=7baeffb96bf61861b302d0f963cfda66"],
                         // 要使用影像请用这个地址
                         // tiles: ["https://t3.tianditu.gov.cn/DataServer?T=img_w&X={x}&Y={y}&L={z}&tk=7baeffb96bf61861b302d0f963cfda66"]
+                        maxzoom: 18,// 数据的最大级别为18，超过后会放大处理
                     },
                     tdt2: {
                         type: 'raster',
                         tiles: ["https://t3.tianditu.gov.cn/DataServer?T=cva_w&X={x}&Y={y}&L={z}&tk=7baeffb96bf61861b302d0f963cfda66"],
+                        maxzoom: 18,// 数据的最大级别为18，超过后会放大处理
                     }
                 },
                 layers: [{
@@ -43,6 +45,7 @@ window.onload = async () => {
             },
             center: prj.toLngLat([117.21242940465396, 39.196783504641644]),
             zoom: 15,
+            maxZoom: 24, // 整个地图放大级别最大为24
             pitch: 0,
             renderWorldCopies: false // 不显示多屏地图
         });

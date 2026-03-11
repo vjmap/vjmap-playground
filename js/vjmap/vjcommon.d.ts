@@ -36,6 +36,7 @@ export declare class CacheDbStorage {
     getAll(): Promise<DbRecord[]>;
     getRecordByKey(key: string): Promise<DbRecord[]>;
     getValueByKey(key: string, parseJson?: boolean): Promise<any>;
+    getRecordByKeyPrefix(prefix: string): Promise<DbRecord[]>;
     setValueByKey(key: string, value: any, toJson?: boolean): Promise<DbRecord>;
     upsert(record: DbRecord): Promise<DbRecord>;
     deleteRecord(key: string): Promise<DbRecord>;
@@ -78,24 +79,33 @@ export declare const createMapStyleLayerName: (svc: Service, overMapType: WmsOve
 export declare const createOutSymbol: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<any>;
 
 export declare const createUpdateMapStyleObj: (map: Map_2, option?: Record<string, any>) => {
+    removeHideObjectIds: (objectIds: string[], noUpdate?: boolean, isClear?: boolean) => Promise<void>;
     addHideObjectIds: (objectIds: string[], noUpdate?: boolean, isClear?: boolean) => Promise<void>;
     refresh: () => Promise<void>;
     hideObjectIds: Set<string>;
     getClipBounds: () => any;
+    updateStyle: (style?: any) => Promise<any>;
+    getCurStyle: () => {};
 };
 
 export declare const createUpdateMapStyleRasterObj: (map: Map_2, option?: Record<string, any>) => {
+    removeHideObjectIds: (objectIds: string[], noUpdate?: boolean, isClear?: boolean) => Promise<void>;
     addHideObjectIds: (objectIds: string[], noUpdate?: boolean, isClear?: boolean) => Promise<void>;
     refresh: () => Promise<void>;
     hideObjectIds: Set<string>;
     getClipBounds: () => any;
+    updateStyle: (style?: any) => Promise<any>;
+    getCurStyle: () => {};
 };
 
 export declare const createUpdateMapStyleVectorObj: (map: Map_2, option?: Record<string, any>) => {
+    removeHideObjectIds: (objectIds: string[], noUpdate?: boolean, isClear?: boolean) => Promise<void>;
     addHideObjectIds: (objectIds: string[], noUpdate?: boolean, isClear?: boolean) => Promise<void>;
     refresh: () => Promise<void>;
     hideObjectIds: Set<string>;
     getClipBounds: () => any;
+    updateStyle: (style?: any) => Promise<any>;
+    getCurStyle: () => {};
 };
 
 export declare type DbIndex = {
@@ -127,17 +137,17 @@ export declare type DbTable = {
 
 export declare const deleteCadEntity: (map: Map_2, draw: IDrawTool, updateMapStyleObj: any, showInfoFunc?: Function, dlgConfirmInfo?: Function, isRectSel?: boolean, promptFunc?: Function) => Promise<void>;
 
-export declare const drawArrow: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<void>;
+export declare const drawArrow: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function, param?: Record<string, any>) => Promise<any>;
 
 export declare const drawCircle: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, isFill?: boolean) => Promise<void>;
 
-export declare const drawEllipseArc: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => void;
+export declare const drawEllipseArc: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => Promise<any>;
 
-export declare const drawEllipseEdge: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => void;
+export declare const drawEllipseEdge: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => Promise<any>;
 
-export declare const drawEllipseFill: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => void;
+export declare const drawEllipseFill: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => Promise<any>;
 
-export declare const drawEllipseFillArc: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => void;
+export declare const drawEllipseFillArc: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>, showInfoFunc?: Function) => Promise<any>;
 
 export declare const drawFillExrusion: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, drawProperty?: Record<string, any>) => Promise<void>;
 
@@ -502,7 +512,7 @@ export declare type providerLayerTypes = keyof typeof providerLayers;
 
 export declare function queryMapData(map: Map_2, queryParam: {
     condition?: string;
-    bounds?: string;
+    bounds?: string | [number, number, number, number] | [number, number][];
     isContains?: boolean;
     coordType?: 0 | 1;
     clearPropData?: boolean;
@@ -520,7 +530,7 @@ export declare function requestChangeData(map: Map_2, param: {
 
 export declare function runMeasureCmd(map: Map_2, cmd: string): Promise<void>;
 
-export declare const selectFeatures: (map: Map_2, useGeomCoord?: boolean, includeWholeEntity?: boolean, isPointSel?: boolean, disableSnap?: boolean, disableSelectEntities?: Set<String>) => Promise<any>;
+export declare const selectFeatures: (map: Map_2, useGeomCoord?: boolean, includeWholeEntity?: boolean, isPointSel?: boolean, disableSnap?: boolean, disableSelectEntities?: Set<String>, maxSelectCount?: number) => Promise<any>;
 
 export declare const selectRotate: (map: Map_2, draw: IDrawTool, options?: Record<string, any>, showInfoFunc?: Function) => Promise<void>;
 

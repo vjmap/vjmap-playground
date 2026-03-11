@@ -18,7 +18,8 @@ window.onload = async () => {
         // 打开地图
         let res = await svc.openMap({
             mapid: env.exampleMapId, // 地图ID,(请确保此ID已存在，可上传新图形新建ID)
-            mapopenway: vjmap.MapOpenWay.GeomRender // 以几何数据渲染方式打开
+            mapopenway: vjmap.MapOpenWay.GeomRender, // 以几何数据渲染方式打开
+        	style: vjmap.openMapLightStyle()
         })
         if (res.error) {
             message.error(res.error)

@@ -96,6 +96,8 @@ window.onload = async () => {
         let allMarkers = []; // 所有的传感器数据
         let sensorId = 1;
         const bindPosition = async (index, props) => {
+            // 给地图发送ESC键消息即可取消，模拟按ESC键，取消之前可能正在进行的操作
+            map.fire("keyup", { keyCode: 27 })
             // 根据索引使用自定义的图像地址
             let customImage = env.assetsPath + `images/sensor${index}.png`
             let el = document.createElement('div');

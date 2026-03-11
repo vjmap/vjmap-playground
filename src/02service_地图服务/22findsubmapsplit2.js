@@ -45,7 +45,7 @@ window.onload = async () => {
         const getChildMapRects = async () => {
             childMapBounds = []
         
-            let result = await svc.cmdExtractTale({
+            let result = await svc.cmdExtractTable({
                 /** 误差值. 正数表示距离小于这个误差值就以为是直线（为零的话表示自动求误差值)，负数表示自动获取的误差值比例倍数大小 默认为0自动*/
                 tol: 0,
                 /** 查找子图范围 默认false */

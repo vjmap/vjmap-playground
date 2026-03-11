@@ -48,6 +48,24 @@ window.onload = async () => {
         // 如果不允许旋转时，禁止系统默认右键弹出
         //map.getCanvasContainer().oncontextmenu = (e) => {e.preventDefault() }
         
+        
+        /*
+        // 不允许平移
+        map.dragPan.disable()
+        // 不允许缩放
+        map.scrollZoom.disable()
+        // 不允许旋转
+        map.dragRotate.disable();
+        map.touchZoomRotate.disableRotation();
+        // 不允许倾斜
+        let pitch = 60
+        map.setMaxPitch(pitch);
+        map.setMinPitch(pitch)
+        // 如果不允许旋转时，禁止系统默认右键弹出
+        map.getCanvasContainer().oncontextmenu = (e) => {e.preventDefault() }
+        
+         */
+        
     }
     catch (e) {
         console.error(e);

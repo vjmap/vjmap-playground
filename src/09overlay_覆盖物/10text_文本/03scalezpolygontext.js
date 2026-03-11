@@ -46,10 +46,14 @@ window.onload = async () => {
         let mapBounds = map.getGeoBounds();
         
         const draw = map.getDrawLayer();
+        
+        let desiredCadHeight = mapBounds.height() / 60; // 取地图范围高度的1/80作为CAD文字高度 或传一个您要定义的cad高度值
+        let pixelHeight = desiredCadHeight / map.pixelToGeoLength(1, map.getZoom());
+        
         for(let i = 0; i < 10; i++) {
             let param = {
                 text: 'text' + i,
-                height: 30, // 文字初始像素高
+                height: pixelHeight, // 文字初始像素高
                 disableScale: true, // 不指定缩放
                 disableRotate: true, // 不指定旋转
                 scaleValue: 1.0,

@@ -137,6 +137,37 @@ window.onload = async () => {
         
         draw.changeMode('static');  // 编辑模式 simple_select
         
+        
+        /*
+         // 加一个引线注记到当前地图中 思路：先在cad里面绘制一个引线注记做为模板，再从模板中克隆此实体加进地图中
+         // 在指定位置加一个符号
+         let pos1 = mapBounds.randomPoint() // 随机生成一个点
+         // new vjmap.Marker().setLngLat(map.toLngLat(pos1)).addTo(map)
+         // 这个引线注记图来源于哪个模板
+         let tempId = "cee2f5f808ee"
+         let dbEnt = new vjmap.DbMLeader()
+         dbEnt.cloneFromDb = tempId + "/v1"
+         // 引线注记的objectid,在云端管理平台内存直接打开，点击objectid查看
+         dbEnt.cloneObjectId = "222"
+         dbEnt.contents = "190.00"
+         // 对原来的进行平移
+         dbEnt.matrix = [
+         {
+                op: "translation",
+                // [2098.7074,1483.1797]是原来引线注记的x,y位置
+                vector: [pos1.x - 2098.7074, pos1.y - 1483.1797]
+            }
+         ]
+         // 旋转角度
+         dbEnt.textRotation = Math.PI / 2
+        
+         let data = await vjcommon.createGeomData(map, [dbEnt], null, null, null, {
+            mapid: tempId, // 上面的要修改的实体，来源于此图id
+            version: "v1"
+        }, undefined);
+         vjcommon.addFeaturesToDraw(data, draw);
+         */
+        
     }
     catch (e) {
         console.error(e);

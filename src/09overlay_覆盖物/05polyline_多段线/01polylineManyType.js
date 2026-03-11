@@ -140,9 +140,9 @@ window.onload = async () => {
             isHoverFeatureState: true
         });
         polylines.addTo(map);
-        polylines.clickLayer(e => message.info(`您点击了第 ${e.features[0].id} 个，名称为 ${e.features[0].properties.name}，颜色为 ${e.features[0].properties.color} 的 ${e.features[0].properties.type}`))
-        polylines.hoverPopup(f => `<h3>ID: ${f.properties.name}</h3>Color: ${f.properties.color}`, { anchor: 'bottom' });
-        
+        const cancelClickCb =polylines.clickLayer(e => message.info(`您点击了第 ${e.features[0].id} 个，名称为 ${e.features[0].properties.name}，颜色为 ${e.features[0].properties.color} 的 ${e.features[0].properties.type}`))
+        const cancelHoverCb = polylines.hoverPopup(f => `<h3>ID: ${f.properties.name}</h3>Color: ${f.properties.color}`, { anchor: 'bottom' });
+        // 如果要取消监听的话，可以调用相应的返回的回调函数，如 cancelClickCb(); cancelHoverCb();
         
     }
     catch (e) {

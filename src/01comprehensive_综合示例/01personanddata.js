@@ -10,6 +10,7 @@ window.onload = async () => {
     try {
         // 在线效果查看地址: https://vjmap.com/demo/#/demo/map/comprehensive/01personanddata
         // --人员定位与数据集成展示--
+        // 如果人员数多时，如超过几百或几千时，建议用symbol来绘制人员（webgl渲染)。可参考此示例 https://vjmap.com/demo/#/demo/map/overlay/symbol/symbolpath
         // 地图服务对象
         let svc = new vjmap.Service(env.serviceUrl, env.accessToken)
         // 打开地图

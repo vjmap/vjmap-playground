@@ -300,7 +300,7 @@ window.onload = async () => {
                         break;
                     case "cloud": // 云线
                         let strokeWidth = 20
-                        let x1 =  mouseFrom.x, y1 =  mouseFrom.y, x2 = mouseTo.x, y2 = mouseTo.y;
+                        let x1 = mouseFrom.x, y1 = mouseFrom.y, x2 = mouseTo.x, y2 = mouseTo.y;
         
                         // 计算半圆的半径
                         var radius = strokeWidth / 2;
@@ -393,9 +393,9 @@ window.onload = async () => {
                         break;
                     case "text":
                         textbox = new fabric.Textbox("", {
-                            left: mouseFrom.x - 60,
+                            left: mouseFrom.x ,
                             top: mouseFrom.y - 20,
-                            width: 150,
+                            width: 10,
                             fontSize: 30,
                             borderColor: "yellow",
                             fill: color,
@@ -484,6 +484,78 @@ window.onload = async () => {
             }
         }
         
+        const save = () => {
+            // 保存，做为示例，这里只保存到localStorage,实际中需保存至后台
+            let json = fabricCanvas.toJSON();
+            let curParam = svc.currentMapParam()
+            let key = `map_ann_${curParam.mapid}_${curParam.version}`;
+            localStorage.setItem(key, JSON.stringify(json, null, 0));
+            message.info("保存成功");
+        }
+        
+        
+        const load = () => {
+            // 加载
+            let curParam = svc.currentMapParam()
+            let key = `map_ann_${curParam.mapid}_${curParam.version}`;
+            let data = localStorage.getItem(key);
+            if (!data) return
+            let json = JSON.parse(data);
+            beginFreeDraw();
+            fabricCanvas.loadFromJSON(json, function () {
+                fabricCanvas.renderAll();
+            }, function (o, object) {
+            })
+        }
+        
+        const exportDwg = async () => {
+            // 导出成dwg
+        
+            let param = svc.currentMapParam();
+            // fabric转成cad要求的绘制格式
+            let svg = fabricCanvas.toSVG();
+            let leftTopPoint = [canvasCoord1.x, canvasCoord1.y];
+            let rightBottomPoint = [canvasCoord2.x, canvasCoord2.y];
+            let layerName = "批注";
+            let result = await svc.execCommand("imageSvgToDwg", {
+                svg: svg,
+                flipY: false,
+                layer: layerName,
+                hasMapBounds: true,
+                mapBoundLeftTopX: leftTopPoint[0],
+                mapBoundLeftTopY: leftTopPoint[1],
+                mapBoundRightBtmX: rightBottomPoint[0],
+                mapBoundRightBtmY: rightBottomPoint[1],
+                retDocument: true
+            }, "_null", "v1");
+            if (result.error) {
+                map.logInfo(result.error, "error");
+                return
+            }
+            let doc = JSON.parse(result.doc);
+            doc.from = `${param.mapid}/${param.version}`;
+        
+            // js代码
+            let res = await svc.updateMap({
+                // 获取一个临时的图id(临时图形只会用临时查看，过期会自动删除)
+                mapid: vjmap.getTempMapId(1), // 临时图形不浏览情况下过期自动删除时间，单位分钟。默认30
+                filedoc: JSON.stringify(doc),
+                mapopenway: vjmap.MapOpenWay.Memory,
+                style: {
+                    backcolor: 0 // 如果div背景色是浅色，则设置为oxFFFFFF
+                }
+            })
+            if (res.error) {
+                message.error(res.error)
+            }
+        
+            let url = `https://vjmap.com/app/cloud/#/map/${res.mapid}?mapopenway=Memory&version=${res.version}`;
+            // let url = `http://127.0.0.1:27660/_cloud/#/map/${res.mapid}?mapopenway=Memory&version=${res.version}`;
+        
+            window.open(url);
+        }
+        
+        
         // UI界面
         const App = () => {
             return (
@@ -504,6 +576,9 @@ window.onload = async () => {
                             <button className="btn" onClick={() => draw("text")}>文本</button>
                             <button className="btn" onClick={selectDel}>删除选择</button>
                             <button className="btn" onClick={endFreeDraw}>结束绘制</button>
+                            <button className="btn" onClick={save}>保存</button>
+                            <button className="btn" onClick={load}>加载</button>
+                            <button className="btn" onClick={exportDwg}>导出成dwg</button>
                         </div>
                     </div>
                 </div>

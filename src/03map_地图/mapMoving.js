@@ -83,6 +83,43 @@ window.onload = async () => {
         }
         ReactDOM.render(<App />, document.getElementById('ui'));
         
+        
+        
+        /**
+          * 将指定的地理坐标移动到地图上的某个像素位置
+          * @param {Map} map - 地图实例
+          * @param {Array} geopt - cad坐标，格式为 [x, y]
+          * @param {Array} pixel - 目标像素位置，格式为 [x, y]
+          */
+        function movePtToPixel(map, geopt, pixelPoint) {
+        	let lngLat = map.toLngLat(geopt)
+        	// 获取当前地图中心点的像素坐标
+        	const point = map.project(lngLat);
+        
+        	// 计算偏移量
+        	const offsetX = pixelPoint[0] - point.x;
+        	const offsetY = pixelPoint[1] - point.y;
+        
+        	// 获取当前地图中心点
+        	const center = map.getCenter();
+        
+        	// 将当前中心点转换为像素坐标
+        	const centerPoint = map.project(center);
+        	// 计算新的中心点像素坐标
+        	const newCenterPoint = {
+        		x: centerPoint.x - offsetX,
+        		y: centerPoint.y - offsetY
+        	};
+        
+        	// 将新的像素坐标转换回经纬度
+        	const newCenter = map.unproject(newCenterPoint);
+        	map.setCenter(newCenter)
+        }
+        
+        // 如果需要将一个cad坐标移动至指定像素位置 。如将地图左上角移动至屏幕左上角，可用如下代码
+        // let drawBounds = await svc.cmdGetDrawBounds();
+        // movePtToPixel(map, drawBounds.leftTop(), [0,0])
+        
     }
     catch (e) {
         console.error(e);

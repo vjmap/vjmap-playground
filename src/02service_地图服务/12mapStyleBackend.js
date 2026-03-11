@@ -196,6 +196,147 @@ window.onload = async () => {
             }
             await updateStyle(style);
         }
+        
+        // 上面是表达式的写法，效率好，但要学习新语法，也可以用js脚本来实现上面的的功能. js语法上手简单，但性能稍慢
+        // 下面是js脚本实现的代码
+        /*
+        // 修改颜色  红color.r, 绿color.g, 蓝color.b, 透明度color.a,如果输入了级别的话，表示此级别及以上的设置
+        const modifyColor = (color, zoom) => {
+            let result = "";
+            let z = Number.isInteger(zoom) ? `[${zoom + 1}]` : '';
+            if ("r" in color) result += `gOutColorRed${z}=${color.r};`;
+            if ("g" in color) result += `gOutColorGreen${z}=${color.g};`;
+            if ("b" in color) result += `gOutColorBlue${z}=${color.b};`;
+            if ("a" in color) result += `gOutColorAlpha${z}=${color.a};`;
+            return result;
+        }
+        
+        // 修改线宽,如果输入了级别的话，表示此级别及以上的设置
+        const modifyLineWidth = (lw, zoom) => {
+            let result = "";
+            if (lw) {
+                if (!Number.isInteger(zoom)) {
+                    result += `gOutLineWidth=${lw};`;
+                } else {
+                    result += `gOutLineWidth[${zoom + 1}]=${lw};`;
+                }
+            }
+            return result;
+        }
+        
+        // 修改是否显示,如果输入了级别的话，表示此级别及以上的设置
+        const modifyVisible = (visible, zoom) => {
+            let result = "";
+            if (visible !== undefined) {
+                if (!Number.isInteger(zoom)) {
+                    result += `gOutVisible=${visible ? 1 : 0};`;
+                } else {
+                    result += `gOutVisible[${zoom + 1}]=${visible ? 1 : 0};`;
+                }
+            }
+            return result;
+        }
+        
+        // 增加实体类型判断条件,只要满足任何一种类型即可,如 ['AcDbPolyline','AcDbText']
+        const conditionFeatureType = featureTypes => {
+            if (!Array.isArray(featureTypes)) featureTypes = [featureTypes];// 先转成数组，再统一用数组去算吧
+            return featureTypes.map(featureType => `gInFeatureType=='${featureType}'`).join(" || ");
+        }
+        
+        // 增加实体图层判断条件,只要满足任何一种类型即可,如 ['图层一','图层二']
+        const conditionLayers = layers => {
+            if (!Array.isArray(layers)) layers = [layers];// 先转成数组，再统一用数组去算吧
+            return layers.map(layer => `gInLayerName=='${layer}'`).join(" || ");
+        }
+        
+        // 增加实体对象id判断条件,只要满足任何一种类型即可,如 ['283','285']
+        const conditionObjectIds = objectIds => {
+            if (!Array.isArray(objectIds)) objectIds = [objectIds];// 先转成数组，再统一用数组去算吧
+            let strObjectIds = objectIds.join("||");
+            return `'${strObjectIds}'.indexOf(gInObjectId) >= 0`
+        }
+        // 增加实体对象颜色判断条件,只要满足任何一种类型即可,如 [{r:255,g:122,b:100},{r:100}]
+        const conditionColors = colors => {
+            if (!Array.isArray(colors)) colors = [colors];// 先转成数组，再统一用数组去算吧
+            return colors.map(color => {
+                let result = [];
+                if ("r" in color) result.push(`gInColorRed==${color.r}`);
+                if ("g" in color) result.push(`gInColorGreen==${color.g}`);
+                if ("b" in color) result.push(`gInColorBlue==${color.b}`);
+                if ("a" in color) result.push(`gInColorAlpha==${color.a}`);
+                return `(${result.join(" && ")})`
+            }).join(" || ");
+        }
+        
+        // 增加实体对象范围判断条件,只要满足任何一种类型即可,如 [{width:10,height:20,tol: 0.01},{width:300,height:200}]
+        const conditionBounds = bounds => {
+            if (!Array.isArray(bounds)) bounds = [bounds];// 先转成数组，再统一用数组去算吧
+            return bounds.map(bound => {
+                let result = [];
+                if ("width" in bound) result.push(`(Math.abs(gInExtendMaxX-gInExtendMinX-${bound.width})<${bound.tol ? bound.tol: 0.001})`);
+                if ("height" in bound) result.push(`(Math.abs(gInExtendMaxY-gInExtendMinY-${bound.height})<${bound.tol ? bound.tol: 0.001})`);
+                return `(${result.join(" && ")})`
+            }).join(" || ");
+        }
+        
+        const updateExpr = async expr => {
+            if (expressionList.findIndex(e => e === expr) >= 0) return;//加过
+            expressionList.push(expr);
+            await updateStyle();// 更新样式
+        }
+        
+        const setLayerTextColors = async ()=> {
+            // 类型条件
+            let condition1 = conditionFeatureType(["AcDbText", "AcDbMText", "AcDbAttributeDefinition", "AcDbAttribute"]);
+            // 图层条件
+            let condition2 = conditionLayers("WZ");
+            let value = modifyColor({r: 255, g: 0, b: 0});
+            let expr = `if((${condition1}) && (${condition2})) {${value}} `;
+            await updateExpr(expr);
+        }
+        
+        const setObjectsVisible = async () => {
+            // objectId
+            let condition = conditionObjectIds(["10D_10F__111_#", "10D_10F__110_#"]);
+            let value1 = modifyVisible(false, 1); // 1-3级不可见
+            let value2 = modifyVisible(true, 3); // 3级以上可见了
+            let expr = `if(${condition}) {${value1} ${value2}} `;
+            await updateExpr(expr);
+        }
+        
+        const setLineWidth = async () => {
+            // 颜色条件
+            let condition = conditionColors([{r: 255, g: 255, b:0}]);
+            let value1 = modifyLineWidth(5);
+            let value2 = modifyColor({r: 0, g: 255, b: 255, a: 100});
+            let expr = `if(${condition}) {${value1} ${value2}} `;
+            await updateExpr(expr);
+        }
+        
+        const setBoundsColors = async () => {
+            // 范围条件
+            let condition = conditionBounds({width: 4000, tol: 20});
+            let value = modifyColor({r: 255, g: 0, b: 0});
+            let expr = `if(${condition}) {${value}} `;
+            await updateExpr(expr);
+        }
+        
+        const setZoomLayer = async () => {
+            message.info('请放大地图，切换不同的级别，看到的图层内容也不一样')
+            let style = {
+                // 不同级别下 layeroff 控制图层索引是否关闭图层, layeron 来控制图层索引是否打开图层
+                layeron:`{
+                                "*": "()",
+                                "1": "(19,24)",
+                                "2": "(19,24,5)",
+                                "3-4": "(1,19,24,5,22)",
+                                "5": "(1,19,24,5,22,15)",
+                                "6-7": "(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,19,22,24)"
+                            }`
+            }
+            await updateStyle(style);
+        }
+         */
         // UI界面
         const App = () => {
             return (
