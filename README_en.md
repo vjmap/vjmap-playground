@@ -1,9 +1,9 @@
-
+[中文](README.md) | **English**
     
 # Introduction
-  This project contains all the source code for the [VJMap](https://vjmap.com/) official website: https://vjmap.com demo examples.
+  This project contains all the source code for the [VJMap](https://vjmap.com/en/) official website: https://vjmap.com/en/ demo examples.
 
-  [Online demo:](https://vjmap.com/demo) https://vjmap.com/demo
+  [Online demo:](https://vjmap.com/demo/#/gallery/map?lang=en) https://vjmap.com/demo/#/gallery/map?lang=en
 
 # Running
   
@@ -26,7 +26,7 @@ Install the `Live Server` plugin in `VSCode`. After installation, open this dire
 
 `VJMap` provides a one-stop solution for `CAD` drawings or `custom map format` `WebGIS` `visualization` display development. It supports common formats such as `AutoCAD` `DWG` format files, `GeoJSON` and other common `GIS` file formats. It uses WebGL `vector tiles` and `custom styles` to render interactive maps, providing new `big data visualization` and `real-time streaming data` visualization capabilities.
 
-[VJMap](https://vjmap.com/) official website: https://vjmap.com/
+[VJMap](https://vjmap.com/en/) official website: https://vjmap.com/en/
 
 # Features
 
